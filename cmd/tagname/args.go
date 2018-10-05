@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/macroblock/ptool/pkg/ptool"
+	"github.com/macroblock/imed/pkg/ptool"
 )
 
 func splitFn(r rune) bool {
