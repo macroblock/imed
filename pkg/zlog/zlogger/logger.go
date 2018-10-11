@@ -9,6 +9,7 @@ import (
 	"github.com/macroblock/imed/pkg/zlog/loglevel"
 )
 
+// DefaultFormat -
 // ~d - date when a message occurred
 // ~t - time when a message occurred
 // ~l - loglevel
@@ -17,7 +18,7 @@ import (
 // ~e - error message
 // ~x - text message
 // example: "~d ~t (~m) ~l: ~x~e\n"
-const defaultFormat = "(~m) ~l~s~x~e\n"
+const DefaultFormat = "(~m) ~l~s~x~e\n"
 
 // TStyler -
 type TStyler func(key rune, params *TFormatParams) (string, bool)

@@ -10,13 +10,15 @@ type     = ['.trailer'| '.' postertype];
 
 taglist  = [(@sdhd|tags){,(@sdhd|tags)}];
 EONAME   = year (DIV|'.'|$);
+
+INVALID_TAGS = 'trailer'|'film';
 ` + body
 
 var oldNormalSchema = &TSchema{
 	parser:                  &oldParser,
 	MustHaveByType:          []string{"name", "year", "type", "ext"},
-	NonUniqueByType:         []string{"unktag"},
-	Invalid:                 []string{"trailer", "film"},
+	NonUniqueByType:         []string{"unktag", "mtag"},
+	Invalid:                 nil, // []string{"trailer", "film"},
 	ToStringHeadOrderByType: []string{"name", "sxx", "sname", "exx", "ename", "comment", "year", "_", "sdhd", "agetag", "qtag", "atag", "stag"},
 	ToStringTailOrderByType: []string{"m4o", "type", "ext"},
 	ReadFilter:              fnOldSchemaReadFilter,

@@ -82,11 +82,11 @@ func initEntries() {
 		usage: fmt.Sprintf("%v %v [flags]", progName, command),
 		hint:  fmt.Sprintf("Use '%v help schemas' for information about registered schemas.", progName),
 		arg: func() {
-			flag.StringVar(&flagFromSchemas, "from", "", "List of [,;|]-separated names of schemas that will be used to attempt read source file(s).")
+			flag.StringVar(&flagFromSchemas, "from", "", "List of [,;|]-separated names of schemas that will be used to read a source file(s).")
 			flag.StringVar(&flagToSchema, "to", "", "Name of the schema that will be used before rename file(s).")
 			flag.StringVar(&flagDataSource, "src", "", "Data source.")
 			flag.StringVar(&flagDataDest, "dst", "", "Destination of the result.")
-			flag.Var(&flagFilter, "filter", "Each consequtive filter flag unites with AND logic.")
+			flag.Var(&flagFilter, "filter", "Each consequtive filter flag unites with the AND logic.")
 		},
 		cmd: cmdRename,
 	}

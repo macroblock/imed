@@ -13,7 +13,6 @@ import (
 	"github.com/macroblock/imed/pkg/tagname"
 	"github.com/macroblock/imed/pkg/zlog/loglevel"
 	"github.com/macroblock/imed/pkg/zlog/zlog"
-	"github.com/macroblock/imed/pkg/zlog/zlogger"
 )
 
 // should be set like "//host/path/etc" even on Windows
@@ -34,7 +33,7 @@ type tItem struct {
 	msmk    string
 }
 
-func doProcess(filePath string) (string, bool) {
+func doProcess(filePath string) string {
 	defer retif.Catch()
 	log.Info("")
 	log.Info("processing: " + filePath)
@@ -52,6 +51,11 @@ func doProcess(filePath string) (string, bool) {
 	tn.RemoveTags("agetag")
 	newPath, err := tn.ConvertTo(schema)
 	retif.Error(err, "cannot convert to '"+schema+"' schema")
+
+	hasSmokingTag := false
+	if _, err := tn.GetTag("smktag"); err == nil {
+		hasSmokingTag = true
+	}
 
 	file, err := ffinfo.Probe(filePath)
 	retif.Error(err, "ffinfo.Probe() (ffprobe)")
@@ -73,6 +77,7 @@ func doProcess(filePath string) (string, bool) {
 		case "16:15":
 			logoPostfix = "43"
 		case "0:1", "1:1":
+			sar = "1:1"
 			switch sdhd {
 			default:
 				retif.Error(fmt.Errorf("inconvenient set of SAR [%v] and sdhd tag %q", sar, sdhd))
@@ -86,6 +91,7 @@ func doProcess(filePath string) (string, bool) {
 		break
 	}
 	retif.Error(err)
+	strSar := strings.Replace(sar, ":", "/", -1) // x:y -> x/y
 
 	x := qtag[2]
 	if x != 'w' && x != 's' ||
@@ -106,15 +112,24 @@ func doProcess(filePath string) (string, bool) {
 		strVCodec = "-vcodec mpeg2video -b:v 11000k -maxrate 15000k -minrate 0 -bufsize 1835008 -rc_init_occupancy 600000 -g 12 -bf 2 -q:v 1"
 		strACodec = "-acodec mp2 -ab 320k"
 	}
+
 	strSmoking := ""
+	if hasSmokingTag {
+		smkImg := filepath.Join(ageLogoPath, "msmoking_"+logoPostfix+".mov")
+		// workaround: replace windows backslashes to use it in ffmpeg filter
+		smkImg = strings.Replace(smkImg, "\\", "/", -1)
+		strSmoking = "; movie=" + smkImg + ",setsar=" + strSar + "[smoking]; " +
+			" anullsrc=r=48000:cl=2,atrim=end=5[silence]; [smoking][silence][v][a]concat=n=2:v=1:a=1[v][a]; [v]setsar=" + strSar + "[v]"
+	}
+
 	logo := filepath.Join(ageLogoPath, age+"_"+logoPostfix+".mov")
 	// workaround: replace windows backslashes to use it in ffmpeg filter
 	logo = strings.Replace(logo, "\\", "/", -1)
-	ret := "ffmpeg -i \"" + filePath + "\" -filter_complex \"movie=" + logo + ",setsar=" + sar +
+	ret := "ffmpeg -i \"" + filePath + "\" -filter_complex \"movie=" + logo + ",setsar=" + strSar +
 		"[age]; [0:0][age]overlay=0:0:eof_action=pass[v]; [0:1]aresample=48000[a]" + strSmoking + "\" " +
 		" -map [v] " + strVCodec + " -map [a] " + strACodec + " " + newPath
 
-	return ret, true
+	return ret
 }
 
 var (
@@ -136,47 +151,38 @@ func init() {
 }
 
 func main() {
+	// setup log
+	newLogger := misc.NewSimpleLogger
+	if misc.IsTerminal() {
+		newLogger = misc.NewAnsiLogger
+	}
 	log.Add(
-		zlogger.Build().
-			LevelFilter(logFilter).
-			Styler(zlogger.AnsiStyler).
-			Done(),
-		zlogger.Build().
-			LevelFilter(loglevel.Info.Only().Include(loglevel.Notice.Only())).
-			Format("~x\n").
-			Styler(zlogger.AnsiStyler).
-			Done())
+		newLogger(loglevel.Warning.OrLower(), ""),
+		newLogger(loglevel.Info.Only().Include(loglevel.Notice.Only()), "~x\n"),
+	)
 
-	args := os.Args
-	if len(args) <= 1 {
-		log.Info(`
-Error: not enougth arguments
+	defer func() {
+		if log.State().Intersect(loglevel.Warning.OrLower()) != 0 {
+			misc.PauseTerminal()
+		}
+	}()
 
-Usage:
-    agelogo {filename}`)
+	// process command line arguments
+	if len(os.Args) <= 1 {
+		log.Warning(true, "not enough parameters")
+		log.Info("Usage:\n    agelogo {filename}\n")
 		return
 	}
 
-	args = args[1:]
-
-	wasError := false
+	// main job
+	args := os.Args[1:]
 	list := []string{}
 	for _, path := range args {
-		cmd, ok := doProcess(path)
-		if !ok {
-			wasError = true
-			continue
-		}
+		cmd := doProcess(path)
 		list = append(list, cmd)
 	}
 	list = append(list, pauseCmd)
 
 	err := misc.SliceToFile(dstFileName, list)
 	retif.Error(err, fmt.Sprintf("cannot write to %q", dstFileName))
-
-	if wasError {
-		fmt.Println("Press the <Enter> to continue...")
-		var input string
-		fmt.Scanln(&input)
-	}
 }

@@ -1,13 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/macroblock/imed/pkg/misc"
 	"github.com/macroblock/imed/pkg/tagname"
 	"github.com/macroblock/imed/pkg/zlog/loglevel"
 	"github.com/macroblock/imed/pkg/zlog/zlog"
-	"github.com/macroblock/imed/pkg/zlog/zlogger"
 )
 
 var (
@@ -16,7 +15,7 @@ var (
 	logFilter = loglevel.Warning.OrLower()
 )
 
-func doProcess(path string, schema string) bool {
+func doProcess(path string, schema string) {
 	defer retif.Catch()
 	log.Info("")
 	log.Info("rename: " + path)
@@ -33,55 +32,46 @@ func doProcess(path string, schema string) bool {
 	retif.Error(err, "cannot rename file")
 
 	log.Notice(schema, " > ", newPath)
-
-	return true
 }
 
 func main() {
+	// setup log
+	newLogger := misc.NewSimpleLogger
+	if misc.IsTerminal() {
+		newLogger = misc.NewAnsiLogger
+	}
 	log.Add(
-		zlogger.Build().
-			LevelFilter(logFilter).
-			Styler(zlogger.AnsiStyler).
-			Done(),
-		zlogger.Build().
-			LevelFilter(loglevel.Info.Only().Include(loglevel.Notice.Only())).
-			Format("~x\n").
-			Styler(zlogger.AnsiStyler).
-			Done())
+		newLogger(loglevel.Warning.OrLower(), ""),
+		newLogger(loglevel.Info.Only().Include(loglevel.Notice.Only()), "~x\n"),
+	)
 
-	args := os.Args
-	if len(args) <= 1 {
-		log.Info(`
-Error: not enougth arguments
+	defer func() {
+		if log.State().Intersect(loglevel.Warning.OrLower()) != 0 {
+			misc.PauseTerminal()
+		}
+	}()
 
-Usage:
-    tnrename [-rt|-old] filename {filename}`)
+	// process command line arguments
+	if len(os.Args) <= 1 {
+		log.Warning(true, "not enough parameters")
+		log.Info("Usage:\n    tnrename [-rt|-old] {filename}\n")
 		return
 	}
 
+	// main job
+	args := os.Args[1:]
 	schema := ""
-	switch args[1] {
+	switch args[0] {
 	case "-rt":
 		schema = "rt.normal"
-		args = args[2:]
+		args = args[1:]
 	case "-old":
 		schema = "old.normal"
-		args = args[2:]
-	default:
 		args = args[1:]
 	}
 
-	wasError := false
+	// wasError := false
 	for _, path := range args {
-		ok := doProcess(path, schema)
-		if !ok {
-			wasError = true
-		}
-	}
-
-	if wasError {
-		fmt.Println("Press the <Enter> to continue...")
-		var input string
-		fmt.Scanln(&input)
+		doProcess(path, schema)
 	}
 }

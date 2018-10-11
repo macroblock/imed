@@ -1,6 +1,8 @@
 package tagname
 
-import "testing"
+import (
+	"testing"
+)
 
 var (
 	tableTagnameCorrect = []struct {
@@ -132,9 +134,11 @@ func TestTagnameCorrect(t *testing.T) {
 // TestTagnameIncorrect -
 func TestTagnameOldIncorrect(t *testing.T) {
 	for _, v := range tableOldFormParseIncorrect {
-		_, err := oldParser.Parse(v)
+		_, err := NewFromFilename(v)
 		if err == nil {
 			t.Errorf("\n%q\nhas no error", v)
+			// fmt.Println("#### unk:", x.GetTags("unktag"))
+			// fmt.Println("#### sdhd:", x.GetTags("sdhd"))
 			continue
 		}
 	}

@@ -2,20 +2,18 @@ package main
 
 import (
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/macroblock/imed/pkg/misc"
 	"github.com/macroblock/imed/pkg/translit"
 	"github.com/macroblock/imed/pkg/zlog/loglevel"
 	"github.com/macroblock/imed/pkg/zlog/zlog"
-	"github.com/macroblock/imed/pkg/zlog/zlogger"
 )
 
 var (
-	log       = zlog.Instance("main")
-	retif     = log.Catcher()
-	logFilter = loglevel.Warning.OrLower()
+	log   = zlog.Instance("main")
+	retif = log.Catcher()
 )
 
 func doProcess(path string) {
@@ -46,31 +44,32 @@ func doProcess(path string) {
 }
 
 func main() {
+	// setup log
+	newLogger := misc.NewSimpleLogger
+	if misc.IsTerminal() {
+		newLogger = misc.NewAnsiLogger
+	}
 	log.Add(
-		zlogger.Build().
-			LevelFilter(logFilter).
-			Styler(zlogger.AnsiStyler).
-			Done(),
-		zlogger.Build().
-			LevelFilter(loglevel.Info.Only().Include(loglevel.Notice.Only())).
-			Format("~x\n").
-			Styler(zlogger.AnsiStyler).
-			Done())
+		newLogger(loglevel.Warning.OrLower(), ""),
+		newLogger(loglevel.Info.Only().Include(loglevel.Notice.Only()), "~x\n"),
+	)
 
 	defer func() {
 		if log.State().Intersect(loglevel.Warning.OrLower()) != 0 {
-			cmd := exec.Command("cmd", "/C", "pause")
-			cmd.Stdin = os.Stdin
-			cmd.Stdout = os.Stdout
-			cmd.Run()
+			misc.PauseTerminal()
 		}
 	}()
 
-	log.Debug("log initialized")
+	// process command line arguments
 	if len(os.Args) <= 1 {
 		log.Warning(true, "not enough parameters")
+		log.Info("Usage:\n    translit {filename}\n")
+		return
 	}
-	for _, path := range os.Args[1:] {
+
+	// main job
+	args := os.Args[1:]
+	for _, path := range args {
 		doProcess(path)
 	}
 }

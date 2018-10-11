@@ -1,6 +1,8 @@
 package tagname
 
-import "testing"
+import (
+	"testing"
+)
 
 var (
 	tableOldFormParseCorrect = []struct {
@@ -43,6 +45,11 @@ var (
 		"a_2000__tag__tag2",
 		"a__2000",
 		"The_name_s01_zzz_2018__hd_q0w0",
+		// double tags
+		"The_name_2018__hd_q0w0_hd",
+		"The_name_2018__sd_q0w0_hd",
+		"The_name_2018__sd_q0w0_mdisney_mhardsub",
+		"The_name_2018__sd_q0w0_mhardsub_q1s3_trailer",
 	}
 )
 
@@ -74,9 +81,11 @@ func TestOldFormParseCorrect(t *testing.T) {
 // TestOldFormParseIncorrect -
 func TestOldFormParseIncorrect(t *testing.T) {
 	for _, v := range tableOldFormParseIncorrect {
-		_, err := oldParser.Parse(v)
+		_, err := Parse(v, "old.normal")
 		if err == nil {
 			t.Errorf("\n%q\nhas no error", v)
+			// fmt.Println("#### unk:", x.GetTags("unktag"))
+			// fmt.Println("#### sdhd:", x.GetTags("sdhd"))
 			continue
 		}
 	}

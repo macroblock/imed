@@ -23,7 +23,7 @@ func autoName() string {
 
 // Default -
 func Default() *TLogger {
-	return &TLogger{writer: os.Stdout, styler: DefaultStyler, name: autoName(), levelFilter: loglevel.All, format: defaultFormat}
+	return &TLogger{writer: os.Stdout, styler: DefaultStyler, name: autoName(), levelFilter: loglevel.All, format: DefaultFormat}
 }
 
 // Build -

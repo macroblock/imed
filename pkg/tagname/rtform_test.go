@@ -41,8 +41,13 @@ var (
 		"a_2000__.ext.zzz",
 		"a_2000__tag__tag2",
 		"a__2000",
-		"The_name_s01_a_subname_2018__hd_q0w0",
-		"The_name_s01_zzz_2018__hd_q0w0",
+		"hd_2018_The_name_s01_a_subname__q0w0",
+		"hd_2018_The_name_s01_zzz__q0w0_film",
+		// double tags
+		"hd_2018_The_name_2018__q0w0_hd_film",
+		"hd_2018_The_name_2018__q0w0_sd_film",
+		"sd_2018_The_name_2018__hd_q0w0_mdisney_mhardsub_film",
+		"hd_2018_The_name_2018__q0w0_mhardsub_q1s3_trailer",
 	}
 )
 
@@ -74,7 +79,7 @@ func TestRtFormParseCorrect(t *testing.T) {
 // TestOldFormParseIncorrect -
 func TestRtFormParseIncorrect(t *testing.T) {
 	for _, v := range tableRtFormParseIncorrect {
-		_, err := rtParser.Parse(v)
+		_, err := Parse(v, "rt.normal")
 		if err == nil {
 			t.Errorf("\n%q\nhas no error", v)
 			continue

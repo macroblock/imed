@@ -56,15 +56,25 @@ func check(tagname *TTags, schema *TSchema) error {
 			return fmt.Errorf("%q type does not exist", typ)
 		}
 	}
-	for _, typ := range schema.NonUniqueByType {
-		_, ok := o.tabNonUniqueType[typ]
-		if !ok {
-			if len(tagname.byType[typ]) > 1 {
+	// for _, typ := range schema.NonUniqueByType {
+	// 	_, ok := o.tabNonUniqueType[typ]
+	// 	fmt.Println("#####", typ)
+	// 	if !ok {
+	// 		if len(tagname.byType[typ]) > 1 {
+	// 			fmt.Println("#####")
+	// 			return fmt.Errorf("%q type must be unique", typ)
+	// 		}
+	// 	}
+	// }
+	for typ, list := range tagname.byType {
+		if typ == "INVALID_TAGS" {
+			return fmt.Errorf("invalid tag(s) are present: %v", list)
+		}
+		if _, ok := o.tabNonUniqueType[typ]; !ok {
+			if len(list) > 1 {
 				return fmt.Errorf("%q type must be unique", typ)
 			}
 		}
-	}
-	for typ, list := range tagname.byType {
 		if !isExist(o.tabValidType, typ) {
 			return fmt.Errorf("%q is not a valid type", typ)
 		}

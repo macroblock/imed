@@ -13,14 +13,16 @@ _hackHD3D= 'hd' !('hd',|'3d',);
 _hack3D  = '3d';
 type     = 'trailer'|'film'| postertype;
 
-taglist  = {!(type ('.'|$)) tags ,};
+taglist  = {!(type ('.'|$)) tags,};
 EONAME   = DIV|'.'|$;
+
+INVALID_TAGS = 'sd'|'hd'|'3d';
 ` + body
 
 var rtNormalSchema = &TSchema{
 	parser:                  &rtParser,
 	MustHaveByType:          []string{"name", "year", "sdhd", "type", "ext"},
-	NonUniqueByType:         []string{"unktag"},
+	NonUniqueByType:         []string{"unktag", "mtag"},
 	Invalid:                 nil,
 	ToStringHeadOrderByType: []string{"_hackHD3D", "sdhd", "year", "_hack3D", "name", "sxx", "sname", "exx", "ename", "comment", "_", "agetag", "qtag", "atag", "stag"},
 	ToStringTailOrderByType: []string{"m4o", "type", "ext"},
