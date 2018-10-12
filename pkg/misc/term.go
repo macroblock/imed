@@ -5,7 +5,13 @@ import (
 	"os/exec"
 	"runtime"
 
+	"github.com/macroblock/imed/pkg/zlog/zlog"
 	"golang.org/x/crypto/ssh/terminal"
+)
+
+var (
+	log   = zlog.Instance("main")
+	retif = log.Catcher()
 )
 
 // IsTerminal -
@@ -26,4 +32,17 @@ func PauseTerminal() {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Run()
+}
+
+// RunCommand -
+func RunCommand(name string, args ...string) (string, error) {
+	cmd := exec.Command(name, args...)
+	cmd.Stdin = os.Stdin
+	// cmd.Stdout =
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return string(out), err
+	}
+	return string(out), nil
+	// cmd.Run()
 }

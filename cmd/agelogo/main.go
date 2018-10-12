@@ -76,7 +76,7 @@ func doProcess(filePath string) string {
 			logoPostfix = "169"
 		case "16:15":
 			logoPostfix = "43"
-		case "0:1", "1:1":
+		case "0:1", "1:1", "":
 			sar = "1:1"
 			switch sdhd {
 			default:
