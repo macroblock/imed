@@ -47,7 +47,7 @@ postertype = 'poster' digit{digit} 'x' digit{digit};
 
 year     = digit digit digit digit;
 
-tags     = @INVALID_TAGS|@qtag|@atag|@stag|@agetag|@m4otag|@smktag|@mtag|@unktag;
+tags     = @INVALID_TAGS|@qtag|@atag|@stag|@agetag|@m4otag|@smktag|@sbstag|@mtag|@unktag;
 
 qtag     = 'q'digit('w'|'s')digit;
 atag     = 'a'letter digit{letter digit};
@@ -55,6 +55,7 @@ stag     = 's'letter {letter};
 agetag   = '00'|'06'|'12'|'16'|'18'|'99';
 m4otag   = 'm4o';
 smktag   = 'msmoking'|'smoking';
+sbstag   = 'msbs'|'sbs';
 mtag     = 'm'symbol{symbol};
 unktag   = ident;
 

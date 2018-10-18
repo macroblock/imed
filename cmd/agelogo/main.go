@@ -56,12 +56,17 @@ func doProcess(filePath string) string {
 	if _, err := tn.GetTag("smktag"); err == nil {
 		hasSmokingTag = true
 	}
+	hasSideBySideTag := false
+	if _, err := tn.GetTag("sbstag"); err == nil {
+		hasSideBySideTag = true
+	}
 
 	file, err := ffinfo.Probe(filePath)
 	retif.Error(err, "ffinfo.Probe() (ffprobe)")
 
 	sar := ""
 	logoPostfix := ""
+	sbsPostfix := ""
 	err = fmt.Errorf("%v", "cannot find video stream")
 	for i, s := range file.Streams {
 		if s.CodecType != "video" {
@@ -83,6 +88,9 @@ func doProcess(filePath string) string {
 				retif.Error(fmt.Errorf("inconvenient set of SAR [%v] and sdhd tag %q", sar, sdhd))
 			case "3d":
 				logoPostfix = "3D"
+				if hasSideBySideTag {
+					sbsPostfix = "_SBS"
+				}
 			case "hd":
 				logoPostfix = "HD"
 			}
@@ -115,14 +123,14 @@ func doProcess(filePath string) string {
 
 	strSmoking := ""
 	if hasSmokingTag {
-		smkImg := filepath.Join(ageLogoPath, "msmoking_"+logoPostfix+".mov")
+		smkImg := filepath.Join(ageLogoPath, "msmoking_"+logoPostfix+sbsPostfix+".mov")
 		// workaround: replace windows backslashes to use it in ffmpeg filter
 		smkImg = strings.Replace(smkImg, "\\", "/", -1)
 		strSmoking = "; movie=" + smkImg + ",setsar=" + strSar + "[smoking]; " +
 			" anullsrc=r=48000:cl=2,atrim=end=5[silence]; [smoking][silence][v][a]concat=n=2:v=1:a=1[v][a]; [v]setsar=" + strSar + "[v]"
 	}
 
-	logo := filepath.Join(ageLogoPath, age+"_"+logoPostfix+".mov")
+	logo := filepath.Join(ageLogoPath, age+"_"+logoPostfix+sbsPostfix+".mov")
 	// workaround: replace windows backslashes to use it in ffmpeg filter
 	logo = strings.Replace(logo, "\\", "/", -1)
 	ret := "ffmpeg -i \"" + filePath + "\" -filter_complex \"movie=" + logo + ",setsar=" + strSar +
