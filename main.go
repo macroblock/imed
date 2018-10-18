@@ -19,6 +19,12 @@ var (
 )
 
 var (
+	optDontDownload = false
+	optPauseAlways  = false
+	optPauseOnError = false
+)
+
+var (
 	packagePathList = []string{
 		"github.com/macroblock/imed",
 		"github.com/macroblock/imed/cmd/agelogo",
@@ -30,6 +36,7 @@ var (
 
 	packageNameList      []string
 	maxPackageNameLength int
+	prefixes             = map[string]bool{}
 )
 
 func init() {
@@ -45,6 +52,31 @@ func calcMaxLen(pkgs []string) {
 	}
 }
 
+var lastStr string
+
+func prHead(s string) {
+	repeat := maxPackageNameLength - len(s) + 3
+	ansi.Printf("%v %v ", s, strings.Repeat(".", repeat))
+	misc.CPrint(misc.ColorReset, "")
+}
+
+func prProc(s string) {
+	lastStr = s
+	misc.CPrintUndo()
+	misc.CPrint(misc.ColorYellow, s)
+}
+
+func prOk(s string) {
+	misc.CPrintUndo()
+	misc.CPrint(misc.ColorGreen, s+"\n")
+}
+
+func prError() {
+	misc.CPrintUndo()
+	misc.CPrint(misc.ColorRed, lastStr+"\n")
+	log.SetState(loglevel.Error.Only())
+}
+
 func doFindPackage(pkgName string) string {
 	pkgName = "/" + pkgName
 	for _, pkgPath := range packagePathList {
@@ -55,25 +87,22 @@ func doFindPackage(pkgName string) string {
 	return ""
 }
 
-func prHead(s string) {
-	repeat := maxPackageNameLength - len(s) + 3
-	ansi.Printf("%v %v ", s, strings.Repeat(".", repeat))
-	misc.CPrint(misc.ColorReset, "")
-}
-
-func prProc(s string) {
-	misc.CPrintUndo()
-	misc.CPrint(misc.ColorYellow, s)
-}
-
-func prOk(s string) {
-	misc.CPrintUndo()
-	misc.CPrint(misc.ColorGreen, s+"\n")
-}
-
-func prError(s string) {
-	misc.CPrintUndo()
-	misc.CPrint(misc.ColorRed, s+"\n")
+func doDownload(pkgPath string) error {
+	if optDontDownload {
+		return nil
+	}
+	dir := path.Dir(pkgPath)
+	dir = strings.TrimSuffix(dir, "/cmd")
+	if prefixes[dir] || prefixes[pkgPath] {
+		return nil
+	}
+	_, err := misc.RunCommand("go", "get", "-u", "-n", pkgPath)
+	if err != nil {
+		return err
+	}
+	prefixes[dir] = true
+	prefixes[pkgPath] = true
+	return nil
 }
 
 func doInstall(pkgPath string) error {
@@ -81,31 +110,48 @@ func doInstall(pkgPath string) error {
 	return err
 }
 
-func doDownload(pkgPath string) error {
-	_, err := misc.RunCommand("go", "get", "-u", pkgPath)
-	return err
+func argsLen(args []string) int {
+	ret := 0
+	for _, s := range args {
+		if s == "-n" || s == "-p" || s == "-pe" {
+			continue
+		}
+		ret++
+	}
+	return ret
 }
 
-func cmdInstall(names []string) {
-	if len(names) == 0 {
-		names = packageNameList
+func cmdInstall(args []string) {
+	if argsLen(args) == 0 {
+		args = append(args, packageNameList...)
 	}
-	calcMaxLen(names)
-	for _, pkg := range names {
+	calcMaxLen(args)
+	for _, pkg := range args {
+		switch pkg {
+		case "-n":
+			optDontDownload = true
+			continue
+		case "-p":
+			optPauseAlways = true
+			continue
+		case "-pe":
+			optPauseOnError = true
+			continue
+		}
 		prHead(pkg)
 		prProc("describe")
 		if pkg = doFindPackage(pkg); pkg == "" {
-			prError("describe")
+			prError()
 			continue
 		}
 		prProc("download")
 		if doDownload(pkg) != nil {
-			prError("download")
+			prError()
 			continue
 		}
 		prProc("install")
 		if doInstall(pkg) != nil {
-			prError("install")
+			prError()
 			continue
 		}
 		prOk("ok")
@@ -130,7 +176,8 @@ func main() {
 	)
 
 	defer func() {
-		if log.State().Intersect(loglevel.Warning.OrLower()) != 0 {
+		if optPauseAlways ||
+			optPauseOnError && log.State().Intersect(loglevel.Warning.OrLower()) != 0 {
 			misc.PauseTerminal()
 		}
 	}()
@@ -138,7 +185,10 @@ func main() {
 	// process command line arguments
 	if len(os.Args) <= 1 {
 		log.Warning(true, "not enough parameters")
-		log.Info("Usage:\n    imed (install|upgrade|list) {moduleName}\n")
+		log.Info("Usage:\n    imed (install|upgrade|list) {flag|moduleName}\n")
+		log.Info("Flags:\n    -n    don't download source code (install binaries only)" +
+			"\n    -p    pause at the end of process" +
+			"\n    -pe   pause only if an error is occured")
 		return
 	}
 
@@ -154,6 +204,7 @@ func main() {
 		cmdInstall(args[1:])
 	case "upgrade":
 		args = args[1:]
+		log.Error(true, "not yet supported")
 	case "list":
 		cmdList()
 	}

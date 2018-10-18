@@ -50,6 +50,11 @@ func (o *TLog) Instance(name string) *TLog {
 	return &ret
 }
 
+// SetState -
+func (o *TLog) SetState(level loglevel.TFilter) {
+	o.node.state = level
+}
+
 // State -
 func (o *TLog) State() loglevel.TFilter {
 	return o.node.state
