@@ -3,9 +3,7 @@ package tagname
 import "testing"
 
 var (
-	tableRtFormParseCorrect = []struct {
-		inputVal, check string
-	}{
+	tableRtSchemaParseCorrect = []tValueCheckSlice{
 		//          123456789012345678901234567890
 		{inputVal: "sd_2018_Sobibor__12_q0w2_trailer.mpg"},
 		{inputVal: "hd_2018_451_gradus_po_farengeytu__q0w0_16_trailer",
@@ -26,7 +24,7 @@ var (
 		{inputVal: "sd_2018_The_name_s01_002_a_subname__q0w0_film"},
 		{inputVal: "sd_2018_The_name_zzz_a_comment__q0w0_film"},
 	}
-	tableRtFormParseIncorrect = []string{
+	tableRtSchemaParseIncorrect = []string{
 		//23456789012345678901234567890
 		"a",
 		"a__",
@@ -51,38 +49,12 @@ var (
 	}
 )
 
-// TestOldFormParseCorrect -
-func TestRtFormParseCorrect(t *testing.T) {
-	for _, v := range tableRtFormParseCorrect {
-		tagname, err := Parse(v.inputVal, "rt.normal")
-		if err != nil {
-			t.Errorf("\n%q\nParse() error: %v", v.inputVal, err)
-			continue
-		}
-		res, err := ToString(tagname, "rt.normal", "rt.normal")
-		if err != nil {
-			t.Errorf("\n%q\nToString() error: %v", v, err)
-			continue
-		}
-
-		check := v.check
-		if check == "" {
-			check = v.inputVal
-		}
-		if res != check {
-			t.Errorf("\nnot equivalent \nin : %q\nres: %q\nchk: %q", v.inputVal, res, check)
-			continue
-		}
-	}
+// TestOldSchemaParseCorrect -
+func TestRtSchemaParseCorrect(t *testing.T) {
+	parseCorrect(t, "rt", false, tableRtSchemaParseCorrect)
 }
 
-// TestOldFormParseIncorrect -
-func TestRtFormParseIncorrect(t *testing.T) {
-	for _, v := range tableRtFormParseIncorrect {
-		_, err := Parse(v, "rt.normal")
-		if err == nil {
-			t.Errorf("\n%q\nhas no error", v)
-			continue
-		}
-	}
+// TestOldSchemaParseIncorrect -
+func TestRtSchemaParseIncorrect(t *testing.T) {
+	parseIncorrect(t, "rt", false, tableRtSchemaParseIncorrect)
 }

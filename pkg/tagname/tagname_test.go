@@ -9,20 +9,20 @@ var (
 		settings, input, check string
 	}{
 		//23456789012345678901234567890
-		{settings: "rt.normal",
+		{settings: "rt",
 			input: "//test/path/Sobibor_2018__sd_12_q0w2.trailer.mpg",
 			check: "\\\\test\\path\\sd_2018_Sobibor__12_q0w2_trailer.mpg"},
-		{settings: "old.normal",
+		{settings: "old",
 			input: "test\\sd_2018_Sobibor__12_q0w2_trailer.mpg",
 			check: "test\\Sobibor_2018__sd_12_q0w2.trailer.mpg"},
 		{settings: "",
 			input: "sd_2018_Sobibor__12_q0w2_trailer.mpg"},
 		{settings: "",
 			input: "Sobibor_2018__sd_12_q0w2.trailer.mpg"},
-		{settings: "rt.normal",
+		{settings: "rt",
 			input: "Sobibor_2018__3d_12_q0w2.trailer.mpg",
 			check: "hd_2018_3d_Sobibor__12_q0w2_trailer.mpg"},
-		{settings: "old.normal",
+		{settings: "old",
 			input: "hd_2018_3d_Sobibor__12_q0w2_trailer.mpg",
 			check: "Sobibor_2018__3d_12_q0w2.trailer.mpg"},
 		{settings: "",
@@ -45,7 +45,8 @@ var (
 		"a_2000__.ext.zzz",
 		"a_2000__tag__tag2",
 		"a__2000",
-		"The_name_s01_a_subname_2018__hd_q0w0",
+		"The_name_s01_a_subname_2018__q0w0",
+		"The_name_s01_a_subname_2018__hd_q0w0_",
 		"The_name_s01_zzz_2018__hd_q0w0",
 	}
 
@@ -109,7 +110,7 @@ type ttag struct {
 // TestTagnameParseCorrect -
 func TestTagnameCorrect(t *testing.T) {
 	for _, v := range tableTagnameCorrect {
-		tagname, err := NewFromFilename(v.input)
+		tagname, err := NewFromFilename(v.input, CheckNormal)
 		if err != nil {
 			t.Errorf("\n%q\nNewFormFromFile() error:\n%v", v.input, err)
 			continue
@@ -132,9 +133,9 @@ func TestTagnameCorrect(t *testing.T) {
 }
 
 // TestTagnameIncorrect -
-func TestTagnameOldIncorrect(t *testing.T) {
-	for _, v := range tableOldFormParseIncorrect {
-		_, err := NewFromFilename(v)
+func TestTagnameIncorrect(t *testing.T) {
+	for _, v := range tableTagnameIncorrect {
+		_, err := NewFromFilename(v, CheckNormal)
 		if err == nil {
 			t.Errorf("\n%q\nhas no error", v)
 			// fmt.Println("#### unk:", x.GetTags("unktag"))
@@ -147,7 +148,7 @@ func TestTagnameOldIncorrect(t *testing.T) {
 // TestTagnameGetCorrect -
 func TestTagnameGetCorrect(t *testing.T) {
 	for _, v := range tableTagnameGetCorrect {
-		tagname, err := NewFromFilename(v.input)
+		tagname, err := NewFromFilename(v.input, CheckNormal)
 		if err != nil {
 			t.Errorf("\n%q\nNewFromFilename() error:\n%v", v.input, err)
 			continue

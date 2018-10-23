@@ -48,12 +48,32 @@ func IsTerminal() bool {
 	return true
 }
 
+// BatchFileExt -
+func BatchFileExt() string {
+	ret := ".bash"
+	if runtime.GOOS == "windows" {
+		ret = ".bat"
+	}
+	return ret
+}
+
+// PauseTerminalCmd -
+func PauseTerminalCmd() []string {
+	ret := []string{"read", "-rsp", "Press any key to continue...\n", "-n1", "key"}
+	if runtime.GOOS == "windows" {
+		ret = []string{"cmd", "/C", "pause"}
+	}
+	return ret
+}
+
+// PauseTerminalStr -
+func PauseTerminalStr() string {
+	return strings.Join(PauseTerminalCmd(), " ")
+}
+
 // PauseTerminal -
 func PauseTerminal() {
-	cmdStr := []string{"read", "-rsp", "Press any key to continue...\n", "-n1", "key"}
-	if runtime.GOOS == "windows" {
-		cmdStr = []string{"cmd", "/C", "pause"}
-	}
+	cmdStr := PauseTerminalCmd()
 	cmd := exec.Command(cmdStr[0], cmdStr[1:]...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

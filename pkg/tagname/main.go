@@ -7,9 +7,21 @@ import (
 	"github.com/macroblock/imed/pkg/ptool"
 )
 
+// -
+const (
+	CheckNone = iota - 1
+	CheckNormal
+	CheckStrict
+	CheckDeep
+
+	CheckDeepNormal = CheckDeep | CheckNormal
+	CheckDeepStrict = CheckDeep | CheckStrict
+)
+
 // TTags -
 type TTags struct {
 	byType map[string][]string
+	schema *TSchema
 	// settings *TSettings
 }
 
@@ -33,16 +45,16 @@ func init() {
 	rtParser = p
 
 	globSchemas = map[string]*TSchema{}
-	RegisterSchema("old.normal", oldNormalSchema)
-	RegisterSchema("rt.normal", rtNormalSchema)
+	RegisterSchema("old", oldNormalSchema)
+	RegisterSchema("rt", rtNormalSchema)
 }
 
 // NewTagname -
-func NewTagname(tree *ptool.TNode, parser *ptool.TParser) (*TTags, error) {
+func NewTagname(tree *ptool.TNode, parser *ptool.TParser, schema *TSchema) (*TTags, error) {
 	if parser == nil {
-		return nil, fmt.Errorf("parser is null")
+		return nil, fmt.Errorf("NewTagname() parser is null")
 	}
-	tagname := &TTags{}
+	tagname := &TTags{schema: schema}
 	for _, node := range tree.Links {
 		val := node.Value
 		typ := parser.ByID(node.Type)
@@ -98,15 +110,15 @@ func Parse(s string, schemaName string) (*TTags, error) {
 		return nil, err
 	}
 
-	tagname, err := NewTagname(tree, parser)
+	tagname, err := NewTagname(tree, parser, schema)
 	if err != nil {
 		return nil, err
 	}
 
-	err = check(tagname, schema)
-	if err != nil {
-		return nil, err
-	}
+	// err = check(tagname, checkLevel, schema)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	// tagname.settings = checker.settings
 	for _, list := range tagname.byType {
@@ -115,25 +127,30 @@ func Parse(s string, schemaName string) (*TTags, error) {
 	return tagname, nil
 }
 
-// Check -
-func Check(tagname *TTags, schemaName string) error {
-	if tagname == nil {
-		return fmt.Errorf("tagname is nil")
+// State -
+func (o *TTags) State() error {
+	if o == nil {
+		return fmt.Errorf("TTags object is nil")
 	}
-	schema, err := Schema(schemaName)
-	if err != nil {
-		return err
-	}
-	err = check(tagname, schema)
-	if err != nil {
-		return err
+	if o.schema == nil {
+		return fmt.Errorf("TTags object's schema is nil")
 	}
 	return nil
 }
 
+// Check -
+func (o *TTags) Check(isStrictCheck bool) error {
+	if err := o.State(); err != nil {
+		return err
+	}
+
+	err := checkTags(o, isStrictCheck)
+	return err
+}
+
 // ToString -
-func ToString(tagname *TTags, fromSchemaName, toSchemaName string) (string, error) {
-	if tagname == nil {
+func ToString(tags *TTags, fromSchemaName, toSchemaName string) (string, error) {
+	if tags == nil {
 		return "", fmt.Errorf("tagname is nil")
 	}
 	fromSchema, err := Schema(fromSchemaName)
@@ -144,6 +161,6 @@ func ToString(tagname *TTags, fromSchemaName, toSchemaName string) (string, erro
 	if err != nil {
 		return "", err
 	}
-	s, err := toString(tagname, fromSchema, toSchema)
+	s, err := toString(tags, fromSchema, toSchema)
 	return s, err
 }

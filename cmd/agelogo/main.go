@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/malashin/ffinfo"
@@ -33,11 +32,11 @@ type tItem struct {
 	msmk    string
 }
 
-func doProcess(filePath string) string {
+func doProcess(filePath string, checkLevel int) string {
 	defer retif.Catch()
 	log.Info("")
 	log.Info("processing: " + filePath)
-	tn, err := tagname.NewFromFilename(filePath)
+	tn, err := tagname.NewFromFilename(filePath, checkLevel)
 	retif.Error(err, "cannot parse filename")
 
 	schema := tn.Schema()
@@ -141,22 +140,22 @@ func doProcess(filePath string) string {
 }
 
 var (
-	pauseCmd    = ""
-	dstFileName = ""
-	ageLogoPath = ""
+	pauseCmd    = misc.PauseTerminalStr()
+	dstFileName = "#run_age" + misc.BatchFileExt()
+	ageLogoPath = os.Getenv(ageLogoPathEnv)
 )
 
-func init() {
-	ageLogoPath = os.Getenv(ageLogoPathEnv)
-	switch runtime.GOOS {
-	case "windows":
-		pauseCmd = "pause"
-		dstFileName = "#run_age.bat"
-	default:
-		pauseCmd = "read -n1 -r -p \"Press any key to continue...\" key"
-		dstFileName = "#run_age.bash"
-	}
-}
+// func init() {
+// 	ageLogoPath =
+// 	switch runtime.GOOS {
+// 	case "windows":
+// 		pauseCmd = "pause"
+// 		dstFileName = "#run_age" +
+// 	default:
+// 		pauseCmd = "read -n1 -r -p \"Press any key to continue...\" key"
+// 		dstFileName = "#run_age.bash"
+// 	}
+// }
 
 func main() {
 	// setup log
@@ -186,7 +185,7 @@ func main() {
 	args := os.Args[1:]
 	list := []string{}
 	for _, path := range args {
-		cmd := doProcess(path)
+		cmd := doProcess(path, tagname.CheckDeepStrict)
 		list = append(list, cmd)
 	}
 	list = append(list, pauseCmd)

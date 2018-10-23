@@ -47,7 +47,7 @@ postertype = 'poster' digit{digit} 'x' digit{digit};
 
 year     = digit digit digit digit;
 
-tags     = @INVALID_TAGS|@qtag|@atag|@stag|@agetag|@m4otag|@smktag|@sbstag|@mtag|@unktag;
+tags     = @INVALID_TAG|@qtag|@atag|@stag|@agetag|@m4otag|@smktag|@sbstag|@UNKNOWN_TAG;
 
 qtag     = 'q'digit('w'|'s')digit;
 atag     = 'a'letter digit{letter digit};
@@ -56,8 +56,7 @@ agetag   = '00'|'06'|'12'|'16'|'18'|'99';
 m4otag   = 'm4o';
 smktag   = 'msmoking'|'smoking';
 sbstag   = 'msbs'|'sbs';
-mtag     = 'm'symbol{symbol};
-unktag   = ident;
+UNKNOWN_TAG = symbol{symbol};
 
 ext      = ['.'ident];
 
@@ -108,7 +107,7 @@ func Schema(name string) (*TSchema, error) {
 	name = strings.ToLower(name)
 	ret, ok := globSchemas[name]
 	if !ok {
-		return nil, fmt.Errorf("%q is not registered settings name", name)
+		return nil, fmt.Errorf("%q is not a registered settings name", name)
 	}
 	return ret, nil
 }

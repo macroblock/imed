@@ -48,26 +48,28 @@ func isNotExist(table map[string]bool, typ string) bool {
 	return ok
 }
 
-func check(tagname *TTags, schema *TSchema) error {
+func checkTags(tags *TTags, isStrictCheck bool) error {
+	err := tags.State()
+	if err != nil {
+		return err
+	}
+	schema := tags.schema
 	o := schema.checker
 	for _, typ := range schema.MustHaveByType {
-		_, ok := tagname.byType[typ]
+		// fmt.Println("###")
+		_, ok := tags.byType[typ]
 		if !ok {
 			return fmt.Errorf("%q type does not exist", typ)
 		}
 	}
-	// for _, typ := range schema.NonUniqueByType {
-	// 	_, ok := o.tabNonUniqueType[typ]
-	// 	fmt.Println("#####", typ)
-	// 	if !ok {
-	// 		if len(tagname.byType[typ]) > 1 {
-	// 			fmt.Println("#####")
-	// 			return fmt.Errorf("%q type must be unique", typ)
-	// 		}
-	// 	}
-	// }
-	for typ, list := range tagname.byType {
-		if typ == "INVALID_TAGS" {
+	for typ, list := range tags.byType {
+		if typ == "UNKNOWN_TAG" {
+			if isStrictCheck {
+				return fmt.Errorf("UNKNOWN type tag(s) are present: %v", list)
+			}
+			continue
+		}
+		if typ == "INVALID_TAG" {
 			return fmt.Errorf("invalid tag(s) are present: %v", list)
 		}
 		if _, ok := o.tabNonUniqueType[typ]; !ok {
