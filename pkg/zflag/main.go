@@ -37,7 +37,6 @@ type TSection struct {
 
 // Interface -
 type Interface interface {
-	Prepare() error
 	Parse(*[]string) error
 	Keys() []string
 	Do()
@@ -59,12 +58,6 @@ func (o *TFlag) Do() {
 		o.cmd()
 	}
 }
-
-// Prepare -
-func (o *TFlag) Prepare() error { return nil }
-
-// Parse -
-func (o *TFlag) Parse(args *[]string) error { return nil }
 
 // Keys -
 func (o *TFlag) Keys() []string { return o.keys }
@@ -133,43 +126,85 @@ func New(keys string, variable interface{}, brief, usage, hint string) *TFlag {
 	return flag
 }
 
-// Prepare -
-func (o *TSection) Prepare() error {
-	if o.keyMap != nil {
-		return nil
+// ElemByKey -
+func ElemByKey(section *TSection, key string) Interface {
+	var ret Interface
+	for _, elem := range section.elements {
+		for _, k := range elem.Keys() {
+			if k == key {
+				return elem
+			}
+			if k == "" && ret == nil {
+				ret = elem
+			}
+		}
 	}
-	o.keyMap = map[string]Interface{}
-	for _, elem := range o.elements {
-		err := elem.Prepare()
+	return ret
+}
+
+// NextElem -
+func NextElem(section *TSection, args *[]string) (Interface, error) {
+	if len(*args) == 0 {
+		return nil, nil
+	}
+	key := (*args)[0]
+	ret := Interface(nil)
+	for _, elem := range section.elements {
+		for _, k := range elem.Keys() {
+			if k == key {
+				return elem, nil
+			}
+			if k == "" && ret == nil {
+				ret = elem
+			}
+		}
+	}
+	if ret == nil {
+		return nil, fmt.Errorf("section %q has an unsupported key %q", section.keys[0], key)
+	}
+	return ret, nil
+}
+
+// Parse -
+func (o *TSection) Parse(args *[]string) error {
+	if len(*args) == 0 {
+		return fmt.Errorf("%v", "not enough parameters")
+	}
+	*args = (*args)[1:]
+	elem, err := NextElem(o, args)
+	if err != nil {
+		return err
+	}
+	for elem != nil {
+		err := elem.Parse(args)
 		if err != nil {
 			return err
 		}
-		for _, key := range elem.Keys() {
-			_, ok := o.keyMap[key]
-			log.Warning(ok, fmt.Sprintf("section %q has duplicated key %q", o.keys[0], key))
-			o.keyMap[key] = elem
+		elem, err = NextElem(o, args)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
 // Parse -
-func (o *TSection) Parse(args *[]string) error {
-	err := o.Prepare()
-	if err != nil {
-		return err
+func (o *TFlag) Parse(args *[]string) error {
+	key := (*args)[0]
+	*args = (*args)[1:]
+	if t, ok := o.variable.(*bool); ok {
+		*t = true
 	}
-	for len(*args) > 0 {
-		elem, ok := o.keyMap[(*args)[0]]
-		if !ok {
-			return fmt.Errorf("section %q unsupported key %q", o.keys[0], (*args)[0])
-		}
-		args = (*args)[1:]
-		err := elem.Parse(args)
-		if err != nil {
-			return err
-		}
+	*args = (*args)[1:]
+	switch t := o.variable.(type) {
+	case *bool:
+		*t = true
+		return nil
+	case *string:
+		*t = arg
+	case *[]string:
+		*t = append(*t, arg)
 	}
-
+	*args = (*args)[1:]
 	return nil
 }
