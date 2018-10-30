@@ -1,4 +1,4 @@
-package flagset
+package cli
 
 import (
 	"errors"
@@ -13,6 +13,12 @@ var (
 	log = zlog.Instance("zflag")
 )
 
+const (
+	optInvalid tOptions = ^tOptions(0)
+	optNone    tOptions = 1 << iota
+	optTerminator
+)
+
 type (
 	// IElement -
 	IElement interface {
@@ -21,13 +27,14 @@ type (
 	// Interface -
 	Interface interface {
 		IElement
-		Parse(*[]string) error
-		Do()
+		Parse(*[]string, string) error
+		Do() (bool, error)
 		GetKeys() []string
 		GetBrief() string
 		GetUsage() string
 		GetHint() string
 		GetDoc() string
+		GetOption(tOptions) bool
 	}
 
 	// TFlag -
@@ -41,6 +48,7 @@ type (
 		usage    string
 		hint     string
 		doc      string
+		options  tOptions
 	}
 
 	// TCommand -
@@ -62,6 +70,8 @@ type (
 	}
 	tHint tUsage
 	tDoc  tUsage
+
+	tOptions uint
 )
 
 // ErrBreakExecutionWithNoError -
@@ -83,7 +93,7 @@ func New(brief string, fn func() error, elements ...IElement) *TFlagSet {
 
 // Parse -
 func (o *TFlagSet) Parse(args []string) error {
-	return o.root.Parse(&args)
+	return o.root.Parse(&args, "?")
 }
 
 // PrintHelp -
@@ -92,34 +102,25 @@ func (o *TFlagSet) PrintHelp() error {
 }
 
 // Elements -
-func (o *TFlagSet) Elements(elements ...Interface) *TFlagSet {
-	o.root.elements = elements
+func (o *TFlagSet) Elements(elements ...IElement) *TFlagSet {
+	initElements(&o.root, elements...)
 	return o
 }
 
 // Usage -
-func (o *TFlagSet) Usage(text string) *TFlagSet {
-	o.root.usage = text
-	return o
-}
+func (o *TFlagSet) Usage(text string) IElement { return Usage(text) }
 
 // Hint -
-func (o *TFlagSet) Hint(text string) *TFlagSet {
-	o.root.hint = text
-	return o
-}
-
-// Usage -
-func Usage(text string) IElement {
-	return &tUsage{text: text}
-}
-
-// Hint -
-func Hint(text string) IElement {
-	return &tHint{text: text}
-}
+func (o *TFlagSet) Hint(text string) IElement { return Hint(text) }
 
 // Doc -
-func Doc(text string) IElement {
-	return &tDoc{text: text}
-}
+func (o *TFlagSet) Doc(text string) IElement { return Doc(text) }
+
+// Usage -
+func Usage(text string) IElement { return &tUsage{text: text} }
+
+// Hint -
+func Hint(text string) IElement { return &tHint{text: text} }
+
+// Doc -
+func Doc(text string) IElement { return &tDoc{text: text} }

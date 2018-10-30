@@ -8,6 +8,7 @@ import (
 
 	"github.com/malashin/ffinfo"
 
+	"github.com/macroblock/imed/pkg/cli"
 	"github.com/macroblock/imed/pkg/misc"
 	"github.com/macroblock/imed/pkg/tagname"
 	"github.com/macroblock/imed/pkg/zlog/loglevel"
@@ -21,6 +22,13 @@ var (
 	log       = zlog.Instance("main")
 	retif     = log.Catcher()
 	logFilter = loglevel.Warning.OrLower()
+)
+
+var (
+	flagHelp   bool
+	flagStrict bool
+	flagDeep   bool
+	flagFiles  []string
 )
 
 type tItem struct {
@@ -139,25 +147,38 @@ func doProcess(filePath string, checkLevel int) string {
 	return ret
 }
 
+func mainFunc() error {
+
+	checkLevel := tagname.CheckNormal
+	if flagStrict {
+		checkLevel |= tagname.CheckStrict
+	}
+	if flagDeep {
+		checkLevel |= tagname.CheckDeep
+	}
+
+	list := []string{}
+	for _, path := range flagFiles {
+		cmd := doProcess(path, tagname.CheckDeepStrict)
+		list = append(list, cmd)
+	}
+	list = append(list, pauseCmd)
+
+	err := misc.SliceToFile(dstFileName, list)
+	if err != nil {
+		err = fmt.Errorf("cannot write to %q because of %v", dstFileName, err)
+	}
+	return err
+}
+
 var (
 	pauseCmd    = misc.PauseTerminalStr()
 	dstFileName = "#run_age" + misc.BatchFileExt()
 	ageLogoPath = os.Getenv(ageLogoPathEnv)
 )
 
-// func init() {
-// 	ageLogoPath =
-// 	switch runtime.GOOS {
-// 	case "windows":
-// 		pauseCmd = "pause"
-// 		dstFileName = "#run_age" +
-// 	default:
-// 		pauseCmd = "read -n1 -r -p \"Press any key to continue...\" key"
-// 		dstFileName = "#run_age.bash"
-// 	}
-// }
-
 func main() {
+	defer retif.Catch()
 	// setup log
 	newLogger := misc.NewSimpleLogger
 	if misc.IsTerminal() {
@@ -174,22 +195,25 @@ func main() {
 		}
 	}()
 
+	// command line interface
+	flagSet := cli.New("!PROG! the program that creates a script that burns agelogo for the specified files.", mainFunc)
+	flagSet.Elements(
+		cli.Usage("!PROG! [flags] {filename...}"),
+		cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
+		cli.Flag("-h -help   : help", &flagHelp).Terminator(),
+		cli.Flag("-s -strict : will raise an error on unknown tags.", &flagStrict),
+		cli.Flag("-d -deep   : will raise an error when a tag do not correspond to a real format.", &flagDeep),
+		cli.Flag(":", &flagFiles),
+	)
+
+	err := flagSet.Parse(os.Args)
+	retif.Error(err != nil, err)
+
 	// process command line arguments
-	if len(os.Args) <= 1 {
-		log.Warning(true, "not enough parameters")
-		log.Info("Usage:\n    agelogo {filename}\n")
-		return
+	if len(flagFiles) == 0 || flagHelp {
+		flagSet.PrintHelp()
+		if !flagHelp {
+			log.Warning(true, "not enough parameters\n")
+		}
 	}
-
-	// main job
-	args := os.Args[1:]
-	list := []string{}
-	for _, path := range args {
-		cmd := doProcess(path, tagname.CheckDeepStrict)
-		list = append(list, cmd)
-	}
-	list = append(list, pauseCmd)
-
-	err := misc.SliceToFile(dstFileName, list)
-	retif.Error(err, fmt.Sprintf("cannot write to %q", dstFileName))
 }
