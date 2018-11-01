@@ -204,10 +204,10 @@ func main() {
 	cmdLine := cli.New("!PROG! the program that creates a script that burns agelogo over the specified files.", mainFunc)
 	cmdLine.Elements(
 		cli.Usage("!PROG! {flags|<...>}"),
-		cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
+		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
 		cli.Flag("-h -help   : help", func() { flagHelp = true; cmdLine.PrintHelp() }).Terminator(),
-		cli.Flag("-s -strict : will raise an error when meets an unknown tag.", &flagStrict),
-		cli.Flag("-d -deep   : will raise an error when a tag do not correspond to a real format.", &flagDeep),
+		cli.Flag("-s -strict : raise an error on an unknown tag.", &flagStrict),
+		cli.Flag("-d -deep   : raise an error on a tag that does not correspond to a real format.", &flagDeep),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
 	)
