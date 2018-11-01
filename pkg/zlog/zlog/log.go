@@ -76,19 +76,18 @@ func (o *TLog) Add(logger ...*zlogger.TLogger) {
 }
 
 // Log -
-func (o *TLog) Log(level loglevel.TLevel, resetFilter loglevel.TFilter, err error, text ...interface{}) {
-	txt := fmt.Sprint(text...)
-	if txt == "" {
+func (o *TLog) Log(level loglevel.TLevel, resetFilter loglevel.TFilter, err error, text string) {
+	if text == "" {
 		if err == nil {
 			return
 		}
-		txt = err.Error()
+		text = err.Error()
 		err = nil
 	}
 	formatParams := zlogger.TFormatParams{
 		Time:       time.Now(),
 		LogLevel:   level,
-		Text:       txt,
+		Text:       text,
 		Error:      err,
 		State:      o.node.state,
 		ModuleName: o.name,
@@ -112,7 +111,7 @@ func (o *TLog) Log(level loglevel.TLevel, resetFilter loglevel.TFilter, err erro
 		}
 	}
 	if level == loglevel.Panic {
-		panic(fmt.Sprint(text...))
+		panic(text)
 	}
 }
 
@@ -135,7 +134,15 @@ func getErrorCondition(condition interface{}) (bool, error) {
 func (o *TLog) Panic(condition interface{}, text ...interface{}) {
 	ok, err := getErrorCondition(condition)
 	if ok || err != nil {
-		o.Log(loglevel.Panic, 0, err, text...)
+		o.Log(loglevel.Panic, 0, err, fmt.Sprint(text...))
+	}
+}
+
+// Panicf -
+func (o *TLog) Panicf(condition interface{}, format string, text ...interface{}) {
+	ok, err := getErrorCondition(condition)
+	if ok || err != nil {
+		o.Log(loglevel.Panic, 0, err, fmt.Sprintf(format, text...))
 	}
 }
 
@@ -143,7 +150,15 @@ func (o *TLog) Panic(condition interface{}, text ...interface{}) {
 func (o *TLog) Error(condition interface{}, text ...interface{}) {
 	ok, err := getErrorCondition(condition)
 	if ok || err != nil {
-		o.Log(loglevel.Error, 0, err, text...)
+		o.Log(loglevel.Error, 0, err, fmt.Sprint(text...))
+	}
+}
+
+// Errorf -
+func (o *TLog) Errorf(condition interface{}, format string, text ...interface{}) {
+	ok, err := getErrorCondition(condition)
+	if ok || err != nil {
+		o.Log(loglevel.Error, 0, err, fmt.Sprintf(format, text...))
 	}
 }
 
@@ -151,28 +166,56 @@ func (o *TLog) Error(condition interface{}, text ...interface{}) {
 func (o *TLog) Warning(condition interface{}, text ...interface{}) {
 	ok, err := getErrorCondition(condition)
 	if ok || err != nil {
-		o.Log(loglevel.Warning, 0, err, text...)
+		o.Log(loglevel.Warning, 0, err, fmt.Sprint(text...))
+	}
+}
+
+// Warningf -
+func (o *TLog) Warningf(condition interface{}, format string, text ...interface{}) {
+	ok, err := getErrorCondition(condition)
+	if ok || err != nil {
+		o.Log(loglevel.Warning, 0, err, fmt.Sprintf(format, text...))
 	}
 }
 
 // Reset -
 func (o *TLog) Reset(resetFilter loglevel.TFilter, text ...interface{}) {
-	o.Log(loglevel.Reset, resetFilter, nil, text...)
+	o.Log(loglevel.Reset, resetFilter, nil, fmt.Sprint(text...))
+}
+
+// Resetf -
+func (o *TLog) Resetf(resetFilter loglevel.TFilter, format string, text ...interface{}) {
+	o.Log(loglevel.Reset, resetFilter, nil, fmt.Sprintf(format, text...))
 }
 
 // Notice -
 func (o *TLog) Notice(text ...interface{}) {
-	o.Log(loglevel.Notice, 0, nil, text...)
+	o.Log(loglevel.Notice, 0, nil, fmt.Sprint(text...))
+}
+
+// Noticef -
+func (o *TLog) Noticef(format string, text ...interface{}) {
+	o.Log(loglevel.Notice, 0, nil, fmt.Sprintf(format, text...))
 }
 
 // Info -
 func (o *TLog) Info(text ...interface{}) {
-	o.Log(loglevel.Info, 0, nil, text...)
+	o.Log(loglevel.Info, 0, nil, fmt.Sprint(text...))
+}
+
+// Infof -
+func (o *TLog) Infof(format string, text ...interface{}) {
+	o.Log(loglevel.Info, 0, nil, fmt.Sprintf(format, text...))
 }
 
 // Debug -
 func (o *TLog) Debug(text ...interface{}) {
-	o.Log(loglevel.Debug, 0, nil, text...)
+	o.Log(loglevel.Debug, 0, nil, fmt.Sprint(text...))
+}
+
+// Debugf -
+func (o *TLog) Debugf(fomat string, text ...interface{}) {
+	o.Log(loglevel.Debug, 0, nil, fmt.Sprintf(fomat, text...))
 }
 
 // Catcher -

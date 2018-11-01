@@ -1,6 +1,10 @@
 package zlog
 
-import "github.com/macroblock/imed/pkg/zlog/loglevel"
+import (
+	"fmt"
+
+	"github.com/macroblock/imed/pkg/zlog/loglevel"
+)
 
 var throw bool
 
@@ -32,7 +36,7 @@ func (o *TCatcher) Return(condition interface{}) {
 func (o *TCatcher) Panic(condition interface{}, text ...interface{}) {
 	ok, err := getErrorCondition(condition)
 	if ok || err != nil {
-		o.log.Log(loglevel.Panic, 0, err, text...)
+		o.log.Log(loglevel.Panic, 0, err, fmt.Sprint(text...))
 		panic(catcherMessage)
 	}
 }
@@ -41,7 +45,7 @@ func (o *TCatcher) Panic(condition interface{}, text ...interface{}) {
 func (o *TCatcher) Error(condition interface{}, text ...interface{}) {
 	ok, err := getErrorCondition(condition)
 	if ok || err != nil {
-		o.log.Log(loglevel.Error, 0, err, text...)
+		o.log.Log(loglevel.Error, 0, err, fmt.Sprint(text...))
 		panic(catcherMessage)
 	}
 }
@@ -50,7 +54,7 @@ func (o *TCatcher) Error(condition interface{}, text ...interface{}) {
 func (o *TCatcher) Warning(condition interface{}, text ...interface{}) {
 	ok, err := getErrorCondition(condition)
 	if ok || err != nil {
-		o.log.Log(loglevel.Warning, 0, err, text...)
+		o.log.Log(loglevel.Warning, 0, err, fmt.Sprint(text...))
 		panic(catcherMessage)
 	}
 }
