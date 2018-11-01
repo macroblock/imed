@@ -61,13 +61,13 @@ func Command(desc string, fn func() error, elements ...IElement) *TCommand {
 	keys, brief := splitDesc(desc)
 	initCommand(&o, keys, brief, fn, elements...)
 	log.Warning(o.name == "", "command without a key(s)")
-	log.Warning(len(o.elements) == 0, "command without an argument(s)")
+	// log.Warning(len(o.elements) == 0, "command without an argument(s)")
 	return &o
 }
 
-func findKeyHandler(section *TCommand, args []string, stack []*TCommand) (Interface, string, error) {
+func findKeyHandler(section *TCommand, args []string, stack []Interface) (Interface, string, error) {
 	if len(args) == 0 {
-		return nil, "", fmt.Errorf("### what is this? ###")
+		return nil, "", internalErrorf("### what is this? ###")
 	}
 	key := args[0]
 	ret := Interface(nil)
@@ -84,13 +84,12 @@ func findKeyHandler(section *TCommand, args []string, stack []*TCommand) (Interf
 		}
 	}
 	if ret == nil {
-		return nil, "", fmt.Errorf("%van unsupported key %q",
-			commandPathPrefix(stack), args[0])
+		return nil, "", fmt.Errorf("%van unsupported key %q", commandPathPrefix(stack), args[0])
 	}
 	return ret, "", nil
 }
 
-func commandPathPrefix(stack []*TCommand) string {
+func commandPathPrefix(stack []Interface) string {
 	// for _, v := range stack {
 	// 	fmt.Printf("%v -", v.name)
 	// }
@@ -98,50 +97,60 @@ func commandPathPrefix(stack []*TCommand) string {
 	if len(stack) == 0 {
 		return ""
 	}
-	name := stack[len(stack)-1].name
-	if name == "" {
-		return ""
+	for i := 1; i < len(stack); i++ {
+		switch t := stack[len(stack)-i].(type) {
+		case *TCommand:
+			if t.name == "" {
+				return ""
+			}
+			return t.name + ": "
+		}
 	}
-	return name + ": "
+	return ""
 }
 
 // Parse -
-func (o *TCommand) Parse(args *[]string, key string) error {
+func (o *TCommand) Parse(args *[]string, key string) (string, error) {
 	// fmt.Println("command keys: ", o.keys)
 	if len(*args) == 0 {
-		return fmt.Errorf("%v", "something went wrong")
+		return "", internalErrorf("%v", "something went wrong")
 	}
 
 	cur := o
-	stack := []*TCommand{cur}
+	stack := []Interface{o}
 	if key != "" {
 		*args = (*args)[1:]
 	}
 	for len(*args) > 0 {
 		elem, key, err := findKeyHandler(cur, *args, stack)
 		if err != nil {
-			return err
+			return o.onError.Handle(err)
 		}
 
 		if t, ok := elem.(*TCommand); ok {
-			if terminate, err := cur.Do(); terminate {
-				return err
-			}
-			cur = t
-			stack = append(stack, cur)
+			// fmt.Println("enter command ", t.name)
+			stack = append(stack, t)
 			*args = (*args)[1:]
-			fmt.Println("enter command ", cur.name)
+			cur = t
 			continue
 		}
 
-		err = elem.Parse(args, key)
+		hint, err := elem.Parse(args, key)
 		if err != nil {
-			return fmt.Errorf("%v%v", commandPathPrefix(stack), err)
+			return hint, fmt.Errorf("%v%v", commandPathPrefix(stack), err)
 		}
-		if terminate, err := elem.Do(); terminate {
-			return err
+		// fmt.Println(elem.GetKeys())
+		stack = append(stack, elem)
+	}
+	err := error(nil)
+	for _, v := range stack {
+		terminate, err := v.Do()
+		if err != nil {
+			return o.onError.Handle(err)
+		}
+		if terminate {
+			break
 		}
 	}
-	_, err := stack[len(stack)-1].Do()
-	return err
+	return o.onError.Handle(err)
 }

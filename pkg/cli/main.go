@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,7 +26,7 @@ type (
 	// Interface -
 	Interface interface {
 		IElement
-		Parse(*[]string, string) error
+		Parse(*[]string, string) (string, error)
 		Do() (bool, error)
 		GetKeys() []string
 		GetBrief() string
@@ -49,6 +48,7 @@ type (
 		hint     string
 		doc      string
 		options  tOptions
+		onError  *tErrorHandler
 	}
 
 	// TCommand -
@@ -56,6 +56,7 @@ type (
 		TFlag
 		name     string
 		elements []Interface
+		postHint string
 	}
 
 	// TFlagSet -
@@ -64,6 +65,10 @@ type (
 		// options
 	}
 
+	tOnError struct {
+		IElement
+		val interface{}
+	}
 	tUsage struct {
 		IElement
 		text string
@@ -73,9 +78,6 @@ type (
 
 	tOptions uint
 )
-
-// ErrBreakExecutionWithNoError -
-var ErrBreakExecutionWithNoError = errors.New("break execution with no error")
 
 var programName string
 
@@ -88,12 +90,20 @@ func init() {
 func New(brief string, fn func() error, elements ...IElement) *TFlagSet {
 	o := &TFlagSet{}
 	initCommand(&o.root, nil, brief, fn, elements...)
+	o.root.setOption(optTerminator, false)
 	return o
 }
 
 // Parse -
 func (o *TFlagSet) Parse(args []string) error {
-	return o.root.Parse(&args, "?")
+	hint, err := o.root.Parse(&args, "?")
+	o.root.postHint = hint
+	return err
+}
+
+// GetHint -
+func (o *TFlagSet) GetHint() string {
+	return o.root.postHint
 }
 
 // PrintHelp -
@@ -124,3 +134,10 @@ func Hint(text string) IElement { return &tHint{text: text} }
 
 // Doc -
 func Doc(text string) IElement { return &tDoc{text: text} }
+
+// OnError -
+func OnError(arg interface{}) IElement {
+	o, err := newErrorHandler(arg)
+	log.Error(err)
+	return o
+}

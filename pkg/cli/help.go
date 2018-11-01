@@ -47,7 +47,7 @@ func defaultHelp(o *TCommand, args ...string) error {
 	for _, elem := range o.elements {
 		switch t := elem.(type) {
 		default:
-			return fmt.Errorf("something went wrong")
+			return internalErrorf("something went wrong")
 		case *TFlag:
 			flags = append(flags, t)
 		case *TCommand:
@@ -61,9 +61,7 @@ func defaultHelp(o *TCommand, args ...string) error {
 		compLine("\nThe commands are:\n", formatFlags(sections, optInvalid, ""), "\n"),
 		compLine("\n", o.GetHint(), "\n"),
 	)
-	text = strings.Replace(text, "!PROG!", programName, -1)
-
-	fmt.Print(text)
+	fmt.Print(Text(text))
 
 	return nil
 }

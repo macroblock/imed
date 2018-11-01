@@ -12,47 +12,6 @@ func (o *TFlag) Do() (bool, error) {
 	return o.GetOption(optTerminator), nil
 }
 
-func initElements(o Interface, elements ...IElement) {
-	flag := &TFlag{}
-	cmd := &TCommand{}
-	switch t := o.(type) {
-	default:
-		panic("something went wrong")
-	case *TFlag:
-		flag = t
-	case *TCommand:
-		cmd = t
-		flag = &t.TFlag
-	}
-	for _, elem := range elements {
-		text := ""
-		strPtr := (*string)(nil)
-		switch t := elem.(type) {
-		default:
-			log.Error(true, fmt.Sprintf("intiElements(any) got unsupported type of element %T", t))
-			panic("!!!!asdfasadf")
-		case *tUsage:
-			strPtr = &flag.usage
-			text = t.text
-		case *tHint:
-			strPtr = &flag.hint
-			text = t.text
-		case *tDoc:
-			strPtr = &flag.doc
-			text = t.text
-		case Interface:
-			log.Error(cmd == nil, fmt.Sprintf("initElements(command) got unsupported type of element %T", t))
-			if cmd == nil {
-				panic("!!!!")
-			}
-			cmd.elements = append(cmd.elements, t)
-		}
-		if strPtr != nil {
-			*strPtr = compLine("", *strPtr, "\n") + text
-		}
-	}
-}
-
 // Flag -
 func Flag(desc string, variable interface{}, elements ...IElement) *TFlag {
 	o := TFlag{}
@@ -73,9 +32,9 @@ func (o *TFlag) Terminator() *TFlag {
 }
 
 // Parse -
-func (o *TFlag) Parse(args *[]string, key string) error {
+func (o *TFlag) Parse(args *[]string, key string) (string, error) {
 	if len(*args) == 0 {
-		return fmt.Errorf("%v", "something went wrong")
+		return "", internalErrorf("%v", "something went wrong")
 	}
 	if key != "" {
 		// key = (*args)[0]
@@ -96,19 +55,19 @@ func (o *TFlag) Parse(args *[]string, key string) error {
 		err = t()
 	}
 	if ok {
-		return err
+		return o.onError.Handle(err)
 	}
 
 	// attempt to parse keys with an argument
 	if len(*args) == 0 {
-		return fmt.Errorf("a key %q of type %T without a parameter", key, o.variable)
+		return o.onError.Handle(fmt.Errorf("a key %q of type %T without a parameter", key, o.variable))
 	}
 	err = error(nil)
 	arg := (*args)[0]
 	*args = (*args)[1:]
 	switch t := o.variable.(type) {
 	default:
-		return fmt.Errorf("an unsupported key of type %T", o.variable)
+		return "", internalErrorf("an unsupported key of type %T", o.variable)
 	case *string:
 		*t = arg
 	case *[]string:
@@ -116,7 +75,7 @@ func (o *TFlag) Parse(args *[]string, key string) error {
 	case func(string) error:
 		err = t(arg)
 	}
-	return err
+	return o.onError.Handle(err)
 }
 
 // GetKeys -

@@ -72,6 +72,6 @@ func main() {
 
 	// wasError := false
 	for _, path := range args {
-		doProcess(path, schema, tagname.CheckDeepStrict)
+		doProcess(path, schema, tagname.CheckDeepNormal) //tagname.CheckDeepStrict)
 	}
 }
