@@ -150,8 +150,7 @@ func doProcess(filePath string, checkLevel int) string {
 func mainFunc() error {
 	if len(flagFiles) == 0 || flagHelp {
 		if !flagHelp {
-			log.Warning(true, "not enough parameters\n")
-			log.Info(cli.Text("Run '!PROG! -h' for usage.\n"))
+			return cli.ErrorNotEnoughArguments()
 		}
 	}
 
@@ -202,23 +201,19 @@ func main() {
 	}()
 
 	// command line interface
-	flagSet := cli.New("!PROG! the program that creates a script that burns agelogo over the specified files.", mainFunc)
-	flagSet.Elements(
-		cli.Usage("!PROG! [flags] {filename...}"),
+	cmdLine := cli.New("!PROG! the program that creates a script that burns agelogo over the specified files.", mainFunc)
+	cmdLine.Elements(
+		cli.Usage("!PROG! {flags|<...>}"),
 		cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
-		cli.Flag("-h -help   : help", func() { flagHelp = true; flagSet.PrintHelp() }).Terminator(),
-		cli.Flag("-s -strict : will raise an error on unknown tags.", &flagStrict),
+		cli.Flag("-h -help   : help", func() { flagHelp = true; cmdLine.PrintHelp() }).Terminator(),
+		cli.Flag("-s -strict : will raise an error when meets an unknown tag.", &flagStrict),
 		cli.Flag("-d -deep   : will raise an error when a tag do not correspond to a real format.", &flagDeep),
-		cli.Flag(":", &flagFiles),
+		cli.Flag(": files to be processed", &flagFiles),
+		cli.OnError("Run '!PROG! -h' for usage.\n"),
 	)
 
-	err := flagSet.Parse(os.Args)
-	retif.Error(err != nil, err)
+	err := cmdLine.Parse(os.Args)
 
-	// if len(flagFiles) == 0 || flagHelp {
-	// 	flagSet.PrintHelp()
-	// 	if !flagHelp {
-	// 		log.Warning(true, "not enough parameters\n")
-	// 	}
-	// }
+	log.Error(err)
+	log.Info(cmdLine.GetHint())
 }
