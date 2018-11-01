@@ -54,7 +54,7 @@ func main() {
 
 	fmt.Println("\n-----------")
 
-	args := []string{"progName", "--version", "aaaa", "-x", "subsection", "-s", "data", "xxxx"}
+	args := []string{"progName", "--version", "aaaa", "-x", "subsection", "-s", "data"}
 	fmt.Println(strings.Join(args, " "))
 
 	err = flagSet.Parse(args)

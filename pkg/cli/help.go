@@ -22,6 +22,9 @@ func formatFlags(elements []Interface, option tOptions, optionText string) strin
 	lines := []string{}
 	for _, elem := range elements {
 		keys := strings.Join(elem.GetKeys(), ", ")
+		if keys == "" {
+			keys = "<...>"
+		}
 		maxKeyStr = misc.MaxInt(maxKeyStr, len(keys))
 		lines = append(lines, keys)
 	}
@@ -36,7 +39,7 @@ func formatFlags(elements []Interface, option tOptions, optionText string) strin
 	}
 	ret := strings.Join(lines, "\n")
 	if printOptionText {
-		ret += compLine("\n", optionText, "")
+		ret += compLine("\n\n", optionText, "")
 	}
 	return ret
 }

@@ -24,7 +24,7 @@ type (
 func (o *tErrorHandler) IElementUniquePattern() {}
 
 func (o *tErrorHandler) Handle(err error) (string, error) {
-	if o == nil {
+	if o == nil || err == nil {
 		return "", err
 	}
 	switch err.(type) {

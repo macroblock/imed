@@ -117,7 +117,7 @@ func (o *TCommand) Parse(args *[]string, key string) (string, error) {
 	}
 
 	cur := o
-	stack := []Interface{o}
+	stack := []Interface{}
 	if key != "" {
 		*args = (*args)[1:]
 	}
@@ -129,7 +129,7 @@ func (o *TCommand) Parse(args *[]string, key string) (string, error) {
 
 		if t, ok := elem.(*TCommand); ok {
 			// fmt.Println("enter command ", t.name)
-			stack = append(stack, t)
+			stack = append(stack, cur)
 			*args = (*args)[1:]
 			cur = t
 			continue
@@ -142,6 +142,7 @@ func (o *TCommand) Parse(args *[]string, key string) (string, error) {
 		// fmt.Println(elem.GetKeys())
 		stack = append(stack, elem)
 	}
+	stack = append(stack, cur)
 	err := error(nil)
 	for _, v := range stack {
 		terminate, err := v.Do()
