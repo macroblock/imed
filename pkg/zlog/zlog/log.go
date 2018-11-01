@@ -77,14 +77,23 @@ func (o *TLog) Add(logger ...*zlogger.TLogger) {
 
 // Log -
 func (o *TLog) Log(level loglevel.TLevel, resetFilter loglevel.TFilter, err error, text ...interface{}) {
+	txt := fmt.Sprint(text...)
+	if txt == "" {
+		if err == nil {
+			return
+		}
+		txt = err.Error()
+		err = nil
+	}
 	formatParams := zlogger.TFormatParams{
 		Time:       time.Now(),
 		LogLevel:   level,
-		Text:       fmt.Sprint(text...),
+		Text:       txt,
 		Error:      err,
 		State:      o.node.state,
 		ModuleName: o.name,
 	}
+
 	o.node.state &^= resetFilter
 	o.node.state |= level.Only()
 
