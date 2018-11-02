@@ -121,10 +121,10 @@ func doProcess(filePath string, checkLevel int) string {
 	default:
 		retif.Error(fmt.Errorf("unreachable"))
 	case "HD", "3D":
-		strVCodec = "-vcodec libx264 -preset slow -b:v 32000k -bf 2 -refs 4 -level 4.2"
+		strVCodec = "-vcodec libx264 -preset slow -b:v 32000k -bf 2 -refs 4 -level 4.2 -pix_fmt yuv420p"
 		strACodec = "-acodec ac3 -ab 320k"
 	case "43", "169":
-		strVCodec = "-vcodec mpeg2video -b:v 11000k -maxrate 15000k -minrate 0 -bufsize 1835008 -rc_init_occupancy 600000 -g 12 -bf 2 -q:v 1"
+		strVCodec = "-vcodec mpeg2video -b:v 11000k -maxrate 15000k -minrate 0 -bufsize 1835008 -rc_init_occupancy 600000 -g 12 -bf 2 -q:v 1 -pix_fmt yuv420p"
 		strACodec = "-acodec mp2 -ab 320k"
 	}
 
@@ -134,13 +134,13 @@ func doProcess(filePath string, checkLevel int) string {
 		// workaround: replace windows backslashes to use it in ffmpeg filter
 		smkImg = strings.Replace(smkImg, "\\", "/", -1)
 		strSmoking = "; movie=" + smkImg + ",setsar=" + strSar + "[smoking]; " +
-			" anullsrc=r=48000:cl=2,atrim=end=5[silence]; [smoking][silence][v][a]concat=n=2:v=1:a=1[v][a]; [v]setsar=" + strSar + "[v]"
+			" anullsrc=r=48000:cl=mono,atrim=end=5,pan=2c|c0=c0|c1=c0[silence]; [smoking][silence][v][a]concat=n=2:v=1:a=1[v][a]; [v]setsar=" + strSar + "[v]"
 	}
 
 	logo := filepath.Join(ageLogoPath, age+"_"+logoPostfix+sbsPostfix+".mov")
 	// workaround: replace windows backslashes to use it in ffmpeg filter
 	logo = strings.Replace(logo, "\\", "/", -1)
-	ret := "ffmpeg -i \"" + filePath + "\" -filter_complex \"movie=" + logo + ",setsar=" + strSar +
+	ret := "fflite -i \"" + filePath + "\" -filter_complex \"movie=" + logo + ",setsar=" + strSar +
 		"[age]; [0:0][age]overlay=0:0:eof_action=pass[v]; [0:1]aresample=48000[a]" + strSmoking + "\" " +
 		" -map [v] " + strVCodec + " -map [a] " + strACodec + " " + newPath
 

@@ -60,14 +60,14 @@ func Command(desc string, fn func() error, elements ...IElement) *TCommand {
 
 	keys, brief := splitDesc(desc)
 	initCommand(&o, keys, brief, fn, elements...)
-	log.Warning(o.name == "", "command without a key(s)")
+	log.Warningf(o.name == "", "command without a key(s)")
 	// log.Warning(len(o.elements) == 0, "command without an argument(s)")
 	return &o
 }
 
 func findKeyHandler(section *TCommand, args []string, stack []Interface) (Interface, string, error) {
 	if len(args) == 0 {
-		return nil, "", internalErrorf("### what is this? ###")
+		return nil, "", internalError("### what is this? ###")
 	}
 	key := args[0]
 	ret := Interface(nil)
@@ -84,16 +84,17 @@ func findKeyHandler(section *TCommand, args []string, stack []Interface) (Interf
 		}
 	}
 	if ret == nil {
-		return nil, "", fmt.Errorf("%van unsupported key %q", commandPathPrefix(stack), args[0])
+		return nil, "", fmt.Errorf("%van unsupported key %q", commandPathPrefix(stack, key), args[0])
 	}
 	return ret, "", nil
 }
 
-func commandPathPrefix(stack []Interface) string {
+func commandPathPrefix(stack []Interface, key string) string {
 	// for _, v := range stack {
 	// 	fmt.Printf("%v -", v.name)
 	// }
-	fmt.Println(" ")
+	key = normKey(key)
+	// fmt.Println(" ")
 	if len(stack) == 0 {
 		return ""
 	}
@@ -101,19 +102,19 @@ func commandPathPrefix(stack []Interface) string {
 		switch t := stack[len(stack)-i].(type) {
 		case *TCommand:
 			if t.name == "" {
-				return ""
+				return key + ": "
 			}
-			return t.name + ": "
+			return t.name + "->" + key + ": "
 		}
 	}
-	return ""
+	return key + ": "
 }
 
 // Parse -
 func (o *TCommand) Parse(args *[]string, key string) (string, error) {
 	// fmt.Println("command keys: ", o.keys)
 	if len(*args) == 0 {
-		return "", internalErrorf("%v", "something went wrong")
+		return "", internalError("something went wrong")
 	}
 
 	cur := o
@@ -137,7 +138,7 @@ func (o *TCommand) Parse(args *[]string, key string) (string, error) {
 
 		hint, err := elem.Parse(args, key)
 		if err != nil {
-			return hint, fmt.Errorf("%v%v", commandPathPrefix(stack), err)
+			return hint, fmt.Errorf("%v%v", commandPathPrefix(stack, key), err)
 		}
 		// fmt.Println(elem.GetKeys())
 		stack = append(stack, elem)

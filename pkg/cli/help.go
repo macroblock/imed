@@ -50,7 +50,7 @@ func defaultHelp(o *TCommand, args ...string) error {
 	for _, elem := range o.elements {
 		switch t := elem.(type) {
 		default:
-			return internalErrorf("something went wrong")
+			log.Panic("something went wrong")
 		case *TFlag:
 			flags = append(flags, t)
 		case *TCommand:
@@ -60,7 +60,7 @@ func defaultHelp(o *TCommand, args ...string) error {
 	text := fmt.Sprintf("%v%v%v%v%v",
 		compLine("", o.GetBrief(), "\n"),
 		compLine("\nUsage:\n    ", o.GetUsage(), "\n"),
-		compLine("\nThe flags are:\n", formatFlags(flags, optTerminator, "* this flag terminates the working flow when it had been processed."), "\n"),
+		compLine("\nThe flags are:\n", formatFlags(flags, optTerminator, "* this flag causes to terminate the working flow when it had been processed."), "\n"),
 		compLine("\nThe commands are:\n", formatFlags(sections, optInvalid, ""), "\n"),
 		compLine("\n", o.GetHint(), "\n"),
 	)
