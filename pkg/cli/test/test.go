@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/macroblock/imed/pkg/zlog/zlog"
+
 	"github.com/macroblock/imed/pkg/cli"
 )
 
 var (
+	log   = zlog.Instance("main")
 	flagV bool
 	flagX bool
 	flagY bool
@@ -54,7 +57,7 @@ func main() {
 
 	fmt.Println("\n-----------")
 
-	args := []string{"progName", "--version", "aaaa", "-x", "subsection", "-s", "data"}
+	args := []string{"progName", "--version", "aaaa", "-x", "subsection", "-s"} //, "data"}
 	fmt.Println(strings.Join(args, " "))
 
 	err = flagSet.Parse(args)

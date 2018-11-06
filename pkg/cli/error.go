@@ -21,43 +21,9 @@ type (
 	}
 )
 
-func (o *tErrorHandler) IElementUniquePattern() {}
-
-func (o *tErrorHandler) Handle(err error) (string, error) {
-	if o == nil || err == nil {
-		return "", err
-	}
-	switch err.(type) {
-	case *tInternalError:
-		return "", err
-	}
-	return (*o)(err)
-}
-
-func internalPanic(msg string) {
-	log.Panic(fmt.Sprintf("#intrnal panic# %v", msg))
-}
-
-func internalPanicf(format string, a ...interface{}) {
-	log.Panic(fmt.Sprintf(format, a...))
-}
-
-func internalPanicErr(err error) {
-	if err != nil {
-		log.Panic(err)
-	}
-}
-
-func internalError(msg string) error {
-	return &tInternalError{msg: msg}
-}
-
-func internalErrorf(format string, a ...interface{}) error {
-	return internalError(fmt.Sprintf(format, a...))
-}
-
-func (o *tInternalError) Error() string {
-	return fmt.Sprint("#Internal error#  ", o.msg)
+// ErrorNotEnoughArguments -
+func ErrorNotEnoughArguments(s ...string) error {
+	return &TErrorNotEnoughArguments{msg: strings.Join(s, "")}
 }
 
 func (o *TErrorNotEnoughArguments) Error() string {
@@ -67,9 +33,16 @@ func (o *TErrorNotEnoughArguments) Error() string {
 	return fmt.Sprint(o.msg)
 }
 
-// ErrorNotEnoughArguments -
-func ErrorNotEnoughArguments(s ...string) error {
-	return &TErrorNotEnoughArguments{msg: strings.Join(s, "")}
+func internalErrorf(format string, a ...interface{}) error {
+	return internalError(fmt.Sprintf(format, a...))
+}
+
+func internalError(msg string) error {
+	return &tInternalError{msg: msg}
+}
+
+func (o *tInternalError) Error() string {
+	return fmt.Sprint("#Internal error#  ", o.msg)
 }
 
 func newErrorHandler(i interface{}) (*tErrorHandler, error) {
@@ -101,4 +74,17 @@ func newErrorHandler(i interface{}) (*tErrorHandler, error) {
 		o = func(err error) (string, error) { return Text(t), err }
 	}
 	return &o, nil
+}
+
+func (o *tErrorHandler) IElementUniquePattern() {}
+
+func (o *tErrorHandler) Handle(err error) (string, error) {
+	if o == nil || err == nil {
+		return "", err
+	}
+	switch err.(type) {
+	case *tInternalError:
+		return "", err
+	}
+	return (*o)(err)
 }

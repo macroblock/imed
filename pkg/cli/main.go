@@ -19,6 +19,11 @@ const (
 )
 
 type (
+	// IValue -
+	IValue interface {
+		String() string
+		Set(string) error
+	}
 	// IElement -
 	IElement interface {
 		IElementUniquePattern()

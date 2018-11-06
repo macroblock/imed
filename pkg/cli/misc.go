@@ -10,14 +10,24 @@ func Text(text string) string {
 	return text
 }
 
+func normKey(key string) string {
+	if key == "" {
+		return "<...>"
+	}
+	return key
+}
+
 func initElements(o Interface, elements ...IElement) {
 	flag := &TFlag{}
 	cmd := &TCommand{}
 	switch t := o.(type) {
 	default:
-		internalPanic("something went wrong")
+		log.Panic("something went wrong")
 	case *TFlag:
 		flag = t
+		// check func
+		_, _, err := getFunc("???", t.variable)
+		log.Panic(err)
 	case *TCommand:
 		cmd = t
 		flag = &t.TFlag
@@ -27,7 +37,7 @@ func initElements(o Interface, elements ...IElement) {
 		strPtr := (*string)(nil)
 		switch t := elem.(type) {
 		default:
-			internalPanicf("intiElements(any) got unsupported type of element %T", t)
+			log.Panicf(true, "intiElements(any) got unsupported type of element %T", t)
 		case *tErrorHandler:
 			flag.onError = t
 		case *tUsage:
@@ -40,9 +50,7 @@ func initElements(o Interface, elements ...IElement) {
 			strPtr = &flag.doc
 			text = t.text
 		case Interface:
-			if cmd == nil {
-				internalPanicf("initElements(flag) got unsupported type of element %T", t)
-			}
+			log.Panicf(cmd == nil, "initElements(flag) got unsupported type of element %T", t)
 			cmd.elements = append(cmd.elements, t)
 		}
 		if strPtr != nil {
