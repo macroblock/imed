@@ -101,10 +101,11 @@ func commandPathPrefix(stack []Interface, key string) string {
 	for i := 1; i < len(stack); i++ {
 		switch t := stack[len(stack)-i].(type) {
 		case *TCommand:
+			fmt.Printf("name %v\n", t.name)
 			if t.name == "" {
 				return key + ": "
 			}
-			return t.name + "->" + key + ": "
+			return fmt.Sprintf("%v %v: ", t.name, key)
 		}
 	}
 	return key + ": "
@@ -127,21 +128,19 @@ func (o *TCommand) Parse(args *[]string, key string) (string, error) {
 		if err != nil {
 			return o.onError.Handle(err)
 		}
+		stack = append(stack, elem)
 
-		if t, ok := elem.(*TCommand); ok {
+		switch t := elem.(type) {
+		default:
+			hint, err := elem.Parse(args, key)
+			if err != nil {
+				return hint, fmt.Errorf("%v%v", commandPathPrefix(stack, key), err)
+			}
+		case *TCommand:
 			// fmt.Println("enter command ", t.name)
-			stack = append(stack, cur)
 			*args = (*args)[1:]
 			cur = t
-			continue
 		}
-
-		hint, err := elem.Parse(args, key)
-		if err != nil {
-			return hint, fmt.Errorf("%v%v", commandPathPrefix(stack, key), err)
-		}
-		// fmt.Println(elem.GetKeys())
-		stack = append(stack, elem)
 	}
 	stack = append(stack, cur)
 	err := error(nil)
