@@ -27,6 +27,7 @@ func initElements(o Interface, elements ...IElement) {
 		flag = t
 		// check func
 		_, _, err := getFunc("???", t.variable)
+		log.Error(err)
 		log.Panic(err)
 	case *TCommand:
 		cmd = t

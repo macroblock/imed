@@ -49,6 +49,7 @@ func newErrorHandler(i interface{}) (*tErrorHandler, error) {
 	o := tErrorHandler(nil)
 	switch t := i.(type) {
 	default:
+		log.Warningf(true, "tOnError got unsupported type %T", i)
 		return nil, internalErrorf("tOnError got unsupported type %T", i)
 	case nil:
 		o = func(err error) (string, error) { return "", err }

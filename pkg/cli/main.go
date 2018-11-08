@@ -116,6 +116,13 @@ func (o *TFlagSet) PrintHelp() error {
 	return o.root.PrintHelp()
 }
 
+// PrintHelpFunc -
+func (o *TFlagSet) PrintHelpFunc() func() error {
+	return func() error {
+		return o.root.PrintHelp()
+	}
+}
+
 // Elements -
 func (o *TFlagSet) Elements(elements ...IElement) *TFlagSet {
 	initElements(&o.root, elements...)

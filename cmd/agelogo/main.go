@@ -25,7 +25,7 @@ var (
 )
 
 var (
-	flagHelp   bool
+	// flagHelp   bool
 	flagStrict bool
 	flagDeep   bool
 	flagFiles  []string
@@ -148,10 +148,10 @@ func doProcess(filePath string, checkLevel int) string {
 }
 
 func mainFunc() error {
-	if len(flagFiles) == 0 || flagHelp {
-		if !flagHelp {
-			return cli.ErrorNotEnoughArguments()
-		}
+	if len(flagFiles) == 0 { //|| flagHelp {
+		// if !flagHelp {
+		return cli.ErrorNotEnoughArguments()
+		// }
 	}
 
 	checkLevel := tagname.CheckNormal
@@ -205,7 +205,7 @@ func main() {
 	cmdLine.Elements(
 		cli.Usage("!PROG! {flags|<...>}"),
 		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
-		cli.Flag("-h -help   : help", func() { flagHelp = true; cmdLine.PrintHelp() }).Terminator(),
+		cli.Flag("-h -help   : help", cmdLine.PrintHelp).Terminator(), // Why this is works ?
 		cli.Flag("-s -strict : raise an error on an unknown tag.", &flagStrict),
 		cli.Flag("-d -deep   : raise an error on a tag that does not correspond to a real format.", &flagDeep),
 		cli.Flag(": files to be processed", &flagFiles),
