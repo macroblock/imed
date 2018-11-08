@@ -10,16 +10,32 @@ var throw bool
 
 const catcherMessage = "TCatcher: you forgot 'defer xxx.Catch()'"
 
-// TCatcher -
-type TCatcher struct {
-	log    *TLog
-	thrown bool
+type (
+	// TCatcher -
+	TCatcher struct {
+		log    *TLog
+		thrown bool
+	}
+
+	tCatcherError struct {
+	}
+)
+
+// Error() -
+func (o *tCatcherError) Error() string {
+	return catcherMessage
 }
 
 // Catch -
 func (o *TCatcher) Catch() {
 	if r := recover(); r != nil {
 		//o.log.Debug("TCatcher: catched")
+		switch r.(type) {
+		case *tCatcherError:
+			r = nil
+			return
+		}
+		panic(r)
 	}
 }
 
@@ -28,7 +44,7 @@ func (o *TCatcher) Return(condition interface{}) {
 	ok, err := getErrorCondition(condition)
 	if ok || err != nil {
 		// o.log.Log(loglevel.Panic, 0, err, text...)
-		panic(catcherMessage)
+		panic(&tCatcherError{})
 	}
 }
 
@@ -37,7 +53,7 @@ func (o *TCatcher) Panic(condition interface{}, text ...interface{}) {
 	ok, err := getErrorCondition(condition)
 	if ok || err != nil {
 		o.log.Log(loglevel.Panic, 0, err, fmt.Sprint(text...))
-		panic(catcherMessage)
+		panic(&tCatcherError{})
 	}
 }
 
@@ -46,7 +62,7 @@ func (o *TCatcher) Error(condition interface{}, text ...interface{}) {
 	ok, err := getErrorCondition(condition)
 	if ok || err != nil {
 		o.log.Log(loglevel.Error, 0, err, fmt.Sprint(text...))
-		panic(catcherMessage)
+		panic(&tCatcherError{})
 	}
 }
 
@@ -55,7 +71,7 @@ func (o *TCatcher) Warning(condition interface{}, text ...interface{}) {
 	ok, err := getErrorCondition(condition)
 	if ok || err != nil {
 		o.log.Log(loglevel.Warning, 0, err, fmt.Sprint(text...))
-		panic(catcherMessage)
+		panic(&tCatcherError{})
 	}
 }
 

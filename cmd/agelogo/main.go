@@ -42,7 +42,7 @@ type tItem struct {
 
 func doProcess(filePath string, checkLevel int) string {
 	defer retif.Catch()
-	log.Info("")
+	log.Info(" ")
 	log.Info("processing: " + filePath)
 	tn, err := tagname.NewFromFilename(filePath, checkLevel)
 	retif.Error(err, "cannot parse filename")

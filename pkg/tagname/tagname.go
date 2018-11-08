@@ -3,6 +3,7 @@ package tagname
 import (
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -40,6 +41,7 @@ func NewFromString(str string, checkLevel int, schemaNames ...string) (*TTagname
 	}
 
 	tn := &TTagname{schema: schema, src: str, tags: tags}
+
 	err = tn.Check(checkLevel)
 	if err != nil {
 		return nil, err
@@ -163,4 +165,142 @@ func (o *TTagname) SetTag(typ string, val string) {
 // Schema -
 func (o *TTagname) Schema() string {
 	return o.schema
+}
+
+// GetFormat -
+func (o *TTagname) GetFormat() (string, error) {
+	return o.GetTag("sdhd")
+}
+
+// GetType -
+func (o *TTagname) GetType() (string, error) {
+	return o.GetTag("type")
+}
+
+// TQuality -
+type TQuality struct {
+	Quality    int
+	Widescreen bool
+	CacheType  int
+}
+
+// GetQuality -
+func (o *TTagname) GetQuality() (*TQuality, error) {
+	q, err := o.GetTag("qtag")
+	if err != nil {
+		return nil, nil
+	}
+	quality, err := strconv.Atoi(string(q[1]))
+	if err != nil {
+		panic(err)
+	}
+	cachetype, err := strconv.Atoi(string(q[3]))
+	if err != nil {
+		panic(err)
+	}
+	wide := false
+	switch q[2] {
+	default:
+		panic("unreachable")
+	case 'w':
+		wide = true
+	case 's':
+		wide = false
+	}
+	return &TQuality{Quality: quality, Widescreen: wide, CacheType: cachetype}, nil
+}
+
+// GetAudio -
+func (o *TTagname) GetAudio() (string, error) {
+	val, err := o.GetTag("atag")
+	if err != nil {
+		// trying to describe by format and type
+		typ, err1 := o.GetType()
+		frm, err2 := o.GetFormat()
+		if err1 != nil || err2 != nil {
+			return "", fmt.Errorf("%v", "cannot get audio tag (fomat or/and type tags are missing)")
+		}
+
+		if typ != "film" && typ != "trailer" {
+			return "", fmt.Errorf("%v", "cannot get audio tag (fomat or/and type tags are missing)")
+		}
+		val = "ar2"
+		if frm != "sd" && typ == "film" {
+			val = "ar6"
+		}
+	}
+	return val, nil
+}
+
+// GetSubtitle -
+func (o *TTagname) GetSubtitle() (string, error) {
+	val, err := o.GetTag("stag")
+	if err != nil {
+		return "s", nil
+	}
+	return val, nil
+}
+
+// TResolution -
+type TResolution struct {
+	W, H int
+}
+
+func (o TResolution) String() string {
+	return fmt.Sprintf("%vx%v", o.W, o.H)
+}
+
+// TFormat -
+type TFormat struct {
+	resolution TResolution
+	Sar        string
+	Audio      string
+	Subtitle   string
+	Quality    int
+	CacheType  int
+	Sbs        bool
+}
+
+func newFormat() *TFormat {
+	return &TFormat{resolution: TResolution{-1, -1}, Quality: -1, CacheType: 0, Sbs: false}
+}
+
+// Describe -
+func (o *TTagname) Describe() (*TFormat, error) {
+	format := newFormat()
+	quality, err := o.GetQuality()
+	if err != nil {
+		return nil, err
+	}
+
+	frm, err := o.GetFormat()
+	switch frm {
+	default:
+		if err == nil {
+			err = fmt.Errorf("unsupported format %q of the tagname %v", frm, o.src)
+		}
+		return nil, err
+	case "hd", "3d":
+		format.resolution = TResolution{1920, 1080}
+		format.Sar = "1:1"
+	case "sd":
+		format.resolution = TResolution{720, 576}
+		format.Sar = "16:15"
+		if quality.Widescreen {
+			format.Sar = "64:45"
+		}
+	}
+
+	format.Audio, err = o.GetAudio()
+	if err != nil {
+		return nil, err
+	}
+	format.Subtitle, err = o.GetSubtitle()
+	if err != nil {
+		return nil, err
+	}
+
+	format.Quality = quality.Quality
+	format.CacheType = quality.CacheType
+	return format, nil
 }
