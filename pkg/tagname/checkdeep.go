@@ -54,7 +54,7 @@ func checkDeep(tagname *TTagname) error {
 				case "", "0:1":
 					sar = "1:1"
 				}
-				if format.Sar != sar {
+				if format.Sar != "" && format.Sar != sar {
 					return fmt.Errorf(fmtCheckError("SAR", format.Sar, sar, tagname.src))
 				}
 			case "audio":
@@ -66,8 +66,11 @@ func checkDeep(tagname *TTagname) error {
 			}
 		}
 
-		if len(realA) == 3 && (realA[1] == '-' || realA[1] == 'e') {
-			realA = fmt.Sprintf("%vr%v", string(realA[0]), string(realA[2]))
+		if len(realA) == 3 && realA[1] != '-' {
+			realA = fmt.Sprintf("a-%v", string(realA[2]))
+		}
+		if len(format.Audio) == 3 && format.Audio[1] != '-' {
+			format.Audio = fmt.Sprintf("a-%v", string(format.Audio[2]))
 		}
 		if format.Audio != realA {
 			return fmt.Errorf(fmtCheckError("audio", format.Audio, realA, tagname.src))

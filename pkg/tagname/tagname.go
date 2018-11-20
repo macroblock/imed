@@ -188,7 +188,7 @@ type TQuality struct {
 func (o *TTagname) GetQuality() (*TQuality, error) {
 	q, err := o.GetTag("qtag")
 	if err != nil {
-		return nil, nil
+		return nil, fmt.Errorf("qtag is absent")
 	}
 	quality, err := strconv.Atoi(string(q[1]))
 	if err != nil {
@@ -262,16 +262,16 @@ type TFormat struct {
 }
 
 func newFormat() *TFormat {
-	return &TFormat{resolution: TResolution{-1, -1}, Quality: -1, CacheType: 0, Sbs: false}
+	return &TFormat{resolution: TResolution{-1, -1}, Quality: -1, CacheType: -1, Sbs: false}
 }
 
 // Describe -
 func (o *TTagname) Describe() (*TFormat, error) {
 	format := newFormat()
 	quality, err := o.GetQuality()
-	if err != nil {
-		return nil, err
-	}
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	frm, err := o.GetFormat()
 	switch frm {
@@ -285,6 +285,9 @@ func (o *TTagname) Describe() (*TFormat, error) {
 		format.Sar = "1:1"
 	case "sd":
 		format.resolution = TResolution{720, 576}
+		if quality == nil {
+			break
+		}
 		format.Sar = "16:15"
 		if quality.Widescreen {
 			format.Sar = "64:45"
@@ -300,7 +303,9 @@ func (o *TTagname) Describe() (*TFormat, error) {
 		return nil, err
 	}
 
-	format.Quality = quality.Quality
-	format.CacheType = quality.CacheType
+	if quality != nil {
+		format.Quality = quality.Quality
+		format.CacheType = quality.CacheType
+	}
 	return format, nil
 }

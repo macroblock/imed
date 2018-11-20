@@ -40,6 +40,15 @@ type tItem struct {
 	msmk    string
 }
 
+func in(what string, where ...string) bool {
+	for _, s := range where {
+		if what == s {
+			return true
+		}
+	}
+	return false
+}
+
 func doProcess(filePath string, checkLevel int) string {
 	defer retif.Catch()
 	log.Info(" ")
@@ -53,8 +62,9 @@ func doProcess(filePath string, checkLevel int) string {
 	retif.Error(err, "cannot get 'agetag' tag")
 	sdhd, err := tn.GetTag("sdhd")
 	retif.Error(err, "cannot get 'sdhd' tag")
+
 	qtag, err := tn.GetTag("qtag")
-	retif.Error(err, "cannot get 'qtag' tag")
+
 	tn.RemoveTags("agetag")
 	newPath, err := tn.ConvertTo(schema)
 	retif.Error(err, "cannot convert to '"+schema+"' schema")
@@ -108,11 +118,14 @@ func doProcess(filePath string, checkLevel int) string {
 	retif.Error(err)
 	strSar := strings.Replace(sar, ":", "/", -1) // x:y -> x/y
 
-	x := qtag[2]
-	if x != 'w' && x != 's' ||
-		x == 'w' && (logoPostfix != "169" && logoPostfix != "HD" && logoPostfix != "3D") ||
-		x == 's' && logoPostfix != "43" {
-		retif.Error(fmt.Errorf("wrong qtag %q for video %v", qtag, logoPostfix))
+	x := "-"
+	if qtag != "" {
+		x = string(qtag[2])
+	}
+	if !(x == "-" ||
+		x == "s" && in(logoPostfix, "43") ||
+		x == "w" && in(logoPostfix, "169", "HD", "3D")) {
+		retif.Error(fmt.Errorf("wrong qtag %q for %v video", qtag, logoPostfix))
 	}
 
 	strVCodec := "#error#"
@@ -148,10 +161,8 @@ func doProcess(filePath string, checkLevel int) string {
 }
 
 func mainFunc() error {
-	if len(flagFiles) == 0 { //|| flagHelp {
-		// if !flagHelp {
+	if len(flagFiles) == 0 {
 		return cli.ErrorNotEnoughArguments()
-		// }
 	}
 
 	checkLevel := tagname.CheckNormal
@@ -205,7 +216,7 @@ func main() {
 	cmdLine.Elements(
 		cli.Usage("!PROG! {flags|<...>}"),
 		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
-		cli.Flag("-h -help   : help", cmdLine.PrintHelp).Terminator(), // Why this is works ?
+		cli.Flag("-h -help   : help", cmdLine.PrintHelp).Terminator(), // Why is this works ?
 		cli.Flag("-s -strict : raise an error on an unknown tag.", &flagStrict),
 		cli.Flag("-d -deep   : raise an error on a tag that does not correspond to a real format.", &flagDeep),
 		cli.Flag(": files to be processed", &flagFiles),
