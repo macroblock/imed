@@ -389,6 +389,14 @@ func (o *TProgMaker) localCompile(pm *TProgMaker, toFail *TLabel, root *TNode, e
 		// fmt.Println("#range: ", a, b)
 		pm.Emit(opCHECKRANGE, [2]rune{a, b})
 		pm.Emit(opJZ, toFail)
+	case cEscaped:
+		a, err := o.getRuneFromTerm(root.Links[0])
+		if err != nil {
+			return nil, fmt.Errorf("escaped parameter: %v", err)
+		}
+		// fmt.Println("#range: ", a, b)
+		pm.Emit(opCHECKRUNE, a)
+		pm.Emit(opJZ, toFail)
 	case cEOF:
 		// fmt.Println("#EOF")
 		pm.Emit(opCHECKRUNE, RuneEOF)

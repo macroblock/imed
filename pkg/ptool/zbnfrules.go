@@ -178,13 +178,15 @@ func makeZBNFRules() *TBuilder {
 			NewNode(fn(cIdent), cNoSpace),
 			NewNode(fn(cString), "#"),
 		),
-		// range = @singleTerm '..' @singleTerm
+		// range = @singleTerm [ '..' @singleTerm ]
 		NewNode(fn(cStmt), "",
 			NewNode(fn(cIdent), cRange),
 			NewNode(fn(cAnd), "",
 				NewNode(fn(cIdent), "singleTerm"),
+				// NewNode(fn(cMaybe), "",
 				NewNode(fn(cString), ".."),
 				NewNode(fn(cIdent), "singleTerm"),
+				// ),
 			),
 		),
 		// escaped =  '\x'#@hex8
@@ -198,7 +200,7 @@ func makeZBNFRules() *TBuilder {
 				),
 			),
 		),
-		// anyRune  = '\x00'..'\xff'
+		// anyRune  = '\x00' ..'\xff'
 		NewNode(fn(cStmt), "",
 			NewNode(fn(cIdent), "anyRune"),
 			NewNode(fn(cRange), "",
@@ -237,12 +239,14 @@ func makeZBNFRules() *TBuilder {
 				),
 			),
 		),
-		// singleTerm  =  content | escaped | @EOF
+		// singleTerm  =  content | @escaped | @EOF
 		NewNode(fn(cStmt), "",
 			NewNode(fn(cIdent), "singleTerm"),
 			NewNode(fn(cOr), "",
 				NewNode(fn(cIdent), "content"),
-				NewNode(fn(cIdent), cEscaped),
+				NewNode(fn(cKeep), "",
+					NewNode(fn(cIdent), cEscaped),
+				),
 				NewNode(fn(cKeep), "",
 					NewNode(fn(cIdent), cEOF),
 				),
