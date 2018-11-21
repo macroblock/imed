@@ -239,20 +239,20 @@ func makeZBNFRules() *TBuilder {
 				),
 			),
 		),
-		// singleTerm  =  content | @escaped | @EOF
+		// singleTerm  =  content | escaped | @EOF
 		NewNode(fn(cStmt), "",
 			NewNode(fn(cIdent), "singleTerm"),
 			NewNode(fn(cOr), "",
 				NewNode(fn(cIdent), "content"),
-				NewNode(fn(cKeep), "",
-					NewNode(fn(cIdent), cEscaped),
-				),
+				// NewNode(fn(cKeep), "",
+				NewNode(fn(cIdent), cEscaped),
+				// ),
 				NewNode(fn(cKeep), "",
 					NewNode(fn(cIdent), cEOF),
 				),
 			),
 		),
-		// term  =  @range | content | escaped | @EOF
+		// term  =  @range | singleTerm
 		NewNode(fn(cStmt), "",
 			NewNode(fn(cIdent), "term"),
 			NewNode(fn(cOr), "",
