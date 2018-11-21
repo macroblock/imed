@@ -186,7 +186,7 @@ func (o *TParser) Parse(src string, entry ...string) (*TNode, error) {
 		switch instr.opcode {
 		default:
 			o.log("illegal", ip, "", "")
-			return nil, fmtError("illegal instruction")
+			return tree, fmtError("illegal instruction")
 		case opNOP:
 			o.log("nop", ip, "", "")
 		case opEND:
@@ -198,7 +198,7 @@ func (o *TParser) Parse(src string, entry ...string) (*TNode, error) {
 				if expected {
 					prefix = "unexpected"
 				}
-				return nil, fmt.Errorf("[%06x] (l:%v, c:%v): %v %q", errpos.offs, errpos.line, errpos.col, prefix, errpos.r)
+				return tree, fmt.Errorf("[%06x] (l:%v, c:%v): %v %q", errpos.offs, errpos.line, errpos.col, prefix, errpos.r)
 			}
 			return tree, nil
 		case opJMP:
@@ -253,7 +253,7 @@ func (o *TParser) Parse(src string, entry ...string) (*TNode, error) {
 			fs = fs[:len(fs)-1]
 			err := o.restorePos()
 			if err != nil {
-				return nil, fmtError(err)
+				return tree, fmtError(err)
 			}
 		case opRELEASE:
 			o.log("release", ip, "", "")
@@ -266,7 +266,7 @@ func (o *TParser) Parse(src string, entry ...string) (*TNode, error) {
 			o.cpos = fs[len(fs)-1]
 			err := o.restorePos()
 			if err != nil {
-				return nil, fmtError(err)
+				return tree, fmtError(err)
 			}
 		case opPUSHNODE:
 			o.log("pushnode", ip, instr.data, "")
@@ -285,7 +285,7 @@ func (o *TParser) Parse(src string, entry ...string) (*TNode, error) {
 			if len(cnode.Links) == 0 {
 				cnode.Value, err = o.readStringFrom(&pos)
 				if err != nil {
-					return nil, fmtError(err)
+					return tree, fmtError(err)
 				}
 			}
 			x := cnode
