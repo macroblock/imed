@@ -2,19 +2,12 @@ package tagname
 
 import (
 	"fmt"
+	"math"
+	"strconv"
+	"strings"
 
 	"github.com/malashin/ffinfo"
 )
-
-var langMap = map[string]string{"rus": "r", "eng": "e"}
-
-func convLang(lang string) string {
-	ok := false
-	if lang, ok = langMap[lang]; !ok {
-		lang = "-"
-	}
-	return lang
-}
 
 func checkDeep(tagname *TTagname) error {
 	typ, err := tagname.GetType()
@@ -37,13 +30,31 @@ func checkDeep(tagname *TTagname) error {
 			return err
 		}
 
-		realA := "a"
-		realS := "s"
-		for _, s := range file.Streams {
+		type tduration struct {
+			idx int
+			dur float64
+		}
+		duration := []tduration{}
+		videoDur := tduration{}
+		realA := []TAudio{}
+		realS := []string{}
+		for index, s := range file.Streams {
+			// dur, _ := file.StreamDuration(index)
+			// fmt.Printf("#%v: %v\n", index, dur)
 			switch s.CodecType {
 			default:
 				return fmt.Errorf(fmtCheckError("unsupported codec type", s.CodecType, "", tagname.src))
 			case "video":
+				dur, err := file.StreamDuration(index)
+				if dur < 0 {
+					return fmt.Errorf("stream #%v of file %q: %v", index, tagname.src, err)
+				}
+				log.Warningf(err, tagname.src)
+				videoDur = tduration{idx: index, dur: dur}
+
+				if index != 0 {
+					return fmt.Errorf(fmtCheckError("index of the video stream", "0", strconv.Itoa(index), tagname.src))
+				}
 				realRes := TResolution{s.Width, s.Height}
 				if format.resolution != realRes {
 					return fmt.Errorf(fmtCheckError("resolution", format.resolution.String(), realRes.String(), tagname.src))
@@ -58,28 +69,68 @@ func checkDeep(tagname *TTagname) error {
 					return fmt.Errorf(fmtCheckError("SAR", format.Sar, sar, tagname.src))
 				}
 			case "audio":
-				lang := convLang(s.Tags.Language)
-				realA += fmt.Sprintf("%v%v", lang, s.Channels)
+				dur, err := file.StreamDuration(index)
+				if dur < 0 {
+					return fmt.Errorf("get stream duration of stream #%v of file %q: %v", index, tagname.src, err)
+				}
+				log.Warningf(err, tagname.src)
+				duration = append(duration, tduration{idx: index, dur: dur})
+
+				lang := s.Tags.Language
+				if lang == "" || len(lang) != 3 {
+					lang = "---"
+				}
+				realA = append(realA, TAudio{lang, s.Channels})
 			case "subtitle":
-				lang := convLang(s.Tags.Language)
-				realS += fmt.Sprintf("%v", lang)
+				lang := s.Tags.Language
+				if lang == "" || len(lang) != 3 {
+					lang = "---"
+				}
+				realS = append(realS, lang)
 			}
 		}
 
-		if len(realA) == 3 && realA[1] != '-' {
-			realA = fmt.Sprintf("a-%v", string(realA[2]))
+		if len(realA) == 1 && realA[0].language != "---" {
+			realA[0].language = "---"
 		}
-		if len(format.Audio) == 3 && format.Audio[1] != '-' {
-			format.Audio = fmt.Sprintf("a-%v", string(format.Audio[2]))
+		if len(format.Audio) == 1 && format.Audio[0].language != "---" {
+			format.Audio[0].language = "---"
 		}
-		if format.Audio != realA {
-			return fmt.Errorf(fmtCheckError("audio", format.Audio, realA, tagname.src))
+		a1 := audioToStr(format.Audio)
+		a2 := audioToStr(realA)
+		if a1 != a2 {
+			return fmt.Errorf(fmtCheckError("audio", a1, a2, tagname.src))
 		}
-		if format.Subtitle != realS {
-			return fmt.Errorf(fmtCheckError("subtitle", format.Subtitle, realS, tagname.src))
+		s1 := strings.Join(format.Subtitle, " ")
+		s2 := strings.Join(realS, " ")
+		if s1 != s2 {
+			return fmt.Errorf(fmtCheckError("subtitle", s1, s2, tagname.src))
 		}
-	}
+
+		ok := true
+		for _, v := range duration {
+			if math.Abs(videoDur.dur-v.dur) > 0.080 {
+				ok = false
+			}
+		}
+		if !ok {
+			errStr := "different stream duration:"
+			for _, v := range duration {
+				diff := math.Abs(videoDur.dur - v.dur)
+				errStr += fmt.Sprintf("\n            #%v: %.4f seconds (%+.4f)", v.idx, v.dur, diff)
+			}
+			return fmt.Errorf(errStr)
+		}
+	} // switch typ
 	return nil
+}
+
+func audioToStr(a []TAudio) string {
+	ret := ""
+	for _, v := range a {
+		ret += fmt.Sprintf("%v%v", v.language, v.channels)
+	}
+	return ret
 }
 
 func fmtCheckError(title, a, b, filename string) string {

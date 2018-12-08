@@ -5,6 +5,12 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/macroblock/imed/pkg/zlog/zlog"
+)
+
+var (
+	log = zlog.Instance("tagname")
 )
 
 // TTagname -
@@ -210,35 +216,77 @@ func (o *TTagname) GetQuality() (*TQuality, error) {
 	return &TQuality{Quality: quality, Widescreen: wide, CacheType: cachetype}, nil
 }
 
+// TAudio -
+type TAudio struct {
+	language string
+	channels int
+}
+
 // GetAudio -
-func (o *TTagname) GetAudio() (string, error) {
+func (o *TTagname) GetAudio() ([]TAudio, error) {
 	val, err := o.GetTag("atag")
 	if err != nil {
 		// trying to describe by format and type
 		typ, err1 := o.GetType()
 		frm, err2 := o.GetFormat()
 		if err1 != nil || err2 != nil {
-			return "", fmt.Errorf("%v", "cannot get audio tag (fomat or/and type tags are missing)")
+			return nil, fmt.Errorf("%v", "cannot get audio tag (fomat or/and type tags are missing)")
 		}
 
 		if typ != "film" && typ != "trailer" {
-			return "", fmt.Errorf("%v", "cannot get audio tag (fomat or/and type tags are missing)")
+			return nil, fmt.Errorf("%v", "cannot get audio tag (fomat or/and type tags are missing)")
 		}
 		val = "ar2"
 		if frm != "sd" && typ == "film" {
 			val = "ar6"
 		}
 	}
-	return val, nil
+	// fill a ret struct
+	ret := []TAudio{}
+	lang := ""
+	for _, r := range val[1:] {
+		if r < '0' || r > '9' {
+			lang += string(r)
+			continue
+		}
+		ch, err := strconv.Atoi(string(r))
+		if err != nil {
+			panic("strconv")
+		}
+		switch lang {
+		case "r":
+			lang = "rus"
+		case "e":
+			lang = "eng"
+		}
+		ret = append(ret, TAudio{lang, ch})
+		lang = ""
+	}
+	return ret, nil
 }
 
 // GetSubtitle -
-func (o *TTagname) GetSubtitle() (string, error) {
+func (o *TTagname) GetSubtitle() ([]string, error) {
 	val, err := o.GetTag("stag")
 	if err != nil {
-		return "s", nil
+		return nil, nil
 	}
-	return val, nil
+	// fill a ret struct
+	ret := []string{}
+	lang := ""
+	for _, r := range val[1:] {
+		lang = string(r)
+		switch lang {
+		default:
+			lang = "???"
+		case "r":
+			lang = "rus"
+		case "e":
+			lang = "eng"
+		}
+		ret = append(ret, lang)
+	}
+	return ret, nil
 }
 
 // TResolution -
@@ -254,8 +302,8 @@ func (o TResolution) String() string {
 type TFormat struct {
 	resolution TResolution
 	Sar        string
-	Audio      string
-	Subtitle   string
+	Audio      []TAudio
+	Subtitle   []string
 	Quality    int
 	CacheType  int
 	Sbs        bool

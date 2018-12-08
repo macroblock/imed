@@ -2,6 +2,7 @@ package tagname
 
 import (
 	"fmt"
+	"strings"
 )
 
 type tChecker struct {
@@ -62,7 +63,12 @@ func checkTags(tags *TTags, isStrictCheck bool) error {
 			return fmt.Errorf("%q type does not exist", typ)
 		}
 	}
+	errors := []string{}
 	for typ, list := range tags.byType {
+		if strings.HasPrefix(typ, "ERR_") {
+			errors = append(errors, fmt.Sprintf("%v: %v", strings.TrimPrefix(typ, "ERR_"), strings.Join(list, ", ")))
+			continue
+		}
 		if typ == "UNKNOWN_TAG" {
 			if isStrictCheck {
 				return fmt.Errorf("UNKNOWN type tag(s) are present: %v", list)
@@ -91,6 +97,9 @@ func checkTags(tags *TTags, isStrictCheck bool) error {
 				return fmt.Errorf("tag (%q,%q) has an invalid value", typ, val)
 			}
 		}
+	}
+	if len(errors) > 0 {
+		return fmt.Errorf("some error(s):\n        %v", strings.Join(errors, "\n        "))
 	}
 	return nil
 }

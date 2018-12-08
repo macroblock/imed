@@ -47,16 +47,24 @@ postertype = 'poster' digit{digit} 'x' digit{digit};
 
 year     = digit digit digit digit;
 
-tags     = @INVALID_TAG|@qtag|@atag|@stag|@agetag|@m4otag|@smktag|@sbstag|@UNKNOWN_TAG;
+tags     = @INVALID_TAG|@qtag|@atag|@stag|@agetag|@m4otag|@smktag|@sbstag
+         |@ERR_qtag|@ERR_agetag|@ERR_atag|@UNKNOWN_TAG;
 
-qtag     = 'q'digit('w'|'s')digit;
-atag     = 'a'letter digit{letter digit};
-stag     = 's'letter {letter};
-agetag   = '00'|'06'|'12'|'16'|'18'|'99';
-m4otag   = 'm4o';
-smktag   = 'msmoking'|'smoking';
-sbstag   = 'msbs'|'sbs';
+qtag     = 'q'digit('w'|'s')digit !symbol;
+atag     = 'a' ( letter letter letter | 'r' | 'e' ) digit {( letter letter letter | 'r' | 'e' ) digit} !symbol;
+stag     = 's' staglang {staglang} !symbol;
+agetag   = ('00'|'06'|'12'|'16'|'18'|'99') !symbol;
+m4otag   = 'm4o' !symbol;
+smktag   = ('msmoking'|'smoking') !symbol;
+sbstag   = ('msbs'|'sbs') !symbol;
 UNKNOWN_TAG = symbol{symbol};
+
+staglang = 'r'|'s'|ERR_unsupported_subtitle_language;
+
+ERR_atag                          = 'a' {symbol};
+ERR_agetag                        = digit digit;
+ERR_qtag                          = 'q' {symbol};
+ERR_unsupported_subtitle_language = letter;
 
 ext      = ['.'ident];
 
