@@ -1,10 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/atotto/clipboard"
+
+	"github.com/macroblock/imed/pkg/cli"
 	"github.com/macroblock/imed/pkg/misc"
 	"github.com/macroblock/imed/pkg/translit"
 	"github.com/macroblock/imed/pkg/zlog/loglevel"
@@ -14,6 +18,9 @@ import (
 var (
 	log   = zlog.Instance("main")
 	retif = log.Catcher()
+
+	flagFiles     []string
+	flagClipboard bool
 )
 
 func doProcess(path string) {
@@ -43,6 +50,36 @@ func doProcess(path string) {
 	log.Notice("result: " + dir + name + ext)
 }
 
+func mainFunc() error {
+	if len(flagFiles) == 0 && !flagClipboard {
+		return cli.ErrorNotEnoughArguments()
+	}
+
+	if flagClipboard {
+		if clipboard.Unsupported {
+			return fmt.Errorf("%s", "clipboard unsupported on this OS")
+		}
+		text, err := clipboard.ReadAll()
+		if err != nil {
+			return err
+		}
+		lines := strings.Split(text, "\n")
+		for i := range lines {
+			s := lines[i]
+			s, _ = translit.Do(s)
+			s = strings.Trim(s, "_")
+			lines[i] = s
+		}
+		text = strings.Join(lines, "\n")
+		clipboard.WriteAll(text)
+	}
+
+	for _, path := range flagFiles {
+		doProcess(path)
+	}
+	return nil
+}
+
 func main() {
 	// setup log
 	newLogger := misc.NewSimpleLogger
@@ -61,15 +98,31 @@ func main() {
 	}()
 
 	// process command line arguments
-	if len(os.Args) <= 1 {
-		log.Warning(true, "not enough parameters")
-		log.Info("Usage:\n    translit {filename}\n")
-		return
-	}
+	// if len(os.Args) <= 1 {
+	// 	log.Warning(true, "not enough parameters")
+	// 	log.Info("Usage:\n    translit {filename}\n")
+	// 	return
+	// }
 
 	// main job
-	args := os.Args[1:]
-	for _, path := range args {
-		doProcess(path)
-	}
+	// args := os.Args[1:]
+	// for _, path := range args {
+	// 	doProcess(path)
+	// }
+
+	// command line interface
+	cmdLine := cli.New("!PROG! the program that translit text in files or|and clipboard.", mainFunc)
+	cmdLine.Elements(
+		cli.Usage("!PROG! {flags|<...>}"),
+		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
+		cli.Flag("-h -help   : help", cmdLine.PrintHelp).Terminator(), // Why is this works ?
+		cli.Flag("-c -clipboard : raise an error on an unknown tag.", &flagClipboard),
+		cli.Flag(": files to be processed", &flagFiles),
+		cli.OnError("Run '!PROG! -h' for usage.\n"),
+	)
+
+	err := cmdLine.Parse(os.Args)
+
+	log.Error(err)
+	log.Info(cmdLine.GetHint())
 }
