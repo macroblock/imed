@@ -97,26 +97,13 @@ func main() {
 		}
 	}()
 
-	// process command line arguments
-	// if len(os.Args) <= 1 {
-	// 	log.Warning(true, "not enough parameters")
-	// 	log.Info("Usage:\n    translit {filename}\n")
-	// 	return
-	// }
-
-	// main job
-	// args := os.Args[1:]
-	// for _, path := range args {
-	// 	doProcess(path)
-	// }
-
 	// command line interface
-	cmdLine := cli.New("!PROG! the program that translit text in files or|and clipboard.", mainFunc)
+	cmdLine := cli.New("!PROG! the program that translit text in filenames or|and clipboard.", mainFunc)
 	cmdLine.Elements(
 		cli.Usage("!PROG! {flags|<...>}"),
 		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
-		cli.Flag("-h -help   : help", cmdLine.PrintHelp).Terminator(), // Why is this works ?
-		cli.Flag("-c -clipboard : raise an error on an unknown tag.", &flagClipboard),
+		cli.Flag("-h -help      : help", cmdLine.PrintHelp).Terminator(), // Why is this works ?
+		cli.Flag("-c -clipboard : transtlit clipboard data.", &flagClipboard),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
 	)

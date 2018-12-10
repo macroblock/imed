@@ -109,7 +109,7 @@ func checkDeep(tagname *TTagname) error {
 
 		ok := true
 		for _, v := range duration {
-			if math.Abs(videoDur.dur-v.dur) > 0.080 {
+			if math.Abs(videoDur.dur-v.dur) > 0.121 { // max granularity for mpa... it is just an empirical observation
 				ok = false
 			}
 		}
