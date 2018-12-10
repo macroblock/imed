@@ -2,7 +2,6 @@ package tagname
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 
@@ -109,14 +108,15 @@ func checkDeep(tagname *TTagname) error {
 
 		ok := true
 		for _, v := range duration {
-			if math.Abs(videoDur.dur-v.dur) > 0.121 { // max granularity for mpa... it is just an empirical observation
+			diff := videoDur.dur - v.dur
+			if diff < -0.1281 || 0.0221 < diff { // granularity for mpg... it is just an empirical observation
 				ok = false
 			}
 		}
 		if !ok {
 			errStr := "different stream duration:"
 			for _, v := range duration {
-				diff := math.Abs(videoDur.dur - v.dur)
+				diff := videoDur.dur - v.dur
 				errStr += fmt.Sprintf("\n            #%v: %.4f seconds (%+.4f)", v.idx, v.dur, diff)
 			}
 			return fmt.Errorf(errStr)
