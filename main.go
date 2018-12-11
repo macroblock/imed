@@ -6,6 +6,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/atotto/clipboard"
+
 	ansi "github.com/k0kubun/go-ansi"
 	"github.com/macroblock/imed/pkg/misc"
 	"github.com/macroblock/imed/pkg/zlog/loglevel"
@@ -16,6 +18,10 @@ var (
 	log       = zlog.Instance("main")
 	retif     = log.Catcher()
 	logFilter = loglevel.Warning.OrLower()
+)
+
+var (
+	_ = clipboard.Unsupported
 )
 
 var (
