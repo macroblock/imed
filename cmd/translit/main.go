@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode"
 
 	"github.com/atotto/clipboard"
 
@@ -21,6 +22,7 @@ var (
 
 	flagFiles     []string
 	flagClipboard bool
+	flagU         bool
 )
 
 func doProcess(path string) {
@@ -44,10 +46,25 @@ func doProcess(path string) {
 	}
 	name = strings.TrimSuffix(name, ext)
 	name, _ = translit.Do(name)
+	name = upper(name)
 	err = os.Rename(path, dir+name+ext)
 	retif.Error(err, "cannot rename file")
 
 	log.Notice("result: " + dir + name + ext)
+}
+
+func upper(str string) string {
+	if !flagU {
+		return str
+	}
+	s := ""
+	for i, r := range str {
+		if i == 0 {
+			r = unicode.ToUpper(r)
+		}
+		s += string(r)
+	}
+	return s
 }
 
 func mainFunc() error {
@@ -68,7 +85,7 @@ func mainFunc() error {
 			s := lines[i]
 			s, _ = translit.Do(s)
 			s = strings.Trim(s, "_")
-			lines[i] = s
+			lines[i] = upper(s)
 		}
 		text = strings.Join(lines, "\n")
 		clipboard.WriteAll(text)
@@ -104,6 +121,7 @@ func main() {
 		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
 		cli.Flag("-h -help      : help", cmdLine.PrintHelp).Terminator(), // Why is this works ?
 		cli.Flag("-c -clipboard : transtlit clipboard data.", &flagClipboard),
+		cli.Flag("-u            : upper case first letter.", &flagU),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
 	)
