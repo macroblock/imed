@@ -6,7 +6,9 @@ var oldForm = `
 entry    = @name [,snen] [,@comment] ,@year [DIV taglist] @type @ext$;
 
 sdhd     = 'sd'|'hd'|'3d';
-type     = ['.trailer'| '.' postertype];
+type     = ['.trailer'| '_'poster];
+
+poster   = digit{digit} '-' digit{digit} '.poster';
 
 taglist  = [(@sdhd|tags){,(@sdhd|tags)}];
 EONAME   = year (DIV|'.'|$);
@@ -34,6 +36,10 @@ func fnOldSchemaReadFilter(typ, val string) (string, string, error) {
 			val = "film"
 		case ".trailer":
 			val = "trailer"
+		default:
+			val = strings.TrimPrefix(val, "_")
+			val = strings.TrimSuffix(val, ".poster")
+			val = strings.Replace(val, "-", "x", -1)
 		}
 	case "snen":
 		val, err = fixSnen(val)
@@ -52,6 +58,8 @@ func fnOldSchemaWriteFilter(typ, val string) (string, string, error) {
 			val = ""
 		case "trailer":
 			val = ".trailer"
+		default:
+			val = strings.Replace(val, "x", "-", -1) + ".poster"
 		}
 	case "snen":
 		val, err = unfixSnen(val)

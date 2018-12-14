@@ -2,19 +2,22 @@ package tagname
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
 var rtForm = `
-entry    =  (@_hackHD3D @sdhd, @year, @_hack3D,| !(,) @sdhd, @year,) @name [,snen] [,@comment] [DIV taglist] @type @ext$;
+entry       =  (@_hackHD3D @sdhd, @year, @_hack3D,| !(,) @sdhd, @year,) @name [,snen] [,@comment] [DIV taglist] @type @ext$;
 
-sdhd     = ['sd'|'hd'];
-_hackHD3D= 'hd' !('hd',|'3d',);
-_hack3D  = '3d';
-type     = 'trailer'|'film'| postertype;
+sdhd        = ['sd'|'hd'];
+_hackHD3D   = 'hd' !('hd',|'3d',);
+_hack3D     = '3d';
+type        = 'trailer'|'film'| poster;
 
-taglist  = {!(type ('.'|$)) tags,};
-EONAME   = DIV|'.'|$;
+poster      = 'poster' digit{digit} 'x' digit{digit};
+
+taglist     = {!(type ('.'|$)) tags,};
+EONAME      = DIV|'.'|$;
 
 INVALID_TAG = 'sd'|'hd'|'3d';
 ` + body
@@ -33,6 +36,8 @@ var rtNormalSchema = &TSchema{
 
 var localBuffer = ""
 
+var reRes = regexp.MustCompile(`\d+x\d+`)
+
 func fnRtSchemaReadFilter(typ, val string) (string, string, error) {
 	err := error(nil)
 	switch typ {
@@ -46,6 +51,8 @@ func fnRtSchemaReadFilter(typ, val string) (string, string, error) {
 		val, err = fixSnen(val)
 	case "name":
 		val = strings.ToLower(val)
+	case "type":
+		val = strings.TrimPrefix(val, "poster")
 	}
 	return typ, val, err
 }
@@ -61,6 +68,10 @@ func fnRtSchemaWriteFilter(typ, val string) (string, string, error) {
 		val, err = unfixSnen(val)
 	case "name":
 		val = strings.Title(val)
+	case "type":
+		if reRes.MatchString(val) {
+			val = "poster" + val
+		}
 	}
 	return typ, val, err
 }
