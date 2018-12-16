@@ -29,6 +29,16 @@ var (
 			input: "hd_2018_3d_Sobibor__12_q0w2_trailer.mpg"},
 		{settings: "",
 			input: "Sobibor_2018__3d_12_q0w2.trailer.mpg"},
+		{settings: "",
+			input: "Zvezda_rodilas_2018__hd_190-230.poster.jpg"},
+		{settings: "",
+			input: "hd_2018_Bezumno_bogatye_aziaty__pr_poster525x300.jpg"},
+		{settings: "rt",
+			input: "//test/path/Babnik_2008__hd_1620-996.poster.jpg",
+			check: "\\\\test\\path\\hd_2008_Babnik__poster1620x996.jpg"},
+		{settings: "old",
+			input: "//test/path/sd_2018_Proigrannoe_mesto__pryamoiz_poster525x300.jpg",
+			check: "\\\\test\\path\\Proigrannoe_mesto_2018__sd_pryamoiz_525-300.poster.jpg"},
 	}
 	tableTagnameIncorrect = []string{
 		//23456789012345678901234567890
@@ -98,6 +108,15 @@ var (
 				{typ: "agetag", val: "16"},
 				{typ: "type", val: "trailer"},
 				{typ: "ext", val: ".mpg"},
+			},
+		},
+		{input: "Babnik_2008__hd_1620-996.poster.jpg",
+			tags: []ttag{
+				{typ: "name", val: "babnik"},
+				{typ: "year", val: "2008"},
+				{typ: "sdhd", val: "hd"},
+				{typ: "type", val: "1620x996"},
+				{typ: "ext", val: ".jpg"},
 			},
 		},
 	}

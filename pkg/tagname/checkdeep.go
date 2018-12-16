@@ -109,7 +109,7 @@ func checkDeep(tagname *TTagname) error {
 		ok := true
 		for _, v := range duration {
 			diff := videoDur.dur - v.dur
-			if diff < -0.1601 || 0.0221 < diff { // granularity for mpg... it is just an empirical observation
+			if diff < -0.385 /* */ || 0.0221 < diff { // granularity for mpg... it is just an empirical observation
 				ok = false
 			}
 		}

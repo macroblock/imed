@@ -43,8 +43,6 @@ sname    = !(exx,|ZZZ,|EONAME) ident {, !(exx,|ZZZ,|EONAME) ident};
 ename    = !(     ZZZ,|EONAME) ident {, !(     ZZZ,|EONAME) ident};
 comment  = ZZZ,      !(EONAME) ident {, !(          EONAME) ident};
 
-postertype = 'poster' digit{digit} 'x' digit{digit};
-
 year     = digit digit digit digit;
 
 tags     = @INVALID_TAG|@qtag|@atag|@stag|@agetag|@m4otag|@smktag|@sbstag
@@ -57,12 +55,12 @@ agetag   = ('00'|'06'|'12'|'16'|'18'|'99') !symbol;
 m4otag   = 'm4o' !symbol;
 smktag   = ('msmoking'|'smoking') !symbol;
 sbstag   = ('msbs'|'sbs') !symbol;
-UNKNOWN_TAG = symbol{symbol};
+UNKNOWN_TAG = !poster symbol{symbol};
 
 staglang = 'r'|'s'|ERR_unsupported_subtitle_language;
 
 ERR_atag                          = 'a' {symbol};
-ERR_agetag                        = digit digit;
+ERR_agetag                        = digit digit !symbol;
 ERR_qtag                          = 'q' {symbol};
 ERR_unsupported_subtitle_language = letter;
 
