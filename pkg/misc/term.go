@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 
 	ansi "github.com/k0kubun/go-ansi"
@@ -12,27 +13,37 @@ import (
 )
 
 // TTerminalColor -
-type TTerminalColor string
+type TTerminalColor int
 
 // -
 const (
-	ColorReset       = TTerminalColor("0")
-	ColorBlack       = TTerminalColor("30")
-	ColorRed         = TTerminalColor("31")
-	ColorGreen       = TTerminalColor("32")
-	ColorYellow      = TTerminalColor("33")
-	ColorBlue        = TTerminalColor("34")
-	ColorPurple      = TTerminalColor("35")
-	ColorCyan        = TTerminalColor("36")
-	ColorWhite       = TTerminalColor("37")
-	ColorLightBlack  = TTerminalColor("30;1")
-	ColorLightRed    = TTerminalColor("31;1")
-	ColorLightGreen  = TTerminalColor("32;1")
-	ColorLightYellow = TTerminalColor("33;1")
-	ColorLightBlue   = TTerminalColor("34;1")
-	ColorLightPurple = TTerminalColor("35;1")
-	ColorLightCyan   = TTerminalColor("36;1")
-	ColorLightWhite  = TTerminalColor("37;1")
+	ColorReset TTerminalColor = iota
+	ColorBold
+	ColorFaint
+)
+
+// -
+const (
+	ColorBlack TTerminalColor = 30 + iota
+	ColorRed
+	ColorGreen
+	ColorYellow
+	ColorBlue
+	ColorMagenta
+	ColorCyan
+	ColorWhite
+)
+
+// -
+const (
+	ColorBgBlack TTerminalColor = 40 + iota
+	ColorBgRed
+	ColorBgGreen
+	ColorBgYellow
+	ColorBgBlue
+	ColorBgMagenta
+	ColorBgCyan
+	ColorBgWhite
 )
 
 var (
@@ -98,7 +109,7 @@ var lastStrLen int
 // CPrint -
 func CPrint(color TTerminalColor, s string) {
 	lastStrLen = len(s)
-	ansi.Printf("\x1b[%vm%v\x1b[0m", color, s)
+	ansi.Printf("%v%v", Color(color), s)
 }
 
 // CPrintUndo -
@@ -109,4 +120,14 @@ func CPrintUndo() {
 	ansi.Print(clean)
 	ansi.Print(goback)
 	lastStrLen = 0
+}
+
+// Color -
+func Color(colors ...TTerminalColor) string {
+	ret := "\033[0"
+	for _, c := range colors {
+		ret += ";" + strconv.Itoa(int(c))
+	}
+	ret += "m"
+	return ret
 }
