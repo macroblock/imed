@@ -109,7 +109,7 @@ var lastStrLen int
 // CPrint -
 func CPrint(color TTerminalColor, s string) {
 	lastStrLen = len(s)
-	ansi.Printf("%v%v", Color(color), s)
+	ansi.Printf("%v%v%v", Color(color), s, Color())
 }
 
 // CPrintUndo -
