@@ -101,5 +101,29 @@ func checkTags(tags *TTags, isStrictCheck bool) error {
 	if len(errors) > 0 {
 		return fmt.Errorf("some error(s):\n        %v", strings.Join(errors, "\n        "))
 	}
+
+	t, err := tags.FilterTag("type")
+	if err != nil {
+		return err
+	}
+	if t != "film" && t != "trailer" {
+		return nil
+	}
+	sdhd, err := tags.FilterTag("sdhd")
+	if err != nil {
+		return err
+	}
+	atag, err := tags.FilterTag("atag")
+	if err != nil {
+		return nil
+	}
+
+	switch {
+	case atag == "ar2" && (sdhd == "sd" || t == "trailer"):
+		tags.RemoveTags("atag")
+	case atag == "ar6" && (sdhd == "hd" || sdhd == "3d") && t == "film":
+		tags.RemoveTags("atag")
+	}
+
 	return nil
 }

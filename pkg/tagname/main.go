@@ -97,6 +97,27 @@ func (o *TTags) RemoveTags(typ string) {
 	delete(o.byType, typ)
 }
 
+// FilterTag -
+func (o *TTags) FilterTag(typ string) (string, error) {
+	list := o.GetTags(typ)
+	if len(list) == 0 {
+		return "", fmt.Errorf("has no tags of %q type", typ)
+	}
+	if len(list) > 1 {
+		return "", fmt.Errorf("FilterTag() cannot return multiple tags of %q type", typ)
+	}
+	schema := o.schema
+	if schema == nil {
+		return "", fmt.Errorf("schema is nil")
+	}
+	val := list[0]
+	typ, val, err := schema.ReadFilter(typ, val)
+	if err != nil {
+		return "", err
+	}
+	return val, nil
+}
+
 // Parse -
 func Parse(s string, schemaName string) (*TTags, error) {
 	schema, err := Schema(schemaName)
