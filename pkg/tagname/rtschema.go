@@ -27,7 +27,7 @@ var rtNormalSchema = &TSchema{
 	MustHaveByType:          []string{"name", "year", "sdhd", "type", "ext"},
 	NonUniqueByType:         nil,
 	Invalid:                 nil,
-	ToStringHeadOrderByType: []string{"_hackHD3D", "sdhd", "year", "_hack3D", "name", "sxx", "sname", "exx", "ename", "comment", "_", "agetag", "qtag", "atag", "stag"},
+	ToStringHeadOrderByType: []string{"_hackHD3D", "sdhd", "year", "_hack3D", "name", "sxx", "sname", "exx", "ename", "comment", "_", "alreadyagedtag", "agetag", "qtag", "atag", "stag"},
 	ToStringTailOrderByType: []string{"m4o", "type", "ext"},
 	ReadFilter:              fnRtSchemaReadFilter,
 	WriteFilter:             fnRtSchemaWriteFilter,

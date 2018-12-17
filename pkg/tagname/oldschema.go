@@ -21,7 +21,7 @@ var oldNormalSchema = &TSchema{
 	MustHaveByType:          []string{"name", "year", "sdhd", "type", "ext"},
 	NonUniqueByType:         nil,
 	Invalid:                 nil, // []string{"trailer", "film"},
-	ToStringHeadOrderByType: []string{"name", "sxx", "sname", "exx", "ename", "comment", "year", "_", "sdhd", "agetag", "qtag", "atag", "stag"},
+	ToStringHeadOrderByType: []string{"name", "sxx", "sname", "exx", "ename", "comment", "year", "_", "sdhd", "alreadyagedtag", "agetag", "qtag", "atag", "stag"},
 	ToStringTailOrderByType: []string{"m4o", "type", "ext"},
 	ReadFilter:              fnOldSchemaReadFilter,
 	WriteFilter:             fnOldSchemaWriteFilter,

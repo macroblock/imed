@@ -45,21 +45,22 @@ comment  = ZZZ,      !(EONAME) ident {, !(          EONAME) ident};
 
 year     = digit digit digit digit;
 
-tags     = @INVALID_TAG|@qtag|@atag|@stag|@agetag|@m4otag|@smktag|@sbstag
+tags     = @INVALID_TAG|@qtag|@atag|@stag|@alreadyagedtag|@agetag|@m4otag|@smktag|@sbstag
          |@ERR_qtag|@ERR_agetag|@ERR_atag|@UNKNOWN_TAG;
 
-qtag     = 'q'digit('w'|'s')digit !symbol;
-atag     = 'a' ( letter letter letter | 'r' | 'e' ) digit {( letter letter letter | 'r' | 'e' ) digit} !symbol;
-stag     = 's' staglang {staglang} !symbol;
-agetag   = ('00'|'06'|'12'|'16'|'18'|'99') !symbol;
-m4otag   = 'm4o' !symbol;
-smktag   = ('msmoking'|'smoking') !symbol;
-sbstag   = ('msbs'|'sbs') !symbol;
+qtag      = 'q'digit('w'|'s')digit !symbol;
+atag      = 'a' ( letter letter letter | 'r' | 'e' ) digit {( letter letter letter | 'r' | 'e' ) digit} !symbol;
+stag      = 's' staglang {staglang} !symbol;
+agetag    = ('00'|'06'|'12'|'16'|'18'|'99') !symbol;
+alreadyagedtag = digit digit 'aged' !symbol;
+m4otag    = 'm4o' !symbol;
+smktag    = ('msmoking'|'smoking') !symbol;
+sbstag    = ('msbs'|'sbs') !symbol;
 UNKNOWN_TAG = !poster symbol{symbol};
 
 staglang = 'r'|'s'|ERR_unsupported_subtitle_language;
 
-ERR_atag                          = 'a' {symbol};
+ERR_atag                          = !'amed' 'a' {symbol};
 ERR_agetag                        = digit digit !symbol;
 ERR_qtag                          = 'q' {symbol};
 ERR_unsupported_subtitle_language = letter;
