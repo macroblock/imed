@@ -8,7 +8,7 @@ entry    = @name [,snen] [,@comment] ,@year [DIV taglist] @type @ext$;
 sdhd     = 'sd'|'hd'|'3d';
 type     = ['.trailer'| '_'poster];
 
-poster   = digit{digit} '-' digit{digit} '.poster';
+poster   = digit{digit} '-' digit{digit} '.poster' [hex];
 
 taglist  = [(@sdhd|tags){,(@sdhd|tags)}];
 EONAME   = year (DIV|'.'|$);
@@ -37,9 +37,13 @@ func fnOldSchemaReadFilter(typ, val string) (string, string, error) {
 		case ".trailer":
 			val = "trailer"
 		default:
-			val = strings.TrimPrefix(val, "_")
-			val = strings.TrimSuffix(val, ".poster")
-			val = strings.Replace(val, "-", "x", -1)
+			if strings.Contains(val, "poster") {
+				x := strings.Split(val+"#", "#")
+				val = x[0]
+				val = strings.TrimPrefix(val, "_")
+				val = strings.TrimSuffix(val, ".poster")
+				val = strings.Replace(val, "-", "x", -1) + "#" + x[1]
+			}
 		}
 	case "snen":
 		val, err = fixSnen(val)
@@ -59,7 +63,14 @@ func fnOldSchemaWriteFilter(typ, val string) (string, string, error) {
 		case "trailer":
 			val = ".trailer"
 		default:
-			val = strings.Replace(val, "x", "-", -1) + ".poster"
+			if strings.Contains(val, "#") {
+				x := strings.Split(val, "#")
+				val = x[0]
+				val = strings.Replace(val, "x", "-", -1) + ".poster"
+				if len(x[1]) != 0 {
+					val += "#" + x[1]
+				}
+			}
 		}
 	case "snen":
 		val, err = unfixSnen(val)

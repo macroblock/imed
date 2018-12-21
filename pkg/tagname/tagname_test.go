@@ -39,6 +39,12 @@ var (
 		{settings: "old",
 			input: "//test/path/sd_2018_Proigrannoe_mesto__pryamoiz_poster525x300.jpg",
 			check: "\\\\test\\path\\Proigrannoe_mesto_2018__sd_pryamoiz_525-300.poster.jpg"},
+		{settings: "rt",
+			input: "Vse_elki_2018__sd_1140-726.poster#203b17b5.jpg",
+			check: "sd_2018_Vse_elki__poster1140x726#203b17b5.jpg"},
+		{settings: "old",
+			input: "sd_2018_Vse_elki__poster1140x726#203b17b5.jpg",
+			check: "Vse_elki_2018__sd_1140-726.poster#203b17b5.jpg"},
 	}
 	tableTagnameIncorrect = []string{
 		//23456789012345678901234567890
@@ -115,7 +121,7 @@ var (
 				{typ: "name", val: "babnik"},
 				{typ: "year", val: "2008"},
 				{typ: "sdhd", val: "hd"},
-				{typ: "type", val: "1620x996"},
+				{typ: "type", val: "1620x996#"},
 				{typ: "ext", val: ".jpg"},
 			},
 		},

@@ -44,6 +44,7 @@ ename    = !(     ZZZ,|EONAME) ident {, !(     ZZZ,|EONAME) ident};
 comment  = ZZZ,      !(EONAME) ident {, !(          EONAME) ident};
 
 year     = digit digit digit digit;
+hex      = '#' symbol symbol symbol symbol symbol symbol symbol symbol;
 
 tags     = @INVALID_TAG | @EXCLUSIVE_TAGS
          |@qtag|@atag|@stag|@alreadyagedtag|@agetag|@m4otag|@smktag|@sbstag

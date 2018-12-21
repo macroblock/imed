@@ -14,7 +14,7 @@ _hackHD3D   = 'hd' !('hd',|'3d',);
 _hack3D     = '3d';
 type        = 'trailer'|'film'| poster;
 
-poster      = 'poster' digit{digit} 'x' digit{digit};
+poster      = 'poster' digit{digit} 'x' digit{digit} [hex];
 
 taglist     = {!(type ('.'|$)) tags,};
 EONAME      = DIV|'.'|$;
@@ -52,7 +52,12 @@ func fnRtSchemaReadFilter(typ, val string) (string, string, error) {
 	case "name":
 		val = strings.ToLower(val)
 	case "type":
-		val = strings.TrimPrefix(val, "poster")
+		if strings.Contains(val, "poster") {
+			val = strings.TrimPrefix(val, "poster")
+			if !strings.Contains(val, "#") {
+				val += "#"
+			}
+		}
 	}
 	return typ, val, err
 }
@@ -69,8 +74,11 @@ func fnRtSchemaWriteFilter(typ, val string) (string, string, error) {
 	case "name":
 		val = strings.Title(val)
 	case "type":
-		if reRes.MatchString(val) {
-			val = "poster" + val
+		if strings.Contains(val, "#") {
+			val = strings.TrimSuffix(val, "#")
+			if reRes.MatchString(val) {
+				val = "poster" + val
+			}
 		}
 	}
 	return typ, val, err
