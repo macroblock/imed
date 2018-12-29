@@ -58,14 +58,26 @@ func doProcess(filePath string, checkLevel int) string {
 
 	schema := tn.Schema()
 
-	age, err := tn.GetTag("agetag")
-	retif.Error(err, "cannot get 'agetag' tag")
+	_, err = tn.GetTag("alreadyagedtag")
+	doAge := true
+	if err != nil {
+		doAge = false
+	}
+
+	age := ""
+	if !doAge {
+		age, err = tn.GetTag("agetag")
+		retif.Error(err, "cannot get 'agetag' tag")
+	}
+
 	sdhd, err := tn.GetTag("sdhd")
 	retif.Error(err, "cannot get 'sdhd' tag")
 
 	qtag, err := tn.GetTag("qtag")
 
 	tn.RemoveTags("agetag")
+	tn.RemoveTags("alreadyagedtag")
+
 	newPath, err := tn.ConvertTo(schema)
 	retif.Error(err, "cannot convert to '"+schema+"' schema")
 
