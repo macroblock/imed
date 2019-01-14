@@ -23,6 +23,7 @@ var (
 	flagFiles     []string
 	flagClipboard bool
 	flagU         bool
+	flagD         string
 )
 
 func doProcess(path string) {
@@ -87,7 +88,10 @@ func mainFunc() error {
 			s = strings.Trim(s, "_")
 			lines[i] = upper(s)
 		}
-		text = strings.Join(lines, "\n")
+		if flagD == "" {
+			flagD = "\n"
+		}
+		text = strings.Join(lines, flagD)
 		clipboard.WriteAll(text)
 	}
 
@@ -122,6 +126,7 @@ func main() {
 		cli.Flag("-h -help      : help", cmdLine.PrintHelp).Terminator(), // Why is this works ?
 		cli.Flag("-c -clipboard : transtlit clipboard data.", &flagClipboard),
 		cli.Flag("-u            : upper case first letter.", &flagU),
+		cli.Flag("-d -delimiter : delimiter to separate multiple files. CR by default.", &flagD),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
 	)
