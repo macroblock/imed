@@ -39,7 +39,8 @@ package ptool
 // letter   = 'a'..'z' | 'A'..'Z' | '_'
 // eof      = '$'
 // noSpace  = '#'
-// range    = @string '..' @string
+// range    = @string ('..'|'-') @string
+// exclrange= @string '-' @string   // '-' for [x;y) range; '..' for [x;y] range
 // anyRune  = '\x00'-'\xff'
 // content   = '\'' # @string # '\''
 // string   = !'\'' # anyRune # {# '\'' # anyRune }
@@ -123,6 +124,7 @@ func makeZBNFRules() *TBuilder {
 			NewNode(fn(cIdent), cDigit),
 			NewNode(fn(cRange), "",
 				NewNode(fn(cString), "0"),
+				NewNode(fn(cString), ".."),
 				NewNode(fn(cString), "9"),
 			),
 		),
@@ -132,10 +134,12 @@ func makeZBNFRules() *TBuilder {
 			NewNode(fn(cOr), "",
 				NewNode(fn(cRange), "",
 					NewNode(fn(cString), "a"),
+					NewNode(fn(cString), ".."),
 					NewNode(fn(cString), "z"),
 				),
 				NewNode(fn(cRange), "",
 					NewNode(fn(cString), "A"),
+					NewNode(fn(cString), ".."),
 					NewNode(fn(cString), "Z"),
 				),
 				NewNode(fn(cString), "_"),
@@ -147,14 +151,17 @@ func makeZBNFRules() *TBuilder {
 			NewNode(fn(cOr), "",
 				NewNode(fn(cRange), "",
 					NewNode(fn(cString), "0"),
+					NewNode(fn(cString), ".."),
 					NewNode(fn(cString), "9"),
 				),
 				NewNode(fn(cRange), "",
 					NewNode(fn(cString), "a"),
+					NewNode(fn(cString), ".."),
 					NewNode(fn(cString), "f"),
 				),
 				NewNode(fn(cRange), "",
 					NewNode(fn(cString), "A"),
+					NewNode(fn(cString), ".."),
 					NewNode(fn(cString), "F"),
 				),
 			),
@@ -178,13 +185,24 @@ func makeZBNFRules() *TBuilder {
 			NewNode(fn(cIdent), cNoSpace),
 			NewNode(fn(cString), "#"),
 		),
-		// range = @singleTerm [ '..' @singleTerm ]
+		// rangesign = '..' | '-'
+		NewNode(fn(cStmt), "",
+			NewNode(fn(cIdent), "rangesign"),
+			NewNode(fn(cOr), "",
+				NewNode(fn(cString), ".."),
+				NewNode(fn(cString), "-"),
+			),
+		),
+		// range = @singleTerm ('..'|'-') @singleTerm
 		NewNode(fn(cStmt), "",
 			NewNode(fn(cIdent), cRange),
 			NewNode(fn(cAnd), "",
 				NewNode(fn(cIdent), "singleTerm"),
 				// NewNode(fn(cMaybe), "",
-				NewNode(fn(cString), ".."),
+				//NewNode(fn(cString), ".."),
+				NewNode(fn(cKeep), "",
+					NewNode(fn(cIdent), "rangesign"),
+				),
 				NewNode(fn(cIdent), "singleTerm"),
 				// ),
 			),
@@ -205,7 +223,8 @@ func makeZBNFRules() *TBuilder {
 			NewNode(fn(cIdent), "anyRune"),
 			NewNode(fn(cRange), "",
 				NewNode(fn(cString), "\x00"),
-				NewNode(fn(cString), "\xff"),
+				NewNode(fn(cString), "-"),
+				NewNode(fn(cEOF), ""),
 			),
 		),
 		// content   = '\'' # @string # '\''

@@ -186,6 +186,7 @@ func (o *TProgMaker) getRuneFromTerm(node *TNode) (rune, error) {
 		ret, _ := utf8.DecodeRuneInString(param)
 		return ret, nil
 	case cEOF:
+		// fmt.Println("getRune: ", RuneEOF)
 		return RuneEOF, nil
 	case cHex8:
 		ret, _ := strconv.ParseInt(param, 16, 16)
@@ -382,11 +383,15 @@ func (o *TProgMaker) localCompile(pm *TProgMaker, toFail *TLabel, root *TNode, e
 		if err != nil {
 			return nil, fmt.Errorf("first range parameter: %v", err)
 		}
-		b, err := o.getRuneFromTerm(root.Links[1])
+		b, err := o.getRuneFromTerm(root.Links[2])
 		if err != nil {
 			return nil, fmt.Errorf("second range parameter: %v", err)
 		}
 		// fmt.Println("#range: ", a, b)
+		if root.Links[1].Value == "-" {
+			b--
+			// fmt.Println("b: ", b)
+		}
 		pm.Emit(opCHECKRANGE, [2]rune{a, b})
 		pm.Emit(opJZ, toFail)
 	case cHex8:
@@ -399,6 +404,7 @@ func (o *TProgMaker) localCompile(pm *TProgMaker, toFail *TLabel, root *TNode, e
 		pm.Emit(opJZ, toFail)
 	case cEOF:
 		// fmt.Println("#EOF")
+		// fmt.Println("#EOF ", RuneEOF)
 		pm.Emit(opCHECKRUNE, RuneEOF)
 		pm.Emit(opJZ, toFail)
 	}

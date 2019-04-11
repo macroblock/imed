@@ -48,7 +48,7 @@ func (o TPos) String() string {
 }
 
 // RuneEOF -
-const RuneEOF = '\uffff'
+const RuneEOF = rune(0x7fffffff) //rune(^0) //'\U0010ffff'
 
 //go:generate stringer -type=TOpCode
 // -
