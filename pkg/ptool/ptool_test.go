@@ -8,7 +8,8 @@ import (
 // TestPTool -
 func TestTagnameCorrect(t *testing.T) {
 	rools := `
-entry = '' {@rus | @eng} @any $;
+entry = '' bom {@rus | @eng} @any $;
+bom = \ufeff;
 rusrune = 'а'..'я'|'А'..'Я';
 engrune = 'a'..'z'|'A'..'Z';
 rus = rusrune#{#rusrune};
@@ -26,7 +27,7 @@ anyrune = \x00..$;
 	}
 	// fmt.Println(builder.TreeToString())
 	fmt.Println("parse -------")
-	tree, err := p.Parse("xxzабвгддд qwerty   asdfфываdsa 123098aj098")
+	tree, err := p.Parse(string([]byte{0xef, 0xbb, 0xbf}) + "xxzабвгддд qwerty   asdfфываdsa 123098aj098")
 	if err != nil {
 		t.Errorf("parser error: %v\n", err)
 		return

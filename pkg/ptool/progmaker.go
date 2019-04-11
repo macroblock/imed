@@ -188,8 +188,10 @@ func (o *TProgMaker) getRuneFromTerm(node *TNode) (rune, error) {
 	case cEOF:
 		// fmt.Println("getRune: ", RuneEOF)
 		return RuneEOF, nil
-	case cHex8:
-		ret, _ := strconv.ParseInt(param, 16, 16)
+	case cHex8, cHex16, cHex32:
+		// fmt.Printf("cHex: %q\n", param)
+		ret, _ := strconv.ParseInt(param, 16, 32)
+		// fmt.Printf("cHex ret: %v\n", ret)
 		return rune(ret), nil
 	}
 }
@@ -396,7 +398,7 @@ func (o *TProgMaker) localCompile(pm *TProgMaker, toFail *TLabel, root *TNode, e
 		// fmt.Println("#range: ", a, b)
 		pm.Emit(opCHECKRANGE, [2]rune{a, b})
 		pm.Emit(opJZ, toFail)
-	case cHex8:
+	case cHex8, cHex16, cHex32:
 		a, err := o.getRuneFromTerm(root)
 		if err != nil {
 			return nil, fmt.Errorf("escaped parameter: %v", err)

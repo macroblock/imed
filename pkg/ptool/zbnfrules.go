@@ -39,6 +39,7 @@ package ptool
 // letter   = 'a'..'z' | 'A'..'Z' | '_'
 // eof      = '$'
 // noSpace  = '#'
+// escaped =  '\x'#@hex8 | '\u'#@hex16 | '\U'#@hex32
 // range    = @string '..' @string  // when second parameter $ then its value automaticly decreased by 1
 // anyRune  = '\x00'..$
 // content   = '\'' # @string # '\''
@@ -65,6 +66,8 @@ const (
 	cDigit     = "digit"
 	cHexDigit  = "hexDigit"
 	cHex8      = "hex8"
+	cHex16     = "hex16"
+	cHex32     = "hex32"
 	cEscaped   = "escaped"
 	cLetter    = "letter"
 	cRange     = "range"
@@ -168,6 +171,40 @@ func makeZBNFRules() *TBuilder {
 				NewNode(fn(cIdent), cHexDigit),
 			),
 		),
+		// hex16 = hexDigit#hexDigit#hexDigit#hexDigit
+		NewNode(fn(cStmt), "",
+			NewNode(fn(cIdent), cHex16),
+			NewNode(fn(cAnd), "",
+				NewNode(fn(cIdent), cHexDigit),
+				NewNode(fn(cNoSpace), "#"),
+				NewNode(fn(cIdent), cHexDigit),
+				NewNode(fn(cNoSpace), "#"),
+				NewNode(fn(cIdent), cHexDigit),
+				NewNode(fn(cNoSpace), "#"),
+				NewNode(fn(cIdent), cHexDigit),
+			),
+		),
+		// hex32 = hexDigit#hexDigit#hexDigit#hexDigit#hexDigit#hexDigit#hexDigit#hexDigit
+		NewNode(fn(cStmt), "",
+			NewNode(fn(cIdent), cHex32),
+			NewNode(fn(cAnd), "",
+				NewNode(fn(cIdent), cHexDigit),
+				NewNode(fn(cNoSpace), "#"),
+				NewNode(fn(cIdent), cHexDigit),
+				NewNode(fn(cNoSpace), "#"),
+				NewNode(fn(cIdent), cHexDigit),
+				NewNode(fn(cNoSpace), "#"),
+				NewNode(fn(cIdent), cHexDigit),
+				NewNode(fn(cNoSpace), "#"),
+				NewNode(fn(cIdent), cHexDigit),
+				NewNode(fn(cNoSpace), "#"),
+				NewNode(fn(cIdent), cHexDigit),
+				NewNode(fn(cNoSpace), "#"),
+				NewNode(fn(cIdent), cHexDigit),
+				NewNode(fn(cNoSpace), "#"),
+				NewNode(fn(cIdent), cHexDigit),
+			),
+		),
 		// EOF = '$'
 		NewNode(fn(cStmt), "",
 			NewNode(fn(cIdent), cEOF),
@@ -187,14 +224,30 @@ func makeZBNFRules() *TBuilder {
 				NewNode(fn(cIdent), "singleTerm"),
 			),
 		),
-		// escaped =  '\x'#@hex8
+		// escaped =  '\x'#@hex8 | '\u'#@hex16 | '\U'#@hex32
 		NewNode(fn(cStmt), "",
 			NewNode(fn(cIdent), cEscaped),
-			NewNode(fn(cAnd), "",
-				NewNode(fn(cString), "\\x"),
-				NewNode(fn(cNoSpace), "#"),
-				NewNode(fn(cKeep), "",
-					NewNode(fn(cIdent), cHex8),
+			NewNode(fn(cOr), "",
+				NewNode(fn(cAnd), "",
+					NewNode(fn(cString), "\\x"),
+					NewNode(fn(cNoSpace), "#"),
+					NewNode(fn(cKeep), "",
+						NewNode(fn(cIdent), cHex8),
+					),
+				),
+				NewNode(fn(cAnd), "",
+					NewNode(fn(cString), "\\u"),
+					NewNode(fn(cNoSpace), "#"),
+					NewNode(fn(cKeep), "",
+						NewNode(fn(cIdent), cHex16),
+					),
+				),
+				NewNode(fn(cAnd), "",
+					NewNode(fn(cString), "\\U"),
+					NewNode(fn(cNoSpace), "#"),
+					NewNode(fn(cKeep), "",
+						NewNode(fn(cIdent), cHex32),
+					),
 				),
 			),
 		),
