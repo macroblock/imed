@@ -14,7 +14,7 @@ engrune = 'a'..'z'|'A'..'Z';
 rus = rusrune#{#rusrune};
 eng = engrune#{#engrune};
 any = anyrune#{#anyrune};
-anyrune = \x00-$;
+anyrune = \x00..$;
 = {' '}
 	`
 	builder := NewBuilder().FromString(rools).Entries("entry")

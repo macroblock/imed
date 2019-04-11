@@ -383,15 +383,17 @@ func (o *TProgMaker) localCompile(pm *TProgMaker, toFail *TLabel, root *TNode, e
 		if err != nil {
 			return nil, fmt.Errorf("first range parameter: %v", err)
 		}
-		b, err := o.getRuneFromTerm(root.Links[2])
+		b, err := o.getRuneFromTerm(root.Links[1])
 		if err != nil {
 			return nil, fmt.Errorf("second range parameter: %v", err)
 		}
-		// fmt.Println("#range: ", a, b)
-		if root.Links[1].Value == "-" {
-			b--
-			// fmt.Println("b: ", b)
+		if a == RuneEOF {
+			return nil, fmt.Errorf("first range parameter cannot be $")
 		}
+		if b == RuneEOF {
+			b--
+		}
+		// fmt.Println("#range: ", a, b)
 		pm.Emit(opCHECKRANGE, [2]rune{a, b})
 		pm.Emit(opJZ, toFail)
 	case cHex8:
