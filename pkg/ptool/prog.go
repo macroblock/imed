@@ -198,7 +198,11 @@ func (o *TParser) Parse(src string, entry ...string) (*TNode, error) {
 				if expected {
 					prefix = "unexpected"
 				}
-				return tree, fmt.Errorf("[%06x] (l:%v, c:%v): %v %q", errpos.offs, errpos.line, errpos.col, prefix, errpos.r)
+				str := "end of file"
+				if errpos.r != RuneEOF {
+					str = fmt.Sprintf("%q", errpos.r)
+				}
+				return tree, fmt.Errorf("[%06x] (l:%v, c:%v): %v %v", errpos.offs, errpos.line, errpos.col, prefix, str)
 			}
 			return tree, nil
 		case opJMP:

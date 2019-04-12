@@ -27,7 +27,7 @@ anyrune = \x00..$;
 	}
 	// fmt.Println(builder.TreeToString())
 	fmt.Println("parse -------")
-	tree, err := p.Parse(string([]byte{0xef, 0xbb, 0xbf}) + "xxzабвгддд qwerty   asdfфываdsa 123098aj098")
+	tree, err := p.Parse(string([]byte{0xef, 0xbb, 0xbf}) + "xxzабвгддд qwerty   asdfфываdsa 1111")
 	if err != nil {
 		t.Errorf("parser error: %v\n", err)
 		return
