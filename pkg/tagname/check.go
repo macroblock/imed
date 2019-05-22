@@ -102,6 +102,8 @@ func checkTags(tags *TTags, isStrictCheck bool) error {
 		return fmt.Errorf("some error(s):\n        %v", strings.Join(errors, "\n        "))
 	}
 
+	tags.RemoveTags("m4otag")
+
 	t, err := tags.FilterTag("type")
 	if err != nil {
 		return err
