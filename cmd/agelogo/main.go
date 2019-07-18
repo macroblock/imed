@@ -146,7 +146,7 @@ func doProcess(filePath string, checkLevel int) string {
 	default:
 		retif.Error(fmt.Errorf("unreachable"))
 	case "HD", "3D":
-		strVCodec = "-vcodec libx264 -preset slow -b:v 32000k -bf 2 -refs 4 -level 4.2 -pix_fmt yuv420p"
+		strVCodec = "-vcodec libx264 -preset medium -crf 16 -pix_fmt yuv420p -g 0"
 		strACodec = "-acodec ac3 -ab 320k"
 	case "43", "169":
 		strVCodec = "-vcodec mpeg2video -b:v 11000k -maxrate 15000k -minrate 0 -bufsize 1835008 -rc_init_occupancy 600000 -g 12 -bf 2 -q:v 1 -pix_fmt yuv420p"
