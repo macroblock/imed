@@ -2,6 +2,7 @@ package tagname
 
 import (
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -24,7 +25,8 @@ func checkDeep(tagname *TTagname) error {
 		if err != nil {
 			return err
 		}
-		file, err := ffinfo.Probe(tagname.src)
+		filePath := filepath.Join(tagname.dir, tagname.src)
+		file, err := ffinfo.Probe(filePath)
 		if err != nil {
 			return err
 		}

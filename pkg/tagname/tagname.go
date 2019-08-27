@@ -22,7 +22,7 @@ type TTagname struct {
 }
 
 // NewFromString -
-func NewFromString(str string, checkLevel int, schemaNames ...string) (*TTagname, error) {
+func NewFromString(dir string, str string, checkLevel int, schemaNames ...string) (*TTagname, error) {
 	var err error
 	var tags *TTags
 	var schema string
@@ -46,7 +46,7 @@ func NewFromString(str string, checkLevel int, schemaNames ...string) (*TTagname
 		return nil, fmt.Errorf("multiple ones:\n  %v", s)
 	}
 
-	tn := &TTagname{schema: schema, src: str, tags: tags}
+	tn := &TTagname{schema: schema, dir: dir, src: str, tags: tags}
 
 	err = tn.Check(checkLevel)
 	if err != nil {
@@ -58,11 +58,12 @@ func NewFromString(str string, checkLevel int, schemaNames ...string) (*TTagname
 // NewFromFilename -
 func NewFromFilename(path string, checkLevel int, schemaNames ...string) (*TTagname, error) {
 	src := filepath.Base(path)
-	ret, err := NewFromString(src, checkLevel, schemaNames...)
+	dir := filepath.Dir(path)
+	ret, err := NewFromString(dir, src, checkLevel, schemaNames...)
 	if err != nil {
 		return nil, err
 	}
-	ret.dir = filepath.Dir(path)
+	// ret.dir = filepath.Dir(path)
 	return ret, nil
 }
 
