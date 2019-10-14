@@ -47,7 +47,7 @@ year     = digit digit digit digit;
 hex      = '#' symbol symbol symbol symbol symbol symbol symbol symbol;
 
 tags     = @INVALID_TAG | @EXCLUSIVE_TAGS
-         |@qtag|@atag|@stag|@alreadyagedtag|@agetag|@m4otag|@smktag|@sbstag|@datetag
+         |@qtag|@atag|@stag|@alreadyagedtag|@agetag|@m4otag|@smktag|@sbstag|@datetag|@hashtag
          |@ERR_qtag|@ERR_agetag|@ERR_atag|@UNKNOWN_TAG;
 
 qtag      = 'q'digit('w'|'s')digit !symbol;
@@ -59,6 +59,7 @@ m4otag    = 'm4o' !symbol;
 smktag    = ('msmoking'|'smoking') !symbol;
 sbstag    = ('msbs'|'sbs') !symbol;
 datetag   = 'd' digit digit digit digit digit digit digit digit digit digit !symbol;
+hashtag   = 'h' symbol symbol symbol symbol symbol symbol symbol symbol symbol symbol !symbol;
 EXCLUSIVE_TAGS = ('amed'|'abc') !symbol;
 
 UNKNOWN_TAG = !poster symbol{symbol};

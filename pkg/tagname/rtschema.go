@@ -28,7 +28,7 @@ var rtNormalSchema = &TSchema{
 	NonUniqueByType:         nil,
 	Invalid:                 nil,
 	ToStringHeadOrderByType: []string{"_hackHD3D", "sdhd", "year", "_hack3D", "name", "sxx", "sname", "exx", "ename", "comment", "_", "alreadyagedtag", "agetag", "qtag", "atag", "stag"},
-	ToStringTailOrderByType: []string{"m4otag", "datetag", "type", "ext"},
+	ToStringTailOrderByType: []string{"m4otag", "datetag", "hashtag", "type", "ext"},
 	ReadFilter:              fnRtSchemaReadFilter,
 	WriteFilter:             fnRtSchemaWriteFilter,
 	HackFilter:              fnHackRtFilter,

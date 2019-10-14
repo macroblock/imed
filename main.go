@@ -36,7 +36,8 @@ var (
 		"github.com/macroblock/imed/cmd/agelogo",
 		"github.com/macroblock/imed/cmd/tagname",
 		"github.com/macroblock/imed/cmd/tndate",
-		"github.com/macroblock/imed/cmd/tnrename",
+		"github.com/macroblock/imed/cmd/tnhash",
+		// "github.com/macroblock/imed/cmd/tnrename",
 		"github.com/macroblock/imed/cmd/translit",
 		"github.com/malashin/fflite",
 	}
