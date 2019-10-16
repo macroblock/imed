@@ -29,19 +29,14 @@ func doProcess(path string, schema string, checkLevel int) {
 		return
 	}
 
-	key := ""
-	tag, err = tn.GetTag("name")
-	key += "_" + tag
-	tag, err = tn.GetTag("sxx")
-	key += "_" + tag
-	tag, err = tn.GetTag("year")
-	key += "_" + tag
-	tag, err = tn.GetTag("sdhd")
-	key += "_" + tag
-	tag, err = tn.GetTag("comment")
-	key += "_" + tag
+	name, _ := tn.GetTag("name")
+	sxx, _ := tn.GetTag("sxx")
+	year, _ := tn.GetTag("year")
+	sdhd, _ := tn.GetTag("sdhd")
+	comment, _ := tn.GetTag("comment")
 
-	tag = hash.String(key, 10)
+	key := hash.Key(name, sxx, year, sdhd, comment)
+	tag = hash.Get(key)
 
 	tn.SetTag("hashtag", "h"+tag)
 
@@ -59,12 +54,13 @@ func doProcess(path string, schema string, checkLevel int) {
 
 func main() {
 
-	// s := "test"
-	// s2 := hash.String(s, 10)
+	// fmt.Printf("Size: %v\n", sha256.Size)
+	// s := "abcdefg"
+	// s2 := hash.Get(s, 32)
 	// fmt.Printf("%q -> %q\n", s, s2)
 
-	// s = "abcdefg"
-	// s2 = hash.String(s, 11)
+	// s = "abcdefh"
+	// s2 = hash.Get(s, 32)
 	// fmt.Printf("%q -> %q\n", s, s2)
 
 	// setup log
