@@ -38,7 +38,7 @@ func doProcess(path string, schema string, checkLevel int) {
 	key := hash.Key(name, sxx, year, sdhd, comment)
 	tag = hash.Get(key)
 
-	tn.SetTag("hashtag", "h"+tag)
+	tn.SetTag("hashtag", "x"+tag)
 
 	if schema == "" {
 		schema = tn.Schema()

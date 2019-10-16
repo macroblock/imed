@@ -59,7 +59,7 @@ m4otag    = 'm4o' !symbol;
 smktag    = ('msmoking'|'smoking') !symbol;
 sbstag    = ('msbs'|'sbs') !symbol;
 datetag   = 'd' digit digit digit digit digit digit digit digit digit digit !symbol;
-hashtag   = 'h' symbol symbol symbol symbol symbol symbol symbol symbol symbol symbol !symbol;
+hashtag   = 'x' symbol symbol symbol symbol symbol symbol symbol symbol symbol symbol !symbol;
 EXCLUSIVE_TAGS = ('amed'|'abc') !symbol;
 
 UNKNOWN_TAG = !poster symbol{symbol};
