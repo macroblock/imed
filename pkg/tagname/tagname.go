@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/macroblock/imed/pkg/hash"
 	"github.com/macroblock/imed/pkg/zlog/zlog"
 )
 
@@ -167,6 +168,22 @@ func (o *TTagname) RemoveTags(typ string) {
 func (o *TTagname) SetTag(typ string, val string) {
 	o.tags.RemoveTags(typ)
 	o.tags.AddTag(typ, val)
+}
+
+// AddHash -
+func (o *TTagname) AddHash() {
+	typ, _ := o.GetTag("type")
+	if typ != "film" {
+		return
+	}
+	name, _ := o.GetTag("name")
+	sxx, _ := o.GetTag("sxx")
+	year, _ := o.GetTag("year")
+	sdhd, _ := o.GetTag("sdhd")
+	comment, _ := o.GetTag("comment")
+	key := name + "_" + sxx + "_" + year + "_" + sdhd + "_" + comment
+	tag := hash.Get(key)
+	o.SetTag("hashtag", "x"+tag)
 }
 
 // Schema -
