@@ -32,6 +32,8 @@ func doProcess(path string, schema string, checkLevel int) {
 
 	if flagAddHash {
 		tn.AddHash()
+	} else {
+		tn.RemoveTags("hashtag")
 	}
 
 	if schema == "" {
