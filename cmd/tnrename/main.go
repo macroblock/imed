@@ -33,7 +33,7 @@ func doProcess(path string, schema string, checkLevel int) {
 	if flagAddHash {
 		tn.AddHash()
 	} else {
-		tn.RemoveTags("hashtag")
+		tn.RemoveHash()
 	}
 
 	if schema == "" {
@@ -92,25 +92,6 @@ func main() {
 			misc.PauseTerminal()
 		}
 	}()
-
-	// process command line arguments
-	// if len(os.Args) <= 1 {
-	// 	log.Warning(true, "not enough parameters")
-	// 	log.Info("Usage:\n    tnrename [-rt|-old] {filename}\n")
-	// 	return
-	// }
-
-	// main job
-	// args := os.Args[1:]
-	// schema := ""
-	// switch args[0] {
-	// case "-rt":
-	// 	schema = "rt"
-	// 	args = args[1:]
-	// case "-old":
-	// 	schema = "old"
-	// 	args = args[1:]
-	// }
 
 	// command line interface
 	cmdLine := cli.New("!PROG! the program that renames tagged files.", mainFunc)

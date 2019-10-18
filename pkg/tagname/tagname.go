@@ -186,6 +186,11 @@ func (o *TTagname) AddHash() {
 	o.SetTag("hashtag", "x"+tag)
 }
 
+// RemoveHash -
+func (o *TTagname) RemoveHash() {
+	o.RemoveTags("hashtag")
+}
+
 // Schema -
 func (o *TTagname) Schema() string {
 	return o.schema
