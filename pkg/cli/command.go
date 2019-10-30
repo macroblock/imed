@@ -17,6 +17,7 @@ func splitDesc(desc string) ([]string, string) {
 		if strings.IndexRune(partSep, r) != -1 {
 			partKeys = desc[:i]
 			partBrief = desc[i+1:]
+			break
 		}
 	}
 
