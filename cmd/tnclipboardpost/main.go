@@ -70,7 +70,9 @@ func doProcess(path string, schema string, checkLevel int) string {
 		if len(x) > 0 {
 			options = append(options, "субтитры")
 		}
-		newPath += " (" + strings.Join(options, " и ") + ")"
+		if len(options) > 0 {
+			newPath += " (" + strings.Join(options, " и ") + ")"
+		}
 	}
 
 	log.Notice(schema, " > ", newPath)
