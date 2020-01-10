@@ -60,11 +60,17 @@ func doProcess(path string, schema string, checkLevel int) string {
 	// retif.Error(err, "cannot rename file")
 
 	if flagFormat {
+		options := []string{}
 		a, err := tn.GetAudio()
 		retif.Warning(err, "cannot describe audio tag")
 		if len(a) > 1 {
-			newPath += " (" + numToText(len(a)) + ")"
+			options = append(options, numToText(len(a)))
 		}
+		x := tn.GetTags("stag")
+		if len(x) > 0 {
+			options = append(options, "субтитры")
+		}
+		newPath += " (" + strings.Join(options, " и ") + ")"
 	}
 
 	log.Notice(schema, " > ", newPath)
@@ -145,9 +151,9 @@ func mainFunc() error {
 	// 	flagD = "\n"
 	// }
 	text = strings.Join(outLines, "\n")
-	if flagFormat {
-		text = "Заливаются следующие мастер-копии:\n\n" + text
-	}
+	// if flagFormat {
+	// 	text = "Заливаются следующие мастер-копии:\n\n" + text
+	// }
 	clipboard.WriteAll(text)
 
 	// for _, path := range flagFiles {
