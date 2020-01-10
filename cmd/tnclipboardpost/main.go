@@ -144,10 +144,10 @@ func mainFunc() error {
 	// if flagD == "" {
 	// 	flagD = "\n"
 	// }
+	text = strings.Join(outLines, "\n")
 	if flagFormat {
 		text = "Заливаются следующие мастер-копии:\n\n" + text
 	}
-	text = strings.Join(outLines, "\n")
 	clipboard.WriteAll(text)
 
 	// for _, path := range flagFiles {
