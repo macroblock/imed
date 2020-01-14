@@ -67,8 +67,6 @@ func doProcess(path string, schema string, checkLevel int) string {
 	// err = os.Rename(path, newPath)
 	// retif.Error(err, "cannot rename file")
 
-	fmt.Println("xxxxxxxx")
-
 	if flagFormat {
 		options := []string{}
 		a, err := tn.GetAudio()
