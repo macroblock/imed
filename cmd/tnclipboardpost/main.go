@@ -24,6 +24,7 @@ var (
 )
 
 var langTable = map[string]string{
+	"rus": "руcская",
 	"eng": "английская",
 	"chn": "китайская",
 	"tur": "турецкая",
@@ -71,10 +72,10 @@ func doProcess(path string, schema string, checkLevel int) string {
 	if flagFormat {
 		options := []string{}
 		a, err := tn.GetAudio()
-		retif.Error(err, "cannot describe audio tag")
+		retif.Error(err, "cannot infer audio tag")
 		switch len(a) {
 		case 0:
-			retif.Error(true, "cannot infer audio: that shouldn't be happened")
+			retif.Error(true, "0 audio: that shouldn't be happened")
 		case 1:
 			text, ok := langTable[a[0].Language]
 			log.Errorf(!ok, "unknown audio language: %v", a[0].Language)
