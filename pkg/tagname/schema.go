@@ -47,7 +47,7 @@ year     = digit digit digit digit;
 hex      = '#' symbol symbol symbol symbol symbol symbol symbol symbol;
 
 tags     = @INVALID_TAG | @EXCLUSIVE_TAGS
-         |@qtag|@atag|@stag|@alreadyagedtag|@agetag|@m4otag|@smktag|@sbstag|@datetag|@hashtag
+         |@qtag|@atag|@stag|@alreadyagedtag|@agetag|@m4otag|@smktag|@hardsubtag|@sbstag|@datetag|@hashtag
          |@ERR_qtag|@ERR_agetag|@ERR_atag|@UNKNOWN_TAG;
 
 qtag      = 'q'digit('w'|'s')digit !symbol;
@@ -55,6 +55,7 @@ atag      = 'a' ( letter letter letter | 'r' | 'e' ) digit {( letter letter lett
 stag      = 's' staglang {staglang} !symbol;
 agetag    = ('00'|'06'|'12'|'16'|'18'|'99') !symbol;
 alreadyagedtag = digit digit 'aged' !symbol;
+hardsubtag= ('mhardsub'|'hardsub') !symbol;
 m4otag    = 'm4o' !symbol;
 smktag    = ('msmoking'|'smoking') !symbol;
 sbstag    = ('msbs'|'sbs') !symbol;

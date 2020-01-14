@@ -23,6 +23,13 @@ var (
 	flagFormat bool
 )
 
+var langTable = map[string]string{
+	"eng": "английская",
+	"chn": "китайская",
+	"tur": "турецкая",
+	"ger": "немецкая",
+}
+
 func numToText(n int) string {
 	s := ""
 	switch n {
@@ -59,17 +66,39 @@ func doProcess(path string, schema string, checkLevel int) string {
 	// err = os.Rename(path, newPath)
 	// retif.Error(err, "cannot rename file")
 
+	fmt.Println("xxxxxxxx")
+
 	if flagFormat {
 		options := []string{}
 		a, err := tn.GetAudio()
-		retif.Warning(err, "cannot describe audio tag")
-		if len(a) > 1 {
+		retif.Error(err, "cannot describe audio tag")
+		switch len(a) {
+		case 0:
+			retif.Error(true, "cannot infer audio: that shouldn't be happened")
+		case 1:
+			text, ok := langTable[a[0].Language]
+			log.Errorf(!ok, "unknown audio language: %v", a[0].Language)
+			if !ok {
+				text = "ОШИБКА!"
+			} else {
+				text += " звуковая дорожка"
+			}
+			options = append(options, text)
+		default:
 			options = append(options, numToText(len(a)))
 		}
-		x := tn.GetTags("stag")
-		if len(x) > 0 {
-			options = append(options, "субтитры")
+
+		subs := tn.GetTags("stag")
+		if len(subs) > 0 {
+			// ### FIXME !!!
+			options = append(options, "русские субтитры")
 		}
+
+		hardsub := tn.GetTags("hardsubtag")
+		if len(hardsub) > 0 {
+			options = append(options, "русский хардсаб")
+		}
+
 		if len(options) > 0 {
 			newPath += " (" + strings.Join(options, " и ") + ")"
 		}

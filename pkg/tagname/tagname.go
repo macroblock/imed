@@ -241,8 +241,8 @@ func (o *TTagname) GetQuality() (*TQuality, error) {
 
 // TAudio -
 type TAudio struct {
-	language string
-	channels int
+	Language string
+	Channels int
 }
 
 // GetAudio -

@@ -91,11 +91,11 @@ func checkDeep(tagname *TTagname) error {
 			}
 		}
 
-		if len(realA) == 1 && realA[0].language != "---" {
-			realA[0].language = "---"
+		if len(realA) == 1 && realA[0].Language != "---" {
+			realA[0].Language = "---"
 		}
-		if len(format.Audio) == 1 && format.Audio[0].language != "---" {
-			format.Audio[0].language = "---"
+		if len(format.Audio) == 1 && format.Audio[0].Language != "---" {
+			format.Audio[0].Language = "---"
 		}
 		a1 := audioToStr(format.Audio)
 		a2 := audioToStr(realA)
@@ -130,7 +130,7 @@ func checkDeep(tagname *TTagname) error {
 func audioToStr(a []TAudio) string {
 	ret := ""
 	for _, v := range a {
-		ret += fmt.Sprintf("%v%v", v.language, v.channels)
+		ret += fmt.Sprintf("%v%v", v.Language, v.Channels)
 	}
 	return ret
 }
