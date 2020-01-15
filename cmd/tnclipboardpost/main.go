@@ -75,6 +75,9 @@ func doProcess(path string, schema string, checkLevel int) string {
 		case 0:
 			retif.Error(true, "0 audio: that shouldn't be happened")
 		case 1:
+			if a[0].Language == "rus" {
+				break
+			}
 			text, ok := langTable[a[0].Language]
 			log.Errorf(!ok, "unknown audio language: %v", a[0].Language)
 			if !ok {
