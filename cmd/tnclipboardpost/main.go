@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/atotto/clipboard"
@@ -18,9 +19,11 @@ var (
 	log   = zlog.Instance("main")
 	retif = log.Catcher()
 
-	flagFiles  []string
-	flagClean  bool
-	flagFormat bool
+	flagFiles   []string
+	flagClean   bool
+	flagFormat  bool
+	flagTrimTo  string
+	flagUnixSep bool
 )
 
 var langTable = map[string]string{
@@ -52,7 +55,21 @@ func doProcess(path string, schema string, checkLevel int) string {
 	defer retif.Catch()
 	log.Info("")
 	log.Info("rename: " + path)
-	tn, err := tagname.NewFromString("", path, checkLevel)
+
+	path = filepath.Clean(path)
+	path = filepath.ToSlash(path)
+	if flagTrimTo == "" {
+		path = filepath.Base(path)
+	} else {
+		x := "/" + flagTrimTo + "/"
+		i := strings.Index(path, x)
+		if i >= 0 {
+			path = path[i+len(x)-1:]
+		}
+	}
+
+	// tn, err := tagname.NewFromString("", path, checkLevel)
+	tn, err := tagname.NewFromFilename(path, checkLevel)
 	retif.Error(err, "cannot parse filename")
 
 	tn.AddHash()
@@ -66,6 +83,10 @@ func doProcess(path string, schema string, checkLevel int) string {
 
 	// err = os.Rename(path, newPath)
 	// retif.Error(err, "cannot rename file")
+
+	if flagUnixSep {
+		newPath = filepath.ToSlash(newPath)
+	}
 
 	if flagFormat {
 		options := []string{}
@@ -109,34 +130,6 @@ func doProcess(path string, schema string, checkLevel int) string {
 	log.Notice(schema, " > ", newPath)
 	return newPath
 }
-
-// func doProcess(path string) {
-// 	defer retif.Catch()
-// 	log.Info("")
-// 	log.Info("rename: " + path)
-// 	dir, name := filepath.Split(path)
-// 	ext := ""
-
-// 	file, err := os.Open(path)
-// 	retif.Error(err, "cannot open file: ", path)
-
-// 	stat, err := file.Stat()
-// 	retif.Error(err, "cannot get filestat: ", path)
-
-// 	err = file.Close()
-// 	retif.Error(err, "cannot close file: ", path)
-
-// 	if !stat.IsDir() {
-// 		ext = filepath.Ext(path)
-// 	}
-// 	name = strings.TrimSuffix(name, ext)
-// 	name, _ = translit.Do(name)
-// 	name = upper(name)
-// 	err = os.Rename(path, dir+name+ext)
-// 	retif.Error(err, "cannot rename file")
-
-// 	log.Notice("result: " + dir + name + ext)
-// }
 
 func invalidRune(r rune) bool {
 	if 'a' <= r && r <= 'z' ||
@@ -224,6 +217,8 @@ func main() {
 		// cli.Flag(": files to be processed", &flagFiles),
 		cli.Flag("-c --clean          :  'clean' lines", &flagClean),
 		cli.Flag("-m --format-message : format output result.", &flagFormat),
+		cli.Flag("-t --trim-path      : trim path up to the value icnlusively (removes whole path if not set).", &flagTrimTo),
+		cli.Flag("-u --unix-separator : convert path separator to Unix style '/'.", &flagUnixSep),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
 	)
 
