@@ -24,6 +24,7 @@ var (
 	flagFormat  bool
 	flagTrimTo  string
 	flagUnixSep bool
+	flagNoCheck bool
 )
 
 var langTable = map[string]string{
@@ -69,17 +70,24 @@ func doProcess(path string, schema string, checkLevel int) string {
 	}
 
 	// tn, err := tagname.NewFromString("", path, checkLevel)
-	tn, err := tagname.NewFromFilename(path, checkLevel)
-	retif.Error(err, "cannot parse filename")
+	newPath := path
+	tn := &tagname.TTagname{} // ### ugly hack
+	if !flagNoCheck {
+		err := error(nil)
+		tn, err = tagname.NewFromFilename(path, checkLevel)
+		retif.Error(err, "cannot parse filename")
 
-	tn.AddHash()
+		tn.AddHash()
 
-	if schema == "" {
-		schema = tn.Schema()
+		if schema == "" {
+			schema = tn.Schema()
+		}
+
+		newPath, err = tn.ConvertTo(schema)
+		retif.Error(err, "cannot convert to '"+schema+"'")
+	} else {
+		flagFormat = false
 	}
-
-	newPath, err := tn.ConvertTo(schema)
-	retif.Error(err, "cannot convert to '"+schema+"'")
 
 	// err = os.Rename(path, newPath)
 	// retif.Error(err, "cannot rename file")
@@ -211,14 +219,12 @@ func main() {
 		cli.Usage("!PROG! {flags|<...>}"),
 		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
 		cli.Flag("-h -help      : help", cmdLine.PrintHelp).Terminator(), // Why is this works ?
-		// cli.Flag("-c -clipboard : transtlit clipboard data.", &flagClipboard),
-		// cli.Flag("-u            : upper case first letter.", &flagU),
-		// cli.Flag("-d -delimiter : delimiter to separate multiple files. CR by default.", &flagD),
-		// cli.Flag(": files to be processed", &flagFiles),
 		cli.Flag("-c --clean          :  'clean' lines", &flagClean),
 		cli.Flag("-m --format-message : format output result.", &flagFormat),
 		cli.Flag("-t --trim-path      : trim path up to the value icnlusively (removes whole path if not set).", &flagTrimTo),
 		cli.Flag("-u --unix-separator : convert path separator to Unix style '/'.", &flagUnixSep),
+		cli.Flag("-n --no-check       : do not do any tag name checks and/or convertions (disables flag -m)", &flagNoCheck),
+
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
 	)
 
