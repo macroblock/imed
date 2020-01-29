@@ -6,8 +6,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/atotto/clipboard"
-
 	ansi "github.com/k0kubun/go-ansi"
 	"github.com/macroblock/imed/pkg/cli"
 	"github.com/macroblock/imed/pkg/misc"
@@ -21,7 +19,9 @@ var (
 )
 
 var (
-	_ = clipboard.Unsupported
+	argsInstall     = []string{"get"}
+	argsUpdate      = []string{"get", "-u"}
+	argsJustInstall = []string{"install"}
 )
 
 var (
@@ -109,7 +109,7 @@ func doFindPackage(pkgName string) string {
 	return ""
 }
 
-func goDownload(pkgPath string) error {
+func goDownload(pkgPath string, args ...string) error {
 	if flagDontDownload {
 		return nil
 	}
@@ -118,7 +118,8 @@ func goDownload(pkgPath string) error {
 	if prefixes[dir] || prefixes[pkgPath] {
 		return nil
 	}
-	info, err := misc.RunCommand("go", "get", "-u", "-n", pkgPath)
+	args = append(args, pkgPath)
+	info, err := misc.RunCommand("go", args...)
 	if err != nil {
 		return fmt.Errorf("%v", info)
 	}
@@ -135,7 +136,7 @@ func goInstall(pkgPath string) error {
 	return err
 }
 
-func doInstall() error {
+func process(args ...string) error {
 	pkgList := flagFiles
 	// if len(pkgList) == 0 {
 	if flagAll {
@@ -151,7 +152,7 @@ func doInstall() error {
 			continue
 		}
 		prProc("download")
-		err = goDownload(pkg)
+		err = goDownload(pkg, args...)
 		if err != nil {
 			prError(err)
 			continue
@@ -174,8 +175,12 @@ func doList() error {
 	return nil
 }
 
-func doUpgrade() error {
-	return fmt.Errorf("command 'upgrade' is not yet supported")
+func doInstall() error {
+	return process("get")
+}
+
+func doUpdate() error {
+	return process("get", "-u")
 }
 
 func doHelp() error {
@@ -221,8 +226,10 @@ func main() {
 			cli.Flag("all -a --all : ", &flagAll),
 			cli.Flag(": packages to be installed", &flagFiles),
 		),
-		cli.Command("upgrade       : upgrade packages", doUpgrade,
-			cli.Flag(": packages to be upgraded", &flagFiles),
+		cli.Command("update        : update packages", doUpdate,
+			cli.Flag("-d           : do not download (rebuild only)", &flagDontDownload),
+			cli.Flag("all -a --all : ", &flagAll),
+			cli.Flag(": packages to be updated", &flagFiles),
 		),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
 	)
