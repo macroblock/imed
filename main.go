@@ -128,19 +128,11 @@ func goDownload(pkgPath string) error {
 }
 
 func goInstall(pkgPath string) error {
-	_, err := misc.RunCommand("go", "install", pkgPath)
-	return err
-}
-
-func argsLen(args []string) int {
-	ret := 0
-	for _, s := range args {
-		if s == "-n" || s == "-p" || s == "-pe" {
-			continue
-		}
-		ret++
+	info, err := misc.RunCommand("go", "install", pkgPath)
+	if err != nil {
+		return fmt.Errorf("%v", info)
 	}
-	return ret
+	return err
 }
 
 func doInstall() error {
