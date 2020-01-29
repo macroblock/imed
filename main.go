@@ -176,11 +176,11 @@ func doList() error {
 }
 
 func doInstall() error {
-	return process("get")
+	return process("get", "-d")
 }
 
 func doUpdate() error {
-	return process("get", "-u")
+	return process("get", "-u", "-d")
 }
 
 func doHelp() error {
