@@ -9,6 +9,7 @@ import (
 	"github.com/atotto/clipboard"
 
 	ansi "github.com/k0kubun/go-ansi"
+	"github.com/macroblock/imed/pkg/cli"
 	"github.com/macroblock/imed/pkg/misc"
 	"github.com/macroblock/imed/pkg/zlog/loglevel"
 	"github.com/macroblock/imed/pkg/zlog/zlog"
@@ -16,7 +17,6 @@ import (
 
 var (
 	log       = zlog.Instance("main")
-	retif     = log.Catcher()
 	logFilter = loglevel.Warning.OrLower()
 )
 
@@ -25,9 +25,18 @@ var (
 )
 
 var (
-	optDontDownload = false
 	optPauseAlways  = false
 	optPauseOnError = false
+
+	flagVerbose bool
+	flagList    bool
+	flagInstall bool
+	flagUpgrade bool
+	flagAll     bool
+	flagFiles   []string
+	flagSort    bool
+
+	flagDontDownload = false
 )
 
 var (
@@ -39,6 +48,8 @@ var (
 		"github.com/macroblock/imed/cmd/tndate",
 		"github.com/macroblock/imed/cmd/tnrename",
 		"github.com/macroblock/imed/cmd/translit",
+		"github.com/malashin/shuher",
+		"github.com/malashin/rtimg",
 		"github.com/malashin/fflite",
 	}
 
@@ -79,10 +90,13 @@ func prOk(s string) {
 	misc.CPrint(misc.ColorGreen, s+"\n")
 }
 
-func prError() {
+func prError(err error) {
 	misc.CPrintUndo()
 	misc.CPrint(misc.ColorRed, lastStr+"\n")
 	log.SetState(loglevel.Error.Only())
+	if flagVerbose {
+		fmt.Printf("%v\n", err)
+	}
 }
 
 func doFindPackage(pkgName string) string {
@@ -95,8 +109,8 @@ func doFindPackage(pkgName string) string {
 	return ""
 }
 
-func doDownload(pkgPath string) error {
-	if optDontDownload {
+func goDownload(pkgPath string) error {
+	if flagDontDownload {
 		return nil
 	}
 	dir := path.Dir(pkgPath)
@@ -104,16 +118,16 @@ func doDownload(pkgPath string) error {
 	if prefixes[dir] || prefixes[pkgPath] {
 		return nil
 	}
-	_, err := misc.RunCommand("go", "get", "-u", "-n", pkgPath)
+	info, err := misc.RunCommand("go", "get", "-u", "-n", pkgPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("%v", info)
 	}
 	prefixes[dir] = true
 	prefixes[pkgPath] = true
 	return nil
 }
 
-func doInstall(pkgPath string) error {
+func goInstall(pkgPath string) error {
 	_, err := misc.RunCommand("go", "install", pkgPath)
 	return err
 }
@@ -129,47 +143,55 @@ func argsLen(args []string) int {
 	return ret
 }
 
-func cmdInstall(args []string) {
-	if argsLen(args) == 0 {
-		args = append(args, packageNameList...)
+func doInstall() error {
+	pkgList := flagFiles
+	// if len(pkgList) == 0 {
+	if flagAll {
+		pkgList = packageNameList
 	}
-	calcMaxLen(args)
-	for _, pkg := range args {
-		switch pkg {
-		case "-n":
-			optDontDownload = true
-			continue
-		case "-p":
-			optPauseAlways = true
-			continue
-		case "-pe":
-			optPauseOnError = true
-			continue
-		}
+	calcMaxLen(pkgList)
+	for _, pkg := range pkgList {
+		err := error(nil)
 		prHead(pkg)
 		prProc("describe")
 		if pkg = doFindPackage(pkg); pkg == "" {
-			prError()
+			prError(fmt.Errorf("unknown package %q", pkg))
 			continue
 		}
 		prProc("download")
-		if doDownload(pkg) != nil {
-			prError()
+		err = goDownload(pkg)
+		if err != nil {
+			prError(err)
 			continue
 		}
 		prProc("install")
-		if doInstall(pkg) != nil {
-			prError()
+		err = goInstall(pkg)
+		if err != nil {
+			prError(err)
 			continue
 		}
 		prOk("ok")
 	}
+	return nil
 }
 
-func cmdList() {
+func doList() error {
 	for _, s := range packageNameList {
 		fmt.Printf("%v\n", s)
 	}
+	return nil
+}
+
+func doUpgrade() error {
+	return fmt.Errorf("command 'upgrade' is not yet supported")
+}
+
+func doHelp() error {
+	return fmt.Errorf("command 'help' is not yet supported")
+}
+
+func mainFunc() error {
+	return fmt.Errorf("not enough arguments")
 }
 
 func main() {
@@ -184,42 +206,37 @@ func main() {
 	)
 
 	defer func() {
-		if optPauseAlways ||
-			optPauseOnError && log.State().Intersect(loglevel.Warning.OrLower()) != 0 {
+		if log.State().Intersect(loglevel.Warning.OrLower()) != 0 {
 			misc.PauseTerminal()
 		}
 	}()
 
-	// process command line arguments
-	if len(os.Args) <= 1 {
-		log.Warning(true, "not enough parameters")
-		log.Info("Usage:\n    imed (install|upgrade|list) {flag|moduleName}\n")
-		log.Info("Flags:\n    -n    don't download source code (install binaries only)" +
-			"\n    -p    pause at the end of process" +
-			"\n    -pe   pause only if an error is occured")
-		return
-	}
+	// command line interface
+	cmdLine := cli.New("!PROG! tools manager for internal use.", mainFunc)
+	cmdLine.Elements(
+		cli.Usage("!PROG! [flags] <command> [arguments]"),
+		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
+		cli.Flag("-h --help        : help", cmdLine.PrintHelp).Terminator(), // Why does this work ?
+		cli.Flag("-v --verbose     : verbose mode", &flagVerbose),
+		cli.Command("help          : for more information about command", doHelp,
+			cli.Flag(": help topics", &flagFiles),
+		),
+		cli.Command("list          : list packages", doList,
+			cli.Flag("-s --sort    : do sort.", &flagSort),
+		),
+		cli.Command("install       : install package (installs all packages if no arguments passed)", doInstall,
+			cli.Flag("-d           : do not download (rebuild only)", &flagDontDownload),
+			cli.Flag("all -a --all : ", &flagAll),
+			cli.Flag(": packages to be installed", &flagFiles),
+		),
+		cli.Command("upgrade       : upgrade packages", doUpgrade,
+			cli.Flag(": packages to be upgraded", &flagFiles),
+		),
+		cli.OnError("Run '!PROG! -h' for usage.\n"),
+	)
 
-	// main job
-	args := os.Args[1:]
-	mode := args[0]
-	switch mode {
-	default:
-		log.Warning(true, fmt.Sprintf("unsupported flag %q", mode))
-		log.Info("Usage:\n    imed (install|upgrade) {moduleName}\n")
-		return
-	case "install":
-		cmdInstall(args[1:])
-	case "upgrade":
-		args = args[1:]
-		log.Error(true, "not yet supported")
-	case "list":
-		cmdList()
-	}
-	// out, err := misc.RunCommand("go", "get", "-u", "-n", "-v", "github.com/macroblock/imed")
-	// if err != nil {
-	// 	fmt.Println("error:\n", err)
-	// }
-	// fmt.Println("output:\n", out)
-	// misc.PauseTerminal()
+	err := cmdLine.Parse(os.Args)
+
+	log.Error(err)
+	log.Info(cmdLine.GetHint())
 }
