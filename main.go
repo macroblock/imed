@@ -19,12 +19,6 @@ var (
 )
 
 var (
-	argsInstall     = []string{"get"}
-	argsUpdate      = []string{"get", "-u"}
-	argsJustInstall = []string{"install"}
-)
-
-var (
 	optPauseAlways  = false
 	optPauseOnError = false
 
