@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/macroblock/imed/pkg/cli"
 	"github.com/macroblock/imed/pkg/loudnorm"
@@ -60,18 +61,23 @@ func mainFunc() error {
 		return cli.ErrorNotEnoughArguments()
 	}
 
+	t := time.Now()
+	fmt.Println("scanning...")
 	opts, err := loudnorm.Scan(flagFiles[0], 0)
 	if err != nil {
 		return err
 	}
+	fmt.Println("delta time ", time.Since(t))
 
-	fmt.Println("opts: ", opts)
+	// fmt.Println("opts: ", opts)
+	fmt.Printf("(%v, LRA: %v, Thresh: %v, TP: %v, Offs: %v) time: %v\n", opts.InputI, opts.InputLRA, opts.InputThresh, opts.InputTP, opts.TargetOffset, time.Since(t))
 
-	err = loudnorm.Process(flagFiles[0], 0, opts)
+	fmt.Println("processing...")
+	err = loudnorm.Process(flagFiles[0], flagFiles[0]+".flac", 0, opts)
 	if err != nil {
 		return err
 	}
-
+	fmt.Printf("(%v, LRA: %v, Thresh: %v, TP: %v, Offs: %v) time: %v\n", opts.InputI, opts.InputLRA, opts.InputThresh, opts.InputTP, opts.TargetOffset, time.Since(t))
 	return nil
 }
 

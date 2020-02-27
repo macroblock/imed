@@ -226,7 +226,7 @@ func parseEbur128Summary(list []string) (*OptionsLight, error) {
 }
 
 // Process -
-func Process(filePath string, trackN int, opts *Options) error {
+func Process(filePath string, fileOut string, trackN int, opts *Options) error {
 	params := []string{
 		"-hide_banner",
 		"-i", filePath,
@@ -243,13 +243,14 @@ func Process(filePath string, trackN int, opts *Options) error {
 			":measured_thresh=" + opts.InputThresh +
 			// ":offset=" + opts.TargetOffset,  // it's just difference between internal target_i and i_out
 			// "-f", "flac",
-			"-codec:a", "flac",
+			"",
+		"-c:a", "flac",
 		"-r:a", samplerate,
 		// "-ac", "6"
 		"-y",
-		"test.flac",
+		fileOut,
 	}
-	fmt.Println("params: ", params)
+	// fmt.Println("params: ", params)
 	c := exec.Command("ffmpeg", params...)
 	var o bytes.Buffer
 	var e bytes.Buffer
@@ -260,6 +261,6 @@ func Process(filePath string, trackN int, opts *Options) error {
 		fmt.Println("###:", e.String())
 		return err
 	}
-	fmt.Println("###done:", e.String())
+	// fmt.Println("###done:", e.String())
 	return nil
 }
