@@ -42,6 +42,7 @@ var (
 		"github.com/macroblock/imed/cmd/tndate",
 		"github.com/macroblock/imed/cmd/tnrename",
 		"github.com/macroblock/imed/cmd/translit",
+		"github.com/macroblock/imed/cmd/loudnorm",
 		"github.com/malashin/shuher",
 		"github.com/malashin/rtimg",
 		"github.com/malashin/fflite",
