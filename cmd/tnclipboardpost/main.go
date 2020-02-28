@@ -33,6 +33,7 @@ var langTable = map[string]string{
 	"chn": "китайская",
 	"tur": "турецкая",
 	"ger": "немецкая",
+	"fra": "французская",
 }
 
 func numToText(n int) string {
