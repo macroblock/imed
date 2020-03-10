@@ -19,6 +19,9 @@ var (
 
 	flagFiles []string
 	flagLight bool
+
+	flagLI,
+	flagLRA string
 )
 
 func doProcess(path string) {
@@ -61,23 +64,41 @@ func mainFunc() error {
 		return cli.ErrorNotEnoughArguments()
 	}
 
+	if flagLI != "" {
+		loudnorm.SetTargetLI(flagLI)
+	}
+
+	if flagLRA != "" {
+		loudnorm.SetTargetLRA(flagLRA)
+	}
+
 	t := time.Now()
-	fmt.Println("scanning...")
-	opts, err := loudnorm.Scan(flagFiles[0], 0)
+	// fmt.Println("scanning...")
+	// opts, err := loudnorm.ScanLight(flagFiles[0], 0)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// fmt.Println("delta time ", time.Since(t))
+
+	// // fmt.Println("opts: ", opts)
+	// fmt.Printf("(%v, LRA: %v, Thresh: %v, TP: %v) time: %v\n",
+	// 	opts.InputI, opts.InputLRA, opts.InputThresh, opts.InputTP, time.Since(t))
+
+	// fmt.Println("processing...")
+	// err = loudnorm.Process(flagFiles[0], flagFiles[0]+".flac", 0,
+	// 	opts.InputI, opts.InputLRA, opts.InputThresh, opts.InputTP)
+	// if err != nil {
+	// 	return err
+	// }
+	// fmt.Printf("(%v, LRA: %v, Thresh: %v, TP: %v) time: %v\n",
+	// 	opts.InputI, opts.InputLRA, opts.InputThresh, opts.InputTP, time.Since(t))
+
+	err := loudnorm.Process(flagFiles[0])
 	if err != nil {
 		return err
 	}
-	fmt.Println("delta time ", time.Since(t))
-
-	// fmt.Println("opts: ", opts)
-	fmt.Printf("(%v, LRA: %v, Thresh: %v, TP: %v, Offs: %v) time: %v\n", opts.InputI, opts.InputLRA, opts.InputThresh, opts.InputTP, opts.TargetOffset, time.Since(t))
-
-	fmt.Println("processing...")
-	err = loudnorm.Process(flagFiles[0], flagFiles[0]+".flac", 0, opts)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("(%v, LRA: %v, Thresh: %v, TP: %v, Offs: %v) time: %v\n", opts.InputI, opts.InputLRA, opts.InputThresh, opts.InputTP, opts.TargetOffset, time.Since(t))
+	fmt.Printf("%v", time.Since(t))
 	return nil
 }
 
@@ -104,6 +125,8 @@ func main() {
 		cli.Usage("!PROG! {flags|<...>}"),
 		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
 		cli.Flag("-h -help      : help", cmdLine.PrintHelp).Terminator(), // Why is this works ?
+		cli.Flag("-li           : light mode (whithout TP)", &flagLI),
+		cli.Flag("-lra           : light mode (whithout TP)", &flagLRA),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.Command("scan       : scan loudnes parameters", doScan,
 			cli.Flag("-l --light: light mode (whithout TP)", &flagLight),

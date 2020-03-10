@@ -11,13 +11,6 @@ import (
 	"strings"
 )
 
-const (
-	targetI    = "-23.0"
-	targetLRA  = "20.0"
-	targetTP   = "-1.0"
-	samplerate = "48k"
-)
-
 // Options -
 type Options struct {
 	InputI            string `json:"input_i"`
@@ -42,6 +35,31 @@ type OptionsLight struct {
 	InputLRAHigh string
 
 	InputTP string
+}
+
+// LoudnessInfo -
+type LoudnessInfo struct {
+	I  string // integrated
+	RA string // range
+	TP string // true peaks
+	TH string // threshold
+}
+
+func (o *LoudnessInfo) String() string {
+	if o == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("I: %v, RA: %v, TP: %v, TH: %v", o.I, o.RA, o.TP, o.TH)
+}
+
+// SetTargetLI -
+func SetTargetLI(li string) {
+	targetI = li
+}
+
+// SetTargetLRA -
+func SetTargetLRA(lra string) {
+	targetLRA = lra
 }
 
 // Scan -
@@ -111,6 +129,9 @@ func ScanLight(filePath string, trackN int) (opts *OptionsLight, err error) {
 		"-f", "null",
 		"NUL",
 	}
+	if GlobalDebug {
+		fmt.Println("### params: ", params)
+	}
 	c := exec.Command("ffmpeg", params...)
 	var o bytes.Buffer
 	var e bytes.Buffer
@@ -154,7 +175,7 @@ func skipBlank(list []string) []string {
 	return list
 }
 
-func parseVal(list []string, prefix string) ([]string, string, error) {
+func parseVal(list []string, prefix string, trimSuffix string) ([]string, string, error) {
 	list = skipBlank(list)
 	if len(list) == 0 {
 		return nil, "", fmt.Errorf("not enough data")
@@ -164,52 +185,53 @@ func parseVal(list []string, prefix string) ([]string, string, error) {
 		return nil, "", fmt.Errorf("does not have prefix %q", prefix)
 	}
 	s = strings.TrimPrefix(s, prefix)
-	s = strings.TrimSuffix(s, "LU")
-	s = strings.TrimSuffix(s, "LUFS")
-	s = strings.TrimSuffix(s, "dBFS")
+	s = strings.TrimSuffix(s, trimSuffix)
+	// s = strings.TrimSuffix(s, "LUFS")
+	// s = strings.TrimSuffix(s, "LU")
+	// s = strings.TrimSuffix(s, "dBFS")
 	s = strings.TrimSpace(s)
 	return list[1:], s, nil
 }
 
 func parseEbur128Summary(list []string) (*OptionsLight, error) {
-	list, _, err := parseVal(list, "Integrated loudness:")
+	list, _, err := parseVal(list, "Integrated loudness:", "")
 	if err != nil {
 		return nil, err
 	}
-	list, I, err := parseVal(list, "I:")
+	list, I, err := parseVal(list, "I:", "LUFS")
 	if err != nil {
 		return nil, err
 	}
-	list, Threshold, err := parseVal(list, "Threshold:")
+	list, Threshold, err := parseVal(list, "Threshold:", "LUFS")
 	if err != nil {
 		return nil, err
 	}
-	list, _, err = parseVal(list, "Loudness range:")
+	list, _, err = parseVal(list, "Loudness range:", "")
 	if err != nil {
 		return nil, err
 	}
-	list, LRA, err := parseVal(list, "LRA:")
+	list, LRA, err := parseVal(list, "LRA:", "LU")
 	if err != nil {
 		return nil, err
 	}
-	list, Threshold2, err := parseVal(list, "Threshold:")
+	list, Threshold2, err := parseVal(list, "Threshold:", "LUFS")
 	if err != nil {
 		return nil, err
 	}
-	list, LRALow, err := parseVal(list, "LRA low:")
+	list, LRALow, err := parseVal(list, "LRA low:", "LUFS")
 	if err != nil {
 		return nil, err
 	}
-	list, LRAHigh, err := parseVal(list, "LRA high:")
+	list, LRAHigh, err := parseVal(list, "LRA high:", "LUFS")
 	if err != nil {
 		return nil, err
 	}
-	list, _, err = parseVal(list, "True peak:")
+	list, _, err = parseVal(list, "True peak:", "dBFS")
 	if err != nil {
 		return nil, err
 	}
 
-	list, TP, err := parseVal(list, "Peak:")
+	list, TP, err := parseVal(list, "Peak:", "dBFS")
 	if err != nil {
 		return nil, err
 	}
@@ -225,32 +247,37 @@ func parseEbur128Summary(list []string) (*OptionsLight, error) {
 	return ret, nil
 }
 
-// Process -
-func Process(filePath string, fileOut string, trackN int, opts *Options) error {
+// NormalizeTo -
+func NormalizeTo(filePath string, trackN int, fileOut string, audioParams []string, inputI, inputLRA, inputTP, inputThresh string) (*Options, error) {
 	params := []string{
+		"-y",
 		"-hide_banner",
 		"-i", filePath,
 		"-map", "0:" + strconv.Itoa(trackN),
 		"-filter:a",
-		"loudnorm=print_format=summary" +
+		"loudnorm=print_format=json" +
 			":linear=true" +
 			":I=" + targetI +
 			":LRA=" + targetLRA +
 			":TP=" + targetTP +
-			":measured_I=" + opts.InputI +
-			":measured_LRA=" + opts.InputLRA +
-			":measured_TP=" + opts.InputTP +
-			":measured_thresh=" + opts.InputThresh +
+			":measured_I=" + inputI +
+			":measured_LRA=" + inputLRA +
+			":measured_TP=" + inputTP +
+			":measured_thresh=" + inputThresh +
 			// ":offset=" + opts.TargetOffset,  // it's just difference between internal target_i and i_out
 			// "-f", "flac",
 			"",
-		"-c:a", "flac",
-		"-r:a", samplerate,
-		// "-ac", "6"
-		"-y",
-		fileOut,
 	}
-	// fmt.Println("params: ", params)
+	params = append(params, audioParams...)
+	params = append(
+		params,
+		"-r:a", samplerate,
+		fileOut,
+	)
+
+	if GlobalDebug {
+		fmt.Println("### params: ", params)
+	}
 	c := exec.Command("ffmpeg", params...)
 	var o bytes.Buffer
 	var e bytes.Buffer
@@ -259,8 +286,34 @@ func Process(filePath string, fileOut string, trackN int, opts *Options) error {
 	err := c.Run()
 	if err != nil {
 		fmt.Println("###:", e.String())
-		return err
+		return nil, err
 	}
-	// fmt.Println("###done:", e.String())
-	return nil
+
+	list := strings.Split(e.String(), "\n")
+
+	if len(list) < 12 {
+		fmt.Println(strings.Join(list, "\n"))
+		return nil, fmt.Errorf("size of an output info too small")
+	}
+
+	found := false
+	jsonList := []string{}
+	for _, line := range list {
+		if strings.HasPrefix(line, "[Parsed_loudnorm_0 @") {
+			found = true
+			continue
+		}
+		if found {
+			jsonList = append(jsonList, line)
+		}
+	}
+
+	opts := &Options{}
+	err = json.Unmarshal([]byte(strings.Join(jsonList, "\n")), &opts)
+	if err != nil {
+		return nil, err
+	}
+
+	// fmt.Println(strings.Join(jsonList, "\n"))
+	return opts, nil
 }
