@@ -62,6 +62,11 @@ func SetTargetLRA(lra string) {
 	targetLRA = lra
 }
 
+// SetTargetTP -
+func SetTargetTP(tp string) {
+	targetTP = tp
+}
+
 // Scan -
 func Scan(filePath string, trackN int) (opts *Options, err error) {
 	params := []string{
@@ -257,6 +262,7 @@ func NormalizeTo(filePath string, trackN int, fileOut string, audioParams []stri
 		"-filter:a",
 		"loudnorm=print_format=json" +
 			":linear=true" +
+			// ":linear=false" +
 			":I=" + targetI +
 			":LRA=" + targetLRA +
 			":TP=" + targetTP +
@@ -271,7 +277,7 @@ func NormalizeTo(filePath string, trackN int, fileOut string, audioParams []stri
 	params = append(params, audioParams...)
 	params = append(
 		params,
-		"-r:a", samplerate,
+		"-ar:a", samplerate,
 		fileOut,
 	)
 

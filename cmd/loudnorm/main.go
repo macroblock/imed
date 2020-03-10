@@ -21,7 +21,8 @@ var (
 	flagLight bool
 
 	flagLI,
-	flagLRA string
+	flagLRA,
+	flagTP string
 )
 
 func doProcess(path string) {
@@ -70,6 +71,10 @@ func mainFunc() error {
 
 	if flagLRA != "" {
 		loudnorm.SetTargetLRA(flagLRA)
+	}
+
+	if flagTP != "" {
+		loudnorm.SetTargetTP(flagTP)
 	}
 
 	t := time.Now()
@@ -127,6 +132,7 @@ func main() {
 		cli.Flag("-h -help      : help", cmdLine.PrintHelp).Terminator(), // Why is this works ?
 		cli.Flag("-li           : light mode (whithout TP)", &flagLI),
 		cli.Flag("-lra           : light mode (whithout TP)", &flagLRA),
+		cli.Flag("-tp           : light mode (whithout TP)", &flagTP),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.Command("scan       : scan loudnes parameters", doScan,
 			cli.Flag("-l --light: light mode (whithout TP)", &flagLight),
