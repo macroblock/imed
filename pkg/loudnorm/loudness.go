@@ -41,7 +41,7 @@ func ValidLoudness(li *LoudnessInfo) bool {
 	if err != nil {
 		panic(err)
 	}
-	if tI+1.0 > I && I > tI-1.0 &&
+	if tI+0.5 > I && I > tI-0.5 && // should it be +/-1.0 ?
 		tLRA >= RA && tTP >= TP {
 		return true
 	}
