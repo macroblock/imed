@@ -40,8 +40,13 @@ func ValidLoudness(li *LoudnessInfo) bool {
 	if err != nil {
 		panic(err)
 	}
+	_ = tLRA
+	_ = RA
+	_ = tTP
+	_ = TP
 	if tI+0.5 > I && I > tI-0.5 && // should it be +/-1.0 ?
-		tLRA+1.0 >= RA && tTP >= TP {
+		//tLRA+1.0 >= RA && tTP >= TP
+		true {
 		return true
 	}
 	// fmt.Printf("####### invalid %v\n", tI)
