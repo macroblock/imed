@@ -119,9 +119,10 @@ func main() {
 	)
 
 	defer func() {
-		if log.State().Intersect(loglevel.Warning.OrLower()) != 0 {
-			misc.PauseTerminal()
-		}
+		// if log.State().Intersect(loglevel.Warning.OrLower()) != 0 {
+		// 	misc.PauseTerminal()
+		// }
+		misc.PauseTerminal()
 	}()
 
 	// command line interface

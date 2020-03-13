@@ -33,7 +33,7 @@ func ValidLoudness(li *LoudnessInfo) bool {
 	if err != nil {
 		panic(err)
 	}
-	RA, err := strconv.ParseFloat(li.TP, 64)
+	RA, err := strconv.ParseFloat(li.RA, 64)
 	if err != nil {
 		panic(err)
 	}
@@ -42,7 +42,7 @@ func ValidLoudness(li *LoudnessInfo) bool {
 		panic(err)
 	}
 	if tI+0.5 > I && I > tI-0.5 && // should it be +/-1.0 ?
-		tLRA >= RA && tTP >= TP {
+		tLRA+1.0 >= RA && tTP >= TP {
 		return true
 	}
 	fmt.Printf("####### invalid %v\n", tI)
