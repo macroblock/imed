@@ -1,7 +1,6 @@
 package loudnorm
 
 import (
-	"fmt"
 	"strconv"
 )
 
@@ -45,6 +44,6 @@ func ValidLoudness(li *LoudnessInfo) bool {
 		tLRA+1.0 >= RA && tTP >= TP {
 		return true
 	}
-	fmt.Printf("####### invalid %v\n", tI)
+	// fmt.Printf("####### invalid %v\n", tI)
 	return false
 }

@@ -19,3 +19,5 @@ test/#test_sound/*.*
 *.mp4
 *.mpg
 *.mkv
+*.aac
+*.ac3
