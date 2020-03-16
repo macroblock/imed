@@ -1,6 +1,7 @@
 package loudnorm
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -170,6 +171,38 @@ func Scan(filePath string, trackN int) (*Options, error) {
 	return ret, nil
 }
 
+func scanLines(data []byte, atEOF bool) (advance int, token []byte, err error) {
+
+	for i := 0; i < len(data); i++ {
+		switch {
+		case data[i] == '\n':
+			return i + 1, data[:i], nil
+		case data[i] == '\r':
+			if i == len(data)-1 {
+				if atEOF {
+					// \r EOF
+					return i + 1, data[:i], nil
+				}
+				// \r EOBuffer -> need more data
+				return 0, nil, nil
+			}
+			if data[i+1] == '\n' {
+				// \r \n
+				return i + 2, data[:i], nil
+			}
+			// \r !\n
+			return i + 1, data[:i], nil
+		}
+	}
+
+	if atEOF {
+		// + 1 is for not to stuck on empty buffer
+		return len(data) + 1, data, nil
+	}
+	// need more data
+	return 0, nil, nil
+}
+
 // ScanLight -
 func ScanLight(filePath string, trackN int) (opts *OptionsLight, err error) {
 	params := []string{
@@ -187,40 +220,59 @@ func ScanLight(filePath string, trackN int) (opts *OptionsLight, err error) {
 	}
 	c := exec.Command("ffmpeg", params...)
 	var o bytes.Buffer
-	var e bytes.Buffer
+	// var e bytes.Buffer
 	c.Stdout = &o
-	c.Stderr = &e
-	err = c.Run()
+	stderr, err := c.StderrPipe()
 	if err != nil {
-		return nil, errors.New(string(e.Bytes()))
+		return nil, err
+	}
+	// c.Stderr = &e
+	err = c.Start()
+	if err != nil {
+		return nil, err // errors.New(string(e.Bytes()))
 	}
 
-	list := strings.Split(e.String(), "\n")
-
-	re := regexp.MustCompile("\\[Parsed_ebur128_0 @ [^ ]+\\] Summary:.*")
-
-	found := false
-	strList := []string{}
-	for _, line := range list {
-		if re.MatchString(line) {
-			found = true
+	reProgress := regexp.MustCompile("size=[^ ]+ time=(\\d{2}:\\d{2}:\\d{2}.\\d+) bitrate=[^ ]+ speed=[^ ]+")
+	scanner := bufio.NewScanner(stderr)
+	scanner.Split(scanLines)
+	for scanner.Scan() {
+		line := scanner.Text()
+		// fmt.Printf("@@@@: %q\n", line)
+		val := reProgress.FindAllStringSubmatch(line, 1)
+		if val == nil {
 			continue
 		}
-		if !found {
-			continue
-		}
-		strList = append(strList, line)
+		fmt.Printf("%v           \x0d", val[0][1])
 	}
-
-	fmt.Println("???????")
-	optsLight, err := parseEbur128Summary(strList)
-	fmt.Println("#######", err)
+	err = c.Wait()
 	if err != nil {
 		return nil, err
 	}
 
-	// fmt.Println(strings.Join(jsonList, "\n"))
-	return optsLight, nil
+	return nil, fmt.Errorf("test error")
+	// list := strings.Split(e.String(), "\n")
+
+	// re := regexp.MustCompile("\\[Parsed_ebur128_0 @ [^ ]+\\] Summary:.*")
+	// found := false
+	// strList := []string{}
+	// for _, line := range list {
+	// 	if re.MatchString(line) {
+	// 		found = true
+	// 		continue
+	// 	}
+	// 	if !found {
+	// 		continue
+	// 	}
+	// 	strList = append(strList, line)
+	// }
+
+	// optsLight, err := parseEbur128Summary(strList)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// // fmt.Println(strings.Join(jsonList, "\n"))
+	// return optsLight, nil
 }
 
 func skipBlank(list []string) []string {
@@ -339,9 +391,9 @@ func NormalizeTo(filePath string, trackN int, fileOut string, audioParams []stri
 		"loudnorm=print_format=json" +
 			":linear=true" +
 			// ":linear=false" +
-			fmt.Sprintf(":I=%.2f:LRA=%.2f:TP=%.2f",
+			fmt.Sprintf(":I=% 6.2f:LRA=% 6.2f:TP=% 6.2f",
 				targetI, targetLRA, targetTP) +
-			fmt.Sprintf(":measured_I=%.2f:measured_LRA=%.2f:measured_TP=%.2f:measured_thresh=%.2f",
+			fmt.Sprintf(":measured_I=% 6.2f:measured_LRA=% 6.2f:measured_TP=% 6.2f:measured_thresh=% 6.2f",
 				inputI, inputLRA, inputTP, inputThresh) +
 			// ":offset=" + opts.TargetOffset,  // it's just difference between internal target_i and i_out
 			// "-f", "flac",
