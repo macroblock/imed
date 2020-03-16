@@ -138,8 +138,8 @@ func generateExtFilename(fi *TFileInfo, si *TStreamInfo) string {
 	path, name := filepath.Split(fi.Filename)
 	ext := filepath.Ext(name)
 	name = strings.TrimSuffix(name, ext)
-	base := path + name + "-" + strconv.Itoa(si.Index) + "-" + si.Lang + "-" + si.Codec
-	return base + ".mp4"
+	base := path + name + "-" + strconv.Itoa(si.Index) + "-" + si.Lang //+ "-" + si.Codec
+	return base + ".m4a"
 }
 
 func generateAudioParams(fi *TFileInfo, si *TStreamInfo) []string {
@@ -165,36 +165,13 @@ func generateAudioParams(fi *TFileInfo, si *TStreamInfo) []string {
 			return mp2Params6
 		}
 	case ModeUnknown:
-		switch si.Codec {
+		switch si.Channels {
 		default:
-			panic(fmt.Sprintf("unsupported audio codec: %v", si.Codec))
-		case "ac3":
-			switch si.Channels {
-			default:
-				panic(fmt.Sprintf("wrong audio stream parameters: codec %v, channels: %v", si.Codec, si.Channels))
-			case 2:
-				return ac3Params2
-			case 6:
-				return ac3Params6
-			}
-		case "mp2":
-			switch si.Channels {
-			default:
-				panic(fmt.Sprintf("wrong audio stream parameters: codec %v, channels: %v", si.Codec, si.Channels))
-			case 2:
-				return mp2Params2
-			case 6:
-				return mp2Params6
-			}
-		case "alac":
-			switch si.Channels {
-			default:
-				panic(fmt.Sprintf("wrong audio stream parameters: codec %v, channels: %v", si.Codec, si.Channels))
-			case 2:
-				return alacParams
-			case 6:
-				return alacParams
-			}
+			panic(fmt.Sprintf("wrong audio stream parameters: codec %v, channels: %v", si.Codec, si.Channels))
+		case 2:
+			return alacParams
+		case 6:
+			return alacParams
 		}
 	}
 }

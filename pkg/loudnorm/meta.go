@@ -8,12 +8,9 @@ import (
 
 // PackLoudnessInfoElement -
 func PackLoudnessInfoElement(streamNo int, li *LoudnessInfo) string {
-	return fmt.Sprintf("[Stream #:%v]\nL_I  %v\nL_RA %v\nL_TP %v\nL_TH %v",
+	return fmt.Sprintf("[Stream #:%v]\nL_I  % 6.2f\nL_RA % 6.2f\nL_TP % 6.2f\nL_TH % 6.2f",
 		strconv.Itoa(streamNo),
-		alignStr(4, li.I),
-		alignStr(4, li.RA),
-		alignStr(4, li.TP),
-		alignStr(4, li.TH),
+		li.I, li.RA, li.TP, li.TH,
 	)
 }
 
@@ -36,31 +33,29 @@ func AttachLoudnessInfo(fi *TFileInfo, data string) error {
 
 	for list = skipBlank(list); len(list) != 0; list = skipBlank(list) {
 		var (
-			streamNo, I, RA, TP, TH string
-			err                     error
+			streamNo      int
+			I, RA, TP, TH float64
+			err           error
 		)
 
-		list, streamNo, err = parseVal(list, "[Stream #:", "]")
+		list, streamNo, err = parseValI(list, "[Stream #:", "]")
+		if err != nil {
+			// return err
+			break
+		}
+		list, I, err = parseValF(list, "L_I", "")
 		if err != nil {
 			return err
 		}
-		n, err := strconv.Atoi(streamNo)
+		list, RA, err = parseValF(list, "L_RA", "")
 		if err != nil {
 			return err
 		}
-		list, I, err = parseVal(list, "L_I", "")
+		list, TP, err = parseValF(list, "L_TP", "")
 		if err != nil {
 			return err
 		}
-		list, RA, err = parseVal(list, "L_RA", "")
-		if err != nil {
-			return err
-		}
-		list, TP, err = parseVal(list, "L_TP", "")
-		if err != nil {
-			return err
-		}
-		list, TH, err = parseVal(list, "L_TH", "")
+		list, TH, err = parseValF(list, "L_TH", "")
 		if err != nil {
 			return err
 		}
@@ -70,7 +65,7 @@ func AttachLoudnessInfo(fi *TFileInfo, data string) error {
 			TP: TP,
 			TH: TH,
 		}
-		dict[n] = li
+		dict[streamNo] = li
 	}
 	for _, stream := range fi.Streams {
 		if li, ok := dict[stream.Index]; ok {

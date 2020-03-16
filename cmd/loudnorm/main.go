@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/macroblock/imed/pkg/cli"
@@ -34,7 +35,7 @@ func doScan() error {
 		return cli.ErrorNotEnoughArguments()
 	}
 	for _, path := range flagFiles {
-		var I, LRA, Thresh string
+		var I, LRA, Thresh float64
 		switch flagLight {
 		default:
 			opts, err := loudnorm.Scan(path, 0)
@@ -66,15 +67,27 @@ func mainFunc() error {
 	}
 
 	if flagLI != "" {
-		loudnorm.SetTargetLI(flagLI)
+		val, err := strconv.ParseFloat(flagLI, 64)
+		if err != nil {
+			return err
+		}
+		loudnorm.SetTargetLI(val)
 	}
 
 	if flagLRA != "" {
-		loudnorm.SetTargetLRA(flagLRA)
+		val, err := strconv.ParseFloat(flagLRA, 64)
+		if err != nil {
+			return err
+		}
+		loudnorm.SetTargetLRA(val)
 	}
 
 	if flagTP != "" {
-		loudnorm.SetTargetTP(flagTP)
+		val, err := strconv.ParseFloat(flagTP, 64)
+		if err != nil {
+			return err
+		}
+		loudnorm.SetTargetTP(val)
 	}
 
 	t := time.Now()

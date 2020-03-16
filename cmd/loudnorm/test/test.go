@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"github.com/macroblock/imed/pkg/loudnorm"
@@ -17,15 +16,12 @@ func testLoudness(I float64, path string) {
 	if err != nil {
 		fmt.Printf("### error: %v\n", err)
 	}
-	val, err := strconv.ParseFloat(opts.InputI, 64)
-	if err != nil {
-		panic(err)
-	}
 	res := "#FAILED"
-	if val <= I+0.1 && val >= I-0.1 {
+	if opts.InputI <= I+0.1 && opts.InputI >= I-0.1 {
 		res = " PASSED"
 	}
-	fmt.Printf("%v: (%2.3f, LRA: %v, Thresh: %v, TP: %v, Offs: %v) %v %q\n", res, val, opts.InputLRA, opts.InputThresh, opts.InputTP, opts.TargetOffset, dt, filepath.Base(path))
+	fmt.Printf("%v: (%2.3f, LRA: %v, Thresh: %v, TP: %v, Offs: %v) %v %q\n",
+		res, opts.InputI, opts.InputLRA, opts.InputThresh, opts.InputTP, opts.TargetOffset, dt, filepath.Base(path))
 }
 
 func testLoudness2(I float64, path string) {
@@ -36,16 +32,13 @@ func testLoudness2(I float64, path string) {
 	if err != nil {
 		fmt.Printf("### error: %v\n", err)
 	}
-	val, err := strconv.ParseFloat(opts.InputI, 64)
-	if err != nil {
-		panic(err)
-	}
 	res := "#FAILED"
-	if val <= I+0.1 && val >= I-0.1 {
+	if opts.InputI <= I+0.1 && opts.InputI >= I-0.1 {
 		res = " PASSED"
 	}
 	// fmt.Printf("%v: (%2.3f) %v2.3 %q\n", res, val, dt, filepath.Base(path))
-	fmt.Printf("%v: (%2.3f, LRA: %v, Thresh: %v %v, TP: %v) %v %q\n", res, val, opts.InputLRA, opts.InputThresh, opts.InputThresh2, opts.InputTP, dt, filepath.Base(path))
+	fmt.Printf("%v: (%2.3f, LRA: %v, Thresh: %v %v, TP: %v) %v %q\n",
+		res, opts.InputI, opts.InputLRA, opts.InputThresh, opts.InputThresh2, opts.InputTP, dt, filepath.Base(path))
 }
 
 func main() {

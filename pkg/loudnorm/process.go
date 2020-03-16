@@ -39,6 +39,7 @@ var (
 	alacParams = []string{
 		"-c:a", "alac",
 		"-compression_level", "0",
+		"-sample_fmt", "s16p",
 	}
 )
 
@@ -264,7 +265,7 @@ func MuxTo(fi *TFileInfo) error {
 	isFirstVideo := true
 	isFirstAudio := true
 	isFirstSubtitle := true
-	metadata := []string{}
+	// metadata := []string{}
 	for _, stream := range fi.Streams {
 		switch stream.Type {
 		case "video":
@@ -311,19 +312,19 @@ func MuxTo(fi *TFileInfo) error {
 				// 	"\nL_TP:"+stream.LoudInfo.InputTP+
 				// 	"\nL_TH:"+stream.LoudInfo.InputThresh,
 			)
-			metadata = append(metadata,
-				fmt.Sprintf("[Stream #:%v]\nL_I  %v\nL_RA %v\nL_TP %v\nL_TH %v",
-					strconv.Itoa(inputIndex),
-					alignStr(4, stream.LoudnessInfo.I),
-					alignStr(4, stream.LoudnessInfo.RA),
-					alignStr(4, stream.LoudnessInfo.TP),
-					alignStr(4, stream.LoudnessInfo.TH),
-				),
-			)
+			// metadata = append(metadata,
+			// 	fmt.Sprintf("[Stream #:%v]\nL_I  % 5.2f\nL_RA % 5.2f\nL_TP % 5.2f\nL_TH % 5.2f",
+			// 		inputIndex,
+			// 		stream.LoudnessInfo.I,
+			// 		stream.LoudnessInfo.RA,
+			// 		stream.LoudnessInfo.TP,
+			// 		stream.LoudnessInfo.TH,
+			// 	),
+			// )
 		}
 	}
 	muxParams = append(muxParams, "-metadata")
-	muxParams = append(muxParams, "comment="+strings.Join(metadata, "\n"))
+	muxParams = append(muxParams, "comment="+PackLoudnessInfo(fi)) //+strings.Join(metadata, "\n"))
 	// muxParams = append(muxParams, "description="+strings.Join(metadata, "\n"))
 	muxParams = append(muxParams, generateOutputName(fi.Filename))
 	err := callFFMPEG(nil, muxParams...)

@@ -20,7 +20,7 @@ func cmdRename(command string, entry tEntry) {
 	}
 	fmt.Println()
 	for _, s := range args {
-		tn, err := tagname.NewFromFilename(s, srcf...)
+		tn, err := tagname.NewFromFilename(s, 0, srcf...)
 		if err != nil {
 			fmt.Printf("### %q read error: %v\n", s, err)
 			continue

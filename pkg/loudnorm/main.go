@@ -11,8 +11,7 @@ import (
 	"strings"
 )
 
-// Options -
-type Options struct {
+type optionsJSON struct {
 	InputI            string `json:"input_i"`
 	InputTP           string `json:"input_tp"`
 	InputLRA          string `json:"input_lra"`
@@ -24,25 +23,38 @@ type Options struct {
 	TargetOffset      string `json:"target_offset"`
 }
 
+// Options -
+type Options struct {
+	InputI            float64
+	InputTP           float64
+	InputLRA          float64
+	InputThresh       float64
+	OutputI           float64
+	OutputTP          float64
+	OutputThresh      float64
+	NormalizationType string
+	TargetOffset      float64
+}
+
 // OptionsLight -
 type OptionsLight struct {
-	InputI      string
-	InputThresh string
+	InputI      float64
+	InputThresh float64
 
-	InputLRA     string
-	InputThresh2 string
-	InputLRALow  string
-	InputLRAHigh string
+	InputLRA     float64
+	InputThresh2 float64
+	InputLRALow  float64
+	InputLRAHigh float64
 
-	InputTP string
+	InputTP float64
 }
 
 // LoudnessInfo -
 type LoudnessInfo struct {
-	I  string // integrated
-	RA string // range
-	TP string // true peaks
-	TH string // threshold
+	I  float64 // integrated
+	RA float64 // range
+	TP float64 // true peaks
+	TH float64 // threshold
 }
 
 func (o *LoudnessInfo) String() string {
@@ -53,22 +65,22 @@ func (o *LoudnessInfo) String() string {
 }
 
 // SetTargetLI -
-func SetTargetLI(li string) {
+func SetTargetLI(li float64) {
 	targetI = li
 }
 
 // SetTargetLRA -
-func SetTargetLRA(lra string) {
+func SetTargetLRA(lra float64) {
 	targetLRA = lra
 }
 
 // SetTargetTP -
-func SetTargetTP(tp string) {
+func SetTargetTP(tp float64) {
 	targetTP = tp
 }
 
 // Scan -
-func Scan(filePath string, trackN int) (opts *Options, err error) {
+func Scan(filePath string, trackN int) (*Options, error) {
 	params := []string{
 		"-hide_banner",
 		"-i", filePath,
@@ -81,14 +93,14 @@ func Scan(filePath string, trackN int) (opts *Options, err error) {
 			// ":linear=true" +
 			"",
 		"-f", "null",
-		"NUL",
+		osNullDevice,
 	}
 	c := exec.Command("ffmpeg", params...)
 	var o bytes.Buffer
 	var e bytes.Buffer
 	c.Stdout = &o
 	c.Stderr = &e
-	err = c.Run()
+	err := c.Run()
 	if err != nil {
 		return nil, errors.New(string(e.Bytes()))
 	}
@@ -113,13 +125,49 @@ func Scan(filePath string, trackN int) (opts *Options, err error) {
 		jsonList = append(jsonList, line)
 	}
 
-	err = json.Unmarshal([]byte(strings.Join(jsonList, "\n")), &opts)
+	x := &optionsJSON{}
+	err = json.Unmarshal([]byte(strings.Join(jsonList, "\n")), &x)
 	if err != nil {
 		return nil, err
 	}
 
-	// fmt.Println(strings.Join(jsonList, "\n"))
-	return opts, nil
+	ret := &Options{
+		NormalizationType: x.NormalizationType,
+	}
+	ret.InputI, err = strconv.ParseFloat(x.InputI, 64)
+	if err != nil {
+		return nil, err
+	}
+	ret.InputLRA, err = strconv.ParseFloat(x.InputLRA, 64)
+	if err != nil {
+		return nil, err
+	}
+	ret.InputTP, err = strconv.ParseFloat(x.InputTP, 64)
+	if err != nil {
+		return nil, err
+	}
+	ret.InputThresh, err = strconv.ParseFloat(x.InputThresh, 64)
+	if err != nil {
+		return nil, err
+	}
+	ret.OutputI, err = strconv.ParseFloat(x.OutputI, 64)
+	if err != nil {
+		return nil, err
+	}
+	ret.OutputTP, err = strconv.ParseFloat(x.OutputTP, 64)
+	if err != nil {
+		return nil, err
+	}
+	ret.OutputThresh, err = strconv.ParseFloat(x.OutputThresh, 64)
+	if err != nil {
+		return nil, err
+	}
+	ret.TargetOffset, err = strconv.ParseFloat(x.TargetOffset, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	return ret, nil
 }
 
 // ScanLight -
@@ -132,7 +180,7 @@ func ScanLight(filePath string, trackN int) (opts *OptionsLight, err error) {
 		"ebur128" +
 			"=peak=true",
 		"-f", "null",
-		"NUL",
+		osNullDevice,
 	}
 	if GlobalDebug {
 		fmt.Println("### params: ", params)
@@ -149,7 +197,7 @@ func ScanLight(filePath string, trackN int) (opts *OptionsLight, err error) {
 
 	list := strings.Split(e.String(), "\n")
 
-	re := regexp.MustCompile("\\[Parsed_ebur128_0 @ ........\\] Summary:.*")
+	re := regexp.MustCompile("\\[Parsed_ebur128_0 @ [^ ]+\\] Summary:.*")
 
 	found := false
 	strList := []string{}
@@ -164,7 +212,9 @@ func ScanLight(filePath string, trackN int) (opts *OptionsLight, err error) {
 		strList = append(strList, line)
 	}
 
+	fmt.Println("???????")
 	optsLight, err := parseEbur128Summary(strList)
+	fmt.Println("#######", err)
 	if err != nil {
 		return nil, err
 	}
@@ -191,52 +241,78 @@ func parseVal(list []string, prefix string, trimSuffix string) ([]string, string
 	}
 	s = strings.TrimPrefix(s, prefix)
 	s = strings.TrimSuffix(s, trimSuffix)
-	// s = strings.TrimSuffix(s, "LUFS")
-	// s = strings.TrimSuffix(s, "LU")
-	// s = strings.TrimSuffix(s, "dBFS")
 	s = strings.TrimSpace(s)
 	return list[1:], s, nil
 }
 
+func parseValS(list []string, prefix string, trimSuffix string) ([]string, string, error) {
+	return parseVal(list, prefix, trimSuffix)
+}
+
+func parseValI(list []string, prefix string, trimSuffix string) ([]string, int, error) {
+	newList, s, err := parseVal(list, prefix, trimSuffix)
+	if err != nil {
+		return newList, 0, err
+	}
+	val, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return newList, 0, err
+	}
+	return newList, int(val), nil
+}
+
+func parseValF(list []string, prefix string, trimSuffix string) ([]string, float64, error) {
+	newList, s, err := parseVal(list, prefix, trimSuffix)
+	if err != nil {
+		return newList, 0.0, err
+	}
+	val, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return newList, 0.0, err
+	}
+	return newList, val, nil
+}
+
 func parseEbur128Summary(list []string) (*OptionsLight, error) {
-	list, _, err := parseVal(list, "Integrated loudness:", "")
+	// fmt.Printf("$$$$$$$$\n%q\n", strings.Join(list, "\\n\n"))
+	list, _, err := parseValS(list, "Integrated loudness:", "")
 	if err != nil {
 		return nil, err
 	}
-	list, I, err := parseVal(list, "I:", "LUFS")
+	list, I, err := parseValF(list, "I:", "LUFS")
 	if err != nil {
 		return nil, err
 	}
-	list, Threshold, err := parseVal(list, "Threshold:", "LUFS")
+	list, Threshold, err := parseValF(list, "Threshold:", "LUFS")
 	if err != nil {
 		return nil, err
 	}
-	list, _, err = parseVal(list, "Loudness range:", "")
+	list, _, err = parseValS(list, "Loudness range:", "")
 	if err != nil {
 		return nil, err
 	}
-	list, LRA, err := parseVal(list, "LRA:", "LU")
+	list, LRA, err := parseValF(list, "LRA:", "LU")
 	if err != nil {
 		return nil, err
 	}
-	list, Threshold2, err := parseVal(list, "Threshold:", "LUFS")
+	list, Threshold2, err := parseValF(list, "Threshold:", "LUFS")
 	if err != nil {
 		return nil, err
 	}
-	list, LRALow, err := parseVal(list, "LRA low:", "LUFS")
+	list, LRALow, err := parseValF(list, "LRA low:", "LUFS")
 	if err != nil {
 		return nil, err
 	}
-	list, LRAHigh, err := parseVal(list, "LRA high:", "LUFS")
+	list, LRAHigh, err := parseValF(list, "LRA high:", "LUFS")
 	if err != nil {
 		return nil, err
 	}
-	list, _, err = parseVal(list, "True peak:", "dBFS")
+	list, _, err = parseValS(list, "True peak:", "")
 	if err != nil {
 		return nil, err
 	}
 
-	list, TP, err := parseVal(list, "Peak:", "dBFS")
+	list, TP, err := parseValF(list, "Peak:", "dBFS")
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +329,7 @@ func parseEbur128Summary(list []string) (*OptionsLight, error) {
 }
 
 // NormalizeTo -
-func NormalizeTo(filePath string, trackN int, fileOut string, audioParams []string, inputI, inputLRA, inputTP, inputThresh string) (*Options, error) {
+func NormalizeTo(filePath string, trackN int, fileOut string, audioParams []string, inputI, inputLRA, inputTP, inputThresh float64) (*Options, error) {
 	params := []string{
 		"-y",
 		"-hide_banner",
@@ -263,13 +339,10 @@ func NormalizeTo(filePath string, trackN int, fileOut string, audioParams []stri
 		"loudnorm=print_format=json" +
 			":linear=true" +
 			// ":linear=false" +
-			":I=" + targetI +
-			":LRA=" + targetLRA +
-			":TP=" + targetTP +
-			":measured_I=" + inputI +
-			":measured_LRA=" + inputLRA +
-			":measured_TP=" + inputTP +
-			":measured_thresh=" + inputThresh +
+			fmt.Sprintf(":I=%.2f:LRA=%.2f:TP=%.2f",
+				targetI, targetLRA, targetTP) +
+			fmt.Sprintf(":measured_I=%.2f:measured_LRA=%.2f:measured_TP=%.2f:measured_thresh=%.2f",
+				inputI, inputLRA, inputTP, inputThresh) +
 			// ":offset=" + opts.TargetOffset,  // it's just difference between internal target_i and i_out
 			// "-f", "flac",
 			"",

@@ -208,7 +208,7 @@ func applyFilters(name string, filters [][]tFilterItem, schemaName string) (bool
 	if schemas[0] == "" {
 		schemas = []string{"rt.normal", "old.normal"}
 	}
-	tn, err := tagname.NewFromFilename(name, schemas...)
+	tn, err := tagname.NewFromFilename(name, 0, schemas...)
 	if err != nil {
 		// fmt.Printf(" %q read error: %v\n", s, err)
 		return false, fmt.Errorf("%v\n%v", name, err)

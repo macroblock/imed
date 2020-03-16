@@ -21,3 +21,4 @@ test/#test_sound/*.*
 *.mkv
 *.aac
 *.ac3
+*.flac
