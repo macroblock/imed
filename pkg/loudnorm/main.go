@@ -232,47 +232,39 @@ func ScanLight(filePath string, trackN int) (opts *OptionsLight, err error) {
 		return nil, err // errors.New(string(e.Bytes()))
 	}
 
-	reProgress := regexp.MustCompile("size=[^ ]+ time=(\\d{2}:\\d{2}:\\d{2}.\\d+) bitrate=[^ ]+ speed=[^ ]+")
+	reProgress := regexp.MustCompile("size=.+ time=(\\d{2}:\\d{2}:\\d{2}.\\d+) bitrate=.+ speed=.+")
+	reEbur := regexp.MustCompile("\\[Parsed_ebur128_0 @ [^ ]+\\] Summary:.*")
 	scanner := bufio.NewScanner(stderr)
 	scanner.Split(scanLines)
+	strList := []string{}
+	found := false
 	for scanner.Scan() {
 		line := scanner.Text()
 		// fmt.Printf("@@@@: %q\n", line)
-		val := reProgress.FindAllStringSubmatch(line, 1)
-		if val == nil {
+		if val := reProgress.FindAllStringSubmatch(line, 1); val != nil {
+			fmt.Printf("%v           \x0d", val[0][1])
 			continue
 		}
-		fmt.Printf("%v           \x0d", val[0][1])
+		if found {
+			strList = append(strList, line)
+			continue
+		}
+		if reEbur.MatchString(line) {
+			found = true
+		}
 	}
+	fmt.Println("")
 	err = c.Wait()
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, fmt.Errorf("test error")
-	// list := strings.Split(e.String(), "\n")
+	optsLight, err := parseEbur128Summary(strList)
+	if err != nil {
+		return nil, err
+	}
 
-	// re := regexp.MustCompile("\\[Parsed_ebur128_0 @ [^ ]+\\] Summary:.*")
-	// found := false
-	// strList := []string{}
-	// for _, line := range list {
-	// 	if re.MatchString(line) {
-	// 		found = true
-	// 		continue
-	// 	}
-	// 	if !found {
-	// 		continue
-	// 	}
-	// 	strList = append(strList, line)
-	// }
-
-	// optsLight, err := parseEbur128Summary(strList)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// // fmt.Println(strings.Join(jsonList, "\n"))
-	// return optsLight, nil
+	return optsLight, nil
 }
 
 func skipBlank(list []string) []string {
