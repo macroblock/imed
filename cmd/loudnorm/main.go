@@ -52,9 +52,9 @@ func doScan() error {
 				log.Errorf("FAIL %v %q", fmt.Sprint(err), path)
 				continue
 			}
-			I = opts.InputI
-			LRA = opts.InputLRA
-			Thresh = opts.InputThresh
+			I = opts.I
+			LRA = opts.LRA
+			Thresh = opts.Thresh
 		}
 		log.Infof("DONE I: %v LRA: %v Thresh: %v %q:", I, LRA, Thresh, filepath.Base(path))
 	}

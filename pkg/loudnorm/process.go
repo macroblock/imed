@@ -149,14 +149,14 @@ func ScanAudio(fi *TFileInfo) error {
 			if GlobalDebug {
 				fmt.Printf("ebur128 %v:%v:\n  input: I: %v, LRA: %v, TP: %v, Thresh: %v, Thresh2: %v\n",
 					filepath.Base(filename), index,
-					li.InputI, li.InputLRA, li.InputTP, li.InputThresh, li.InputThresh2,
+					li.I, li.LRA, li.TP, li.Thresh, li.Thresh2,
 				)
 			}
 			stream.LoudnessInfo = &LoudnessInfo{
-				I:  li.InputI,
-				RA: li.InputLRA,
-				TP: li.InputTP,
-				TH: li.InputThresh,
+				I:  li.I,
+				RA: li.LRA,
+				TP: li.TP,
+				TH: li.Thresh,
 			}
 			stream.validLoudness = true
 			if !ValidLoudness(stream.LoudnessInfo) {

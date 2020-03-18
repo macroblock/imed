@@ -1,15 +1,15 @@
 package loudnorm
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os/exec"
-	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/macroblock/imed/pkg/ffmpeg"
 )
 
 type optionsJSON struct {
@@ -204,67 +204,42 @@ func scanLines(data []byte, atEOF bool) (advance int, token []byte, err error) {
 }
 
 // ScanLight -
-func ScanLight(filePath string, trackN int) (opts *OptionsLight, err error) {
+func ScanLight(filePath string, trackN int) (*ffmpeg.TEburData, error) {
 	params := []string{
 		"-hide_banner",
 		"-i", filePath,
 		"-map", "0:" + strconv.Itoa(trackN),
 		"-filter:a",
 		"ebur128" +
-			"=peak=true",
+			"=peak=true" +
+			"",
 		"-f", "null",
 		osNullDevice,
 	}
 	if GlobalDebug {
 		fmt.Println("### params: ", params)
 	}
-	c := exec.Command("ffmpeg", params...)
-	var o bytes.Buffer
-	// var e bytes.Buffer
-	c.Stdout = &o
-	stderr, err := c.StderrPipe()
+	time, err := ffmpeg.ParseTime("11:22:33.44")
 	if err != nil {
 		return nil, err
 	}
-	// c.Stderr = &e
-	err = c.Start()
-	if err != nil {
-		return nil, err // errors.New(string(e.Bytes()))
-	}
-
-	reProgress := regexp.MustCompile("size=.+ time=(\\d{2}:\\d{2}:\\d{2}.\\d+) bitrate=.+ speed=.+")
-	reEbur := regexp.MustCompile("\\[Parsed_ebur128_0 @ [^ ]+\\] Summary:.*")
-	scanner := bufio.NewScanner(stderr)
-	scanner.Split(scanLines)
-	strList := []string{}
-	found := false
-	for scanner.Scan() {
-		line := scanner.Text()
-		// fmt.Printf("@@@@: %q\n", line)
-		if val := reProgress.FindAllStringSubmatch(line, 1); val != nil {
-			fmt.Printf("%v           \x0d", val[0][1])
-			continue
-		}
-		if found {
-			strList = append(strList, line)
-			continue
-		}
-		if reEbur.MatchString(line) {
-			found = true
-		}
-	}
-	fmt.Println("")
-	err = c.Wait()
+	eburParser := ffmpeg.NewEburParser(true)
+	err = ffmpeg.Run(
+		ffmpeg.NewCombineParser(
+			ffmpeg.NewAudioProgressParser(time, nil),
+			eburParser,
+		),
+		params...,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	optsLight, err := parseEbur128Summary(strList)
+	data, err := eburParser.GetData()
 	if err != nil {
 		return nil, err
 	}
-
-	return optsLight, nil
+	return data, nil
 }
 
 func skipBlank(list []string) []string {
