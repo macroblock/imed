@@ -1,0 +1,1 @@
+ffmpeg -y -hide_banner -i 01 - In The Flesh.wav -map 0:0 -filter:a compand=attacks=0:decays=0.01:points=-90/-90|0/-30:gain=30,ebur128,astats -ar 48k test.wav
