@@ -82,12 +82,18 @@ func mainFunc() error {
 			return err
 		}
 		lines := strings.Split(text, "\n")
+		lastNonEmpty := -1
 		for i := range lines {
 			s := lines[i]
 			s, _ = translit.Do(s)
 			s = strings.Trim(s, "_")
 			lines[i] = upper(s)
+			if lines[i] != "" {
+				lastNonEmpty = i
+			}
 		}
+		lines = lines[:lastNonEmpty+1]
+
 		if flagD == "" {
 			flagD = "\n"
 		}
