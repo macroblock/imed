@@ -139,7 +139,7 @@ func ScanAudio(fi *TFileInfo) error {
 				filename = stream.ExtName
 				index = 0
 			}
-			li, err := ScanLight(filename, index)
+			li, err := Scan(filename, index)
 			defer mtx.Unlock()
 			mtx.Lock()
 			if err != nil {

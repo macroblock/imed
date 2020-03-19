@@ -36,26 +36,14 @@ func doScan() error {
 	}
 	for _, path := range flagFiles {
 		var I, LRA, Thresh float64
-		switch flagLight {
-		default:
-			opts, err := loudnorm.Scan(path, 0)
-			if err != nil {
-				log.Errorf("FAIL %v %q", fmt.Sprint(err), path)
-				continue
-			}
-			I = opts.InputI
-			LRA = opts.InputLRA
-			Thresh = opts.InputThresh
-		case true:
-			opts, err := loudnorm.ScanLight(path, 0)
-			if err != nil {
-				log.Errorf("FAIL %v %q", fmt.Sprint(err), path)
-				continue
-			}
-			I = opts.I
-			LRA = opts.LRA
-			Thresh = opts.Thresh
+		opts, err := loudnorm.Scan(path, 0)
+		if err != nil {
+			log.Errorf("FAIL %v %q", fmt.Sprint(err), path)
+			continue
 		}
+		I = opts.I
+		LRA = opts.LRA
+		Thresh = opts.Thresh
 		log.Infof("DONE I: %v LRA: %v Thresh: %v %q:", I, LRA, Thresh, filepath.Base(path))
 	}
 	return nil
@@ -149,7 +137,7 @@ func main() {
 		cli.Flag("-tp           : light mode (whithout TP)", &flagTP),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.Command("scan       : scan loudnes parameters", doScan,
-			cli.Flag("-l --light: light mode (whithout TP)", &flagLight),
+			// cli.Flag("-l --light: light mode (whithout TP)", &flagLight),
 			cli.Flag(": files to be processed", &flagFiles),
 		),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),

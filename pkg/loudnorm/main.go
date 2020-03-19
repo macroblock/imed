@@ -3,7 +3,6 @@ package loudnorm
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os/exec"
 	"strconv"
@@ -81,130 +80,7 @@ func SetTargetTP(tp float64) {
 }
 
 // Scan -
-func Scan(filePath string, trackN int) (*Options, error) {
-	params := []string{
-		"-hide_banner",
-		"-i", filePath,
-		"-map", "0:" + strconv.Itoa(trackN),
-		"-filter:a",
-		"loudnorm=print_format=json" +
-			// ":I=" + targetI +
-			// ":LRA=" + targetLRA +
-			// ":TP=" + targetTP,
-			// ":linear=true" +
-			"",
-		"-f", "null",
-		osNullDevice,
-	}
-	c := exec.Command("ffmpeg", params...)
-	var o bytes.Buffer
-	var e bytes.Buffer
-	c.Stdout = &o
-	c.Stderr = &e
-	err := c.Run()
-	if err != nil {
-		return nil, errors.New(string(e.Bytes()))
-	}
-	list := strings.Split(e.String(), "\n")
-
-	if len(list) < 12 {
-		fmt.Println(strings.Join(list, "\n"))
-		return nil, fmt.Errorf("size of an output info too small")
-	}
-
-	found := false
-	jsonList := []string{}
-	for _, line := range list {
-		if strings.HasPrefix(line, "[Parsed_loudnorm_0 @") {
-			found = true
-			// jsonList = []string{"{"}
-			continue
-		}
-		if !found {
-			continue
-		}
-		jsonList = append(jsonList, line)
-	}
-
-	x := &optionsJSON{}
-	err = json.Unmarshal([]byte(strings.Join(jsonList, "\n")), &x)
-	if err != nil {
-		return nil, err
-	}
-
-	ret := &Options{
-		NormalizationType: x.NormalizationType,
-	}
-	ret.InputI, err = strconv.ParseFloat(x.InputI, 64)
-	if err != nil {
-		return nil, err
-	}
-	ret.InputLRA, err = strconv.ParseFloat(x.InputLRA, 64)
-	if err != nil {
-		return nil, err
-	}
-	ret.InputTP, err = strconv.ParseFloat(x.InputTP, 64)
-	if err != nil {
-		return nil, err
-	}
-	ret.InputThresh, err = strconv.ParseFloat(x.InputThresh, 64)
-	if err != nil {
-		return nil, err
-	}
-	ret.OutputI, err = strconv.ParseFloat(x.OutputI, 64)
-	if err != nil {
-		return nil, err
-	}
-	ret.OutputTP, err = strconv.ParseFloat(x.OutputTP, 64)
-	if err != nil {
-		return nil, err
-	}
-	ret.OutputThresh, err = strconv.ParseFloat(x.OutputThresh, 64)
-	if err != nil {
-		return nil, err
-	}
-	ret.TargetOffset, err = strconv.ParseFloat(x.TargetOffset, 64)
-	if err != nil {
-		return nil, err
-	}
-
-	return ret, nil
-}
-
-func scanLines(data []byte, atEOF bool) (advance int, token []byte, err error) {
-
-	for i := 0; i < len(data); i++ {
-		switch {
-		case data[i] == '\n':
-			return i + 1, data[:i], nil
-		case data[i] == '\r':
-			if i == len(data)-1 {
-				if atEOF {
-					// \r EOF
-					return i + 1, data[:i], nil
-				}
-				// \r EOBuffer -> need more data
-				return 0, nil, nil
-			}
-			if data[i+1] == '\n' {
-				// \r \n
-				return i + 2, data[:i], nil
-			}
-			// \r !\n
-			return i + 1, data[:i], nil
-		}
-	}
-
-	if atEOF {
-		// + 1 is for not to stuck on empty buffer
-		return len(data) + 1, data, nil
-	}
-	// need more data
-	return 0, nil, nil
-}
-
-// ScanLight -
-func ScanLight(filePath string, trackN int) (*ffmpeg.TEburData, error) {
+func Scan(filePath string, trackN int) (*ffmpeg.TEburData, error) {
 	params := []string{
 		"-hide_banner",
 		"-i", filePath,
