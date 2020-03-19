@@ -27,7 +27,7 @@ type (
 		Lang        string
 		AudioParams []string
 		// Done          bool
-		LoudnessInfo  *LoudnessInfo
+		LoudnessInfo  *TLoudnessInfo
 		W, H          int
 		validFormat   bool
 		validLoudness bool
