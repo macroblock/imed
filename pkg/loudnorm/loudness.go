@@ -8,7 +8,7 @@ var (
 )
 
 // ValidLoudness -
-func ValidLoudness(li *LoudnessInfo) bool {
+func ValidLoudness(li *TLoudnessInfo) bool {
 	if li == nil {
 		return false
 	}

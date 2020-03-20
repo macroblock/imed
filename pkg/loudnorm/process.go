@@ -147,17 +147,68 @@ func ScanAudio(fi *TFileInfo) error {
 				return
 			}
 			if GlobalDebug {
-				fmt.Printf("ebur128 %v:%v:\n  input: I: %v, LRA: %v, TP: %v, Thresh: %v, Thresh2: %v\n",
+				fmt.Printf("ebur128 %v:%v:\n  input: I: %v, LRA: %v, TP: %v, TH: %v, MP: %v\n",
 					filepath.Base(filename), index,
-					li.I, li.LRA, li.TP, li.Thresh, li.Thresh2,
+					li.I, li.RA, li.TP, li.TH, li.MP,
 				)
 			}
-			stream.LoudnessInfo = &LoudnessInfo{
-				I:  li.I,
-				RA: li.LRA,
-				TP: li.TP,
-				TH: li.Thresh,
+			stream.LoudnessInfo = li
+
+			stream.validLoudness = true
+			if !ValidLoudness(stream.LoudnessInfo) {
+				stream.ExtName = generateExtFilename(fi, stream)
+				stream.validLoudness = false
 			}
+		}(stream)
+	}
+
+	wg.Wait()
+	if len(errors) != 0 {
+		return fmtErrors(errors)
+	}
+	return nil
+}
+
+func calculateParameters(fi *TFileInfo) error {
+	wg := sync.WaitGroup{}
+	mtx := sync.Mutex{}
+	errors := []error{}
+	for _, stream := range fi.Streams {
+		if stream.Type != "audio" {
+			continue
+		}
+		stream.AudioParams = generateAudioParams(fi, stream)
+		if ValidLoudness(stream.LoudnessInfo) {
+			if GlobalDebug {
+				fmt.Printf("stream %v has valid loudness (%v)\n", stream.Index, stream.LoudnessInfo)
+			}
+			stream.validLoudness = true
+			continue
+		}
+		wg.Add(1)
+		go func(stream *TStreamInfo) {
+			defer wg.Done()
+			filename := stream.Parent.Filename
+			index := stream.Index
+			if stream.ExtName != "" {
+				filename = stream.ExtName
+				index = 0
+			}
+			li, err := Normalize(filename, index, false, stream.LoudnessInfo)
+			defer mtx.Unlock()
+			mtx.Lock()
+			if err != nil {
+				errors = append(errors, err)
+				return
+			}
+			if GlobalDebug {
+				fmt.Printf("ebur128 %v:%v:\n  input: I: %v, LRA: %v, TP: %v, TH: %v, MP: %v\n",
+					filepath.Base(filename), index,
+					li.I, li.RA, li.TP, li.TH, li.MP,
+				)
+			}
+			stream.LoudnessInfo = li
+
 			stream.validLoudness = true
 			if !ValidLoudness(stream.LoudnessInfo) {
 				stream.ExtName = generateExtFilename(fi, stream)
@@ -207,8 +258,10 @@ func DemuxAndNormalize(fi *TFileInfo) error {
 		wg.Add(1)
 		go func(stream *TStreamInfo) {
 			defer wg.Done()
-			li, err := NormalizeTo(fi.Filename, stream.Index, stream.ExtName, stream.AudioParams,
-				stream.LoudnessInfo.I, stream.LoudnessInfo.RA, stream.LoudnessInfo.TP, stream.LoudnessInfo.TH)
+			// li, err := NormalizeTo(fi.Filename, stream.Index, stream.ExtName, stream.AudioParams,
+			// 	stream.LoudnessInfo.I, stream.LoudnessInfo.RA, stream.LoudnessInfo.TP, stream.LoudnessInfo.TH)
+			// li := &TLoudnessInfo{}
+			err := fmt.Errorf("debug error")
 			mtx.Lock()
 			defer mtx.Unlock()
 			if err != nil {
@@ -216,12 +269,12 @@ func DemuxAndNormalize(fi *TFileInfo) error {
 				return
 			}
 			if GlobalDebug {
-				fmt.Printf("loudnorm %v:%v:\n  %v\n  input: I: %v, LRA: %v, TP: %v, Thresh: %v, Offs: %v\n  output: I: %v, TP: %v, Thresh: %v\n",
-					filepath.Base(fi.Filename), stream.Index,
-					li.NormalizationType,
-					li.InputI, li.InputLRA, li.InputTP, li.InputThresh, li.TargetOffset,
-					li.OutputI, li.OutputTP, li.OutputThresh,
-				)
+				// fmt.Printf("loudnorm %v:%v:\n  %v\n  input: I: %v, LRA: %v, TP: %v, Thresh: %v, Offs: %v\n  output: I: %v, TP: %v, Thresh: %v\n",
+				// 	filepath.Base(fi.Filename), stream.Index,
+				// 	li.NormalizationType,
+				// 	li.InputI, li.InputLRA, li.InputTP, li.InputThresh, li.TargetOffset,
+				// 	li.OutputI, li.OutputTP, li.OutputThresh,
+				// )
 			}
 		}(stream)
 	}
@@ -353,6 +406,14 @@ func Process(filename string) error {
 	}
 	fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
 
+	t = time.Now()
+	fmt.Println("calulating parameters...")
+	err = calculateParameters(fi)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
 	t = time.Now()
 	fmt.Println("demuxing and normalizing...")
 	err = DemuxAndNormalize(fi)

@@ -35,16 +35,12 @@ func doScan() error {
 		return cli.ErrorNotEnoughArguments()
 	}
 	for _, path := range flagFiles {
-		var I, LRA, Thresh float64
-		opts, err := loudnorm.Scan(path, 0)
+		li, err := loudnorm.Scan(path, 0)
 		if err != nil {
 			log.Errorf("FAIL %v %q", fmt.Sprint(err), path)
 			continue
 		}
-		I = opts.I
-		LRA = opts.LRA
-		Thresh = opts.Thresh
-		log.Infof("DONE I: %v LRA: %v Thresh: %v %q:", I, LRA, Thresh, filepath.Base(path))
+		log.Infof("DONE (%v) %q:", li, filepath.Base(path))
 	}
 	return nil
 }

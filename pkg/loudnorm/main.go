@@ -1,10 +1,7 @@
 package loudnorm
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"os/exec"
 	"strconv"
 	"strings"
 
@@ -23,18 +20,18 @@ type optionsJSON struct {
 	TargetOffset      string `json:"target_offset"`
 }
 
-// Options -
-type Options struct {
-	InputI            float64
-	InputTP           float64
-	InputLRA          float64
-	InputThresh       float64
-	OutputI           float64
-	OutputTP          float64
-	OutputThresh      float64
-	NormalizationType string
-	TargetOffset      float64
-}
+// // Options -
+// type Options struct {
+// 	InputI            float64
+// 	InputTP           float64
+// 	InputLRA          float64
+// 	InputThresh       float64
+// 	OutputI           float64
+// 	OutputTP          float64
+// 	OutputThresh      float64
+// 	NormalizationType string
+// 	TargetOffset      float64
+// }
 
 // OptionsLight -
 type OptionsLight struct {
@@ -49,19 +46,22 @@ type OptionsLight struct {
 	InputTP float64
 }
 
-// LoudnessInfo -
-type LoudnessInfo struct {
+// TLoudnessInfo -
+type TLoudnessInfo struct {
 	I  float64 // integrated
 	RA float64 // range
 	TP float64 // true peaks
 	TH float64 // threshold
+	MP float64 // max peaks
+	// Ebur   ffmpeg.TEburInfo
+	// Volume ffmpeg.TVolumeInfo
 }
 
-func (o *LoudnessInfo) String() string {
+func (o *TLoudnessInfo) String() string {
 	if o == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("I: %v, RA: %v, TP: %v, TH: %v", o.I, o.RA, o.TP, o.TH)
+	return fmt.Sprintf("I: %v, RA: %v, TP: %v, TH: %v, MP: %v", o.I, o.RA, o.TP, o.TH, o.MP)
 }
 
 // SetTargetLI -
@@ -80,13 +80,15 @@ func SetTargetTP(tp float64) {
 }
 
 // Scan -
-func Scan(filePath string, trackN int) (*ffmpeg.TEburData, error) {
+func Scan(filePath string, trackN int) (*TLoudnessInfo, error) {
 	params := []string{
 		"-hide_banner",
 		"-i", filePath,
 		"-map", "0:" + strconv.Itoa(trackN),
 		"-filter:a",
-		"ebur128" +
+		"" +
+			"volumedetect," +
+			"ebur128" +
 			"=peak=true" +
 			"",
 		"-f", "null",
@@ -100,9 +102,11 @@ func Scan(filePath string, trackN int) (*ffmpeg.TEburData, error) {
 		return nil, err
 	}
 	eburParser := ffmpeg.NewEburParser(true)
+	volumeParser := ffmpeg.NewVolumeParser()
 	err = ffmpeg.Run(
 		ffmpeg.NewCombineParser(
 			ffmpeg.NewAudioProgressParser(time, nil),
+			volumeParser,
 			eburParser,
 		),
 		params...,
@@ -111,11 +115,23 @@ func Scan(filePath string, trackN int) (*ffmpeg.TEburData, error) {
 		return nil, err
 	}
 
-	data, err := eburParser.GetData()
+	eburInfo, err := eburParser.GetData()
 	if err != nil {
 		return nil, err
 	}
-	return data, nil
+	volumeInfo, err := volumeParser.GetData()
+	if err != nil {
+		return nil, err
+	}
+	loudnessInfo := &TLoudnessInfo{
+		I:  eburInfo.I,
+		RA: eburInfo.LRA,
+		TP: eburInfo.TP,
+		TH: eburInfo.Thresh,
+		MP: volumeInfo.MaxVolume,
+	}
+
+	return loudnessInfo, nil
 }
 
 func skipBlank(list []string) []string {
@@ -223,71 +239,128 @@ func parseEbur128Summary(list []string) (*OptionsLight, error) {
 	return ret, nil
 }
 
-// NormalizeTo -
-func NormalizeTo(filePath string, trackN int, fileOut string, audioParams []string, inputI, inputLRA, inputTP, inputThresh float64) (*Options, error) {
+// Normalize -
+func Normalize(filePath string, trackN int, writeToFile bool, li *TLoudnessInfo) (*TLoudnessInfo, error) {
+	// if li.I >
 	params := []string{
-		"-y",
 		"-hide_banner",
 		"-i", filePath,
 		"-map", "0:" + strconv.Itoa(trackN),
 		"-filter:a",
-		"loudnorm=print_format=json" +
-			":linear=true" +
-			// ":linear=false" +
-			fmt.Sprintf(":I=% 6.2f:LRA=% 6.2f:TP=% 6.2f",
-				targetI, targetLRA, targetTP) +
-			fmt.Sprintf(":measured_I=% 6.2f:measured_LRA=% 6.2f:measured_TP=% 6.2f:measured_thresh=% 6.2f",
-				inputI, inputLRA, inputTP, inputThresh) +
-			// ":offset=" + opts.TargetOffset,  // it's just difference between internal target_i and i_out
-			// "-f", "flac",
+		"" +
+			"compand=0:0.01:-90/-45|0/0" +
+			",volumedetect" +
+			",ebur128" +
+			"=peak=true" +
 			"",
+		"-f", "null",
+		osNullDevice,
 	}
-	params = append(params, audioParams...)
-	params = append(
-		params,
-		"-ar:a", samplerate,
-		fileOut,
-	)
-
 	if GlobalDebug {
 		fmt.Println("### params: ", params)
 	}
-	c := exec.Command("ffmpeg", params...)
-	var o bytes.Buffer
-	var e bytes.Buffer
-	c.Stdout = &o
-	c.Stderr = &e
-	err := c.Run()
+	time, err := ffmpeg.ParseTime("11:22:33.44")
 	if err != nil {
-		fmt.Println("###:", e.String())
 		return nil, err
 	}
-
-	list := strings.Split(e.String(), "\n")
-
-	if len(list) < 12 {
-		fmt.Println(strings.Join(list, "\n"))
-		return nil, fmt.Errorf("size of an output info too small")
-	}
-
-	found := false
-	jsonList := []string{}
-	for _, line := range list {
-		if strings.HasPrefix(line, "[Parsed_loudnorm_0 @") {
-			found = true
-			continue
-		}
-		if found {
-			jsonList = append(jsonList, line)
-		}
-	}
-
-	opts := &Options{}
-	err = json.Unmarshal([]byte(strings.Join(jsonList, "\n")), &opts)
+	eburParser := ffmpeg.NewEburParser(true)
+	volumeParser := ffmpeg.NewVolumeParser()
+	err = ffmpeg.Run(
+		ffmpeg.NewCombineParser(
+			ffmpeg.NewAudioProgressParser(time, nil),
+			volumeParser,
+			eburParser,
+		),
+		params...,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	// fmt.Println(strings.Join(jsonList, "\n"))
-	return opts, nil
+	eburInfo, err := eburParser.GetData()
+	if err != nil {
+		return nil, err
+	}
+	volumeInfo, err := volumeParser.GetData()
+	if err != nil {
+		return nil, err
+	}
+	loudnessInfo := &TLoudnessInfo{
+		I:  eburInfo.I,
+		RA: eburInfo.LRA,
+		TP: eburInfo.TP,
+		TH: eburInfo.Thresh,
+		MP: volumeInfo.MaxVolume,
+	}
+
+	return loudnessInfo, nil
 }
+
+// NormalizeTo -
+// func NormalizeTo(filePath string, trackN int, fileOut string, audioParams []string, inputI, inputLRA, inputTP, inputThresh float64) (*Options, error) {
+// 	params := []string{
+// 		"-y",
+// 		"-hide_banner",
+// 		"-i", filePath,
+// 		"-map", "0:" + strconv.Itoa(trackN),
+// 		"-filter:a",
+// 		"loudnorm=print_format=json" +
+// 			":linear=true" +
+// 			// ":linear=false" +
+// 			fmt.Sprintf(":I=% 6.2f:LRA=% 6.2f:TP=% 6.2f",
+// 				targetI, targetLRA, targetTP) +
+// 			fmt.Sprintf(":measured_I=% 6.2f:measured_LRA=% 6.2f:measured_TP=% 6.2f:measured_thresh=% 6.2f",
+// 				inputI, inputLRA, inputTP, inputThresh) +
+// 			// ":offset=" + opts.TargetOffset,  // it's just difference between internal target_i and i_out
+// 			// "-f", "flac",
+// 			"",
+// 	}
+// 	params = append(params, audioParams...)
+// 	params = append(
+// 		params,
+// 		"-ar:a", samplerate,
+// 		fileOut,
+// 	)
+
+// 	if GlobalDebug {
+// 		fmt.Println("### params: ", params)
+// 	}
+// 	c := exec.Command("ffmpeg", params...)
+// 	var o bytes.Buffer
+// 	var e bytes.Buffer
+// 	c.Stdout = &o
+// 	c.Stderr = &e
+// 	err := c.Run()
+// 	if err != nil {
+// 		fmt.Println("###:", e.String())
+// 		return nil, err
+// 	}
+
+// 	list := strings.Split(e.String(), "\n")
+
+// 	if len(list) < 12 {
+// 		fmt.Println(strings.Join(list, "\n"))
+// 		return nil, fmt.Errorf("size of an output info too small")
+// 	}
+
+// 	found := false
+// 	jsonList := []string{}
+// 	for _, line := range list {
+// 		if strings.HasPrefix(line, "[Parsed_loudnorm_0 @") {
+// 			found = true
+// 			continue
+// 		}
+// 		if found {
+// 			jsonList = append(jsonList, line)
+// 		}
+// 	}
+
+// 	opts := &Options{}
+// 	err = json.Unmarshal([]byte(strings.Join(jsonList, "\n")), &opts)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	// fmt.Println(strings.Join(jsonList, "\n"))
+// 	return opts, nil
+// }
