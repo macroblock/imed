@@ -192,7 +192,7 @@ func mainFunc() error {
 	}
 	list = append(list, pauseCmd)
 
-	err := misc.SliceToFile(dstFileName, list)
+	err := misc.SliceToFile(dstFileName, 0775, list)
 	if err != nil {
 		err = fmt.Errorf("cannot write to %q because of %v", dstFileName, err)
 	}

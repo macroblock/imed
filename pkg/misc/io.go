@@ -9,8 +9,9 @@ import (
 )
 
 // SliceToFile -
-func SliceToFile(filePath string, values interface{}) error {
-	f, err := os.Create(filePath)
+func SliceToFile(filePath string, mode os.FileMode, values interface{}) error {
+	// f, err := os.Create(filePath)
+	f, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, mode)
 	if err != nil {
 		return err
 	}

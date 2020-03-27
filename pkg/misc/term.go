@@ -1,6 +1,7 @@
 package misc
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
@@ -61,7 +62,7 @@ func IsTerminal() bool {
 
 // BatchFileExt -
 func BatchFileExt() string {
-	ret := ".bash"
+	ret := ".sh"
 	if runtime.GOOS == "windows" {
 		ret = ".bat"
 	}
@@ -70,7 +71,8 @@ func BatchFileExt() string {
 
 // PauseTerminalCmd -
 func PauseTerminalCmd() []string {
-	ret := []string{"read", "-rsp", "Press any key to continue...\n", "-n1", "key"}
+	ret := []string{"/bin/bash", "-c", "echo Press any key to continue...; read -rs -n 1 key"}
+
 	if runtime.GOOS == "windows" {
 		ret = []string{"cmd", "/C", "pause"}
 	}
@@ -79,7 +81,15 @@ func PauseTerminalCmd() []string {
 
 // PauseTerminalStr -
 func PauseTerminalStr() string {
-	return strings.Join(PauseTerminalCmd(), " ")
+	args := PauseTerminalCmd()
+	ret := args[0]
+	for _, s := range args[1:] {
+		if strings.Contains(s, " ") {
+			s = "\"" + s + "\""
+		}
+		ret += " " + s
+	}
+	return ret
 }
 
 // PauseTerminal -
@@ -88,7 +98,10 @@ func PauseTerminal() {
 	cmd := exec.Command(cmdStr[0], cmdStr[1:]...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
-	cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
+	}
 }
 
 // RunCommand -
