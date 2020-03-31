@@ -44,8 +44,9 @@ var (
 		"github.com/macroblock/imed/cmd/translit",
 		"github.com/macroblock/imed/cmd/loudnorm",
 		"github.com/macroblock/cpbftpchk",
+		"github.com/macroblock/rtimg",
+		// "github.com/malashin/rtimg",
 		"github.com/malashin/shuher",
-		"github.com/malashin/rtimg",
 		"github.com/malashin/fflite",
 	}
 
