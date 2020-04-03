@@ -27,12 +27,12 @@ var (
 		"-ac:a", "6",
 	}
 	mp2Params2 = []string{
-		"-c:a", "ac3",
+		"-c:a", "mp2",
 		"-b:a", "320k", // !!!! FIXME: is it correct?
 		"-ac:a", "2",
 	}
 	mp2Params6 = []string{
-		"-c:a", "ac3",
+		"-c:a", "mp2",
 		"-b:a", "640k", // !!!! FIXME: is it correct?
 		"-ac:a", "6",
 	}
