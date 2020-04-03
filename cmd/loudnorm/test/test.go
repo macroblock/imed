@@ -21,8 +21,8 @@ func testLoudness(I float64, path string) {
 		res = " PASSED"
 	}
 	// fmt.Printf("%v: (%2.3f) %v2.3 %q\n", res, val, dt, filepath.Base(path))
-	fmt.Printf("%v: (%2.3f, LRA: %v, Thresh: %v %v, TP: %v) %v %q\n",
-		res, opts.I, opts.LRA, opts.Thresh, opts.Thresh2, opts.TP, dt, filepath.Base(path))
+	fmt.Printf("%v: (%2.3f, LRA: %v, Thresh: %v, TP: %v) %v %q\n",
+		res, opts.I, opts.RA, opts.TH, opts.TP, dt, filepath.Base(path))
 }
 
 func main() {
