@@ -24,3 +24,4 @@ test/#test_sound/*.*
 *.flac
 *.wav
 *.m4a
+*.mov

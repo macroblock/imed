@@ -28,6 +28,7 @@ type (
 		AudioParams []string
 		// Done          bool
 		LoudnessInfo  *TLoudnessInfo
+		CompParams    *TCompressParams
 		W, H          int
 		validFormat   bool
 		validLoudness bool
@@ -131,7 +132,7 @@ func generateOutputName(filename string) string {
 	path, name := filepath.Split(filename)
 	ext := filepath.Ext(name)
 	name = strings.TrimSuffix(name, ext)
-	return path + name + "-ebur128.mp4"
+	return path + name + "-ebur128.mov"
 }
 
 func generateExtFilename(fi *TFileInfo, si *TStreamInfo) string {

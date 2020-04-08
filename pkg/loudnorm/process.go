@@ -190,11 +190,11 @@ func calculateParameters(fi *TFileInfo) error {
 			defer wg.Done()
 			filename := stream.Parent.Filename
 			index := stream.Index
-			if stream.ExtName != "" {
-				filename = stream.ExtName
-				index = 0
-			}
-			li, err := Normalize(filename, index, false, stream.LoudnessInfo)
+			// if stream.ExtName != "" *0.9{
+			// 	filename = stream.ExtName
+			// 	index = 0
+			// }
+			comp, err := Normalize(filename, index, stream.LoudnessInfo)
 			defer mtx.Unlock()
 			mtx.Lock()
 			if err != nil {
@@ -202,12 +202,14 @@ func calculateParameters(fi *TFileInfo) error {
 				return
 			}
 			if GlobalDebug {
-				fmt.Printf("ebur128 %v:%v:\n  input: I: %v, LRA: %v, TP: %v, TH: %v, MP: %v\n",
-					filepath.Base(filename), index,
-					li.I, li.RA, li.TP, li.TH, li.MP,
-				)
+				// fmt.Printf("ebur128 %v:%v:\n  input: I: %v, LRA: %v, TP: %v, TH: %v, MP: %v, CR: %v\n",
+				// 	filepath.Base(filename), index,
+				// 	li.I, li.RA, li.TP, li.TH, li.MP, li.CR,
+				// )
+				fmt.Printf("compression filter: %v\n", comp.BuildFilter())
 			}
-			stream.LoudnessInfo = li
+			// stream.LoudnessInfo = li
+			stream.CompParams = comp
 
 			stream.validLoudness = true
 			if !ValidLoudness(stream.LoudnessInfo) {

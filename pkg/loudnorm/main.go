@@ -51,8 +51,10 @@ type TLoudnessInfo struct {
 	I  float64 // integrated
 	RA float64 // range
 	TP float64 // true peaks
-	TH float64 // threshold
 	MP float64 // max peaks
+	TH float64 // threshold
+	CR float64 // compress ratio
+
 	// Ebur   ffmpeg.TEburInfo
 	// Volume ffmpeg.TVolumeInfo
 }
@@ -62,6 +64,25 @@ func (o *TLoudnessInfo) String() string {
 		return "<nil>"
 	}
 	return fmt.Sprintf("I: %v, RA: %v, TP: %v, TH: %v, MP: %v", o.I, o.RA, o.TP, o.TH, o.MP)
+}
+
+// TCompressParams -
+type TCompressParams struct {
+	PreAmp, PostAmp, Ratio float64
+	Correction             float64
+}
+
+// BuildFilter -
+func (o TCompressParams) BuildFilter() string {
+	r := o.Ratio * o.Correction
+	if r < 0.0 {
+		return fmt.Sprintf("volume=%.4fdB", o.PreAmp+o.PostAmp)
+	}
+	ret := fmt.Sprintf("volume=%.4fdB,compand=0:0.01:-90/-%.4f|0/0", o.PreAmp, 90.0*r)
+	if o.PostAmp != 0.0 {
+		ret = fmt.Sprintf("%v,volume=%.4fdB", ret, o.PostAmp)
+	}
+	return ret
 }
 
 // SetTargetLI -
@@ -129,6 +150,7 @@ func Scan(filePath string, trackN int) (*TLoudnessInfo, error) {
 		TP: eburInfo.TP,
 		TH: eburInfo.Thresh,
 		MP: volumeInfo.MaxVolume,
+		CR: -1.0,
 	}
 
 	return loudnessInfo, nil
@@ -239,61 +261,95 @@ func parseEbur128Summary(list []string) (*OptionsLight, error) {
 	return ret, nil
 }
 
+func calcCompressParams(li *TLoudnessInfo) *TCompressParams {
+	diffLU := targetI - li.I
+	if diffLU <= 0.0 {
+		return &TCompressParams{PreAmp: diffLU, PostAmp: 0.0, Ratio: -1.0, Correction: 1.0}
+	}
+	exceededVal := li.MP + diffLU
+	if exceededVal <= 0.0 {
+		return &TCompressParams{PreAmp: diffLU, PostAmp: 0.0, Ratio: -1.0, Correction: 1.0}
+	}
+	offs := -li.MP
+	k := targetI / (li.I + offs)
+	return &TCompressParams{PreAmp: offs, PostAmp: 0.0, Ratio: k, Correction: 1.0}
+}
+
 // Normalize -
-func Normalize(filePath string, trackN int, writeToFile bool, li *TLoudnessInfo) (*TLoudnessInfo, error) {
-	// if li.I >
-	params := []string{
-		"-hide_banner",
-		"-i", filePath,
-		"-map", "0:" + strconv.Itoa(trackN),
-		"-filter:a",
-		"" +
-			"compand=0:0.01:-90/-45|0/0" +
-			",volumedetect" +
-			",ebur128" +
-			"=peak=true" +
-			"",
-		"-f", "null",
-		osNullDevice,
-	}
-	if GlobalDebug {
-		fmt.Println("### params: ", params)
-	}
-	time, err := ffmpeg.ParseTime("11:22:33.44")
-	if err != nil {
-		return nil, err
-	}
-	eburParser := ffmpeg.NewEburParser(true)
-	volumeParser := ffmpeg.NewVolumeParser()
-	err = ffmpeg.Run(
-		ffmpeg.NewCombineParser(
-			ffmpeg.NewAudioProgressParser(time, nil),
-			volumeParser,
-			eburParser,
-		),
-		params...,
-	)
-	if err != nil {
-		return nil, err
-	}
+func Normalize(filePath string, trackN int, li *TLoudnessInfo) (*TCompressParams, error) {
+	comp := calcCompressParams(li)
 
-	eburInfo, err := eburParser.GetData()
-	if err != nil {
-		return nil, err
-	}
-	volumeInfo, err := volumeParser.GetData()
-	if err != nil {
-		return nil, err
-	}
-	loudnessInfo := &TLoudnessInfo{
-		I:  eburInfo.I,
-		RA: eburInfo.LRA,
-		TP: eburInfo.TP,
-		TH: eburInfo.Thresh,
-		MP: volumeInfo.MaxVolume,
-	}
+	// s := fmt.Sprintf("%v.5", k)
+	// compStr := fmt.Sprintf("compand=0:0.01:-90/%v|0/0", s)
 
-	return loudnessInfo, nil
+	for {
+		comp.Correction -= 0.1
+		filter := comp.BuildFilter()
+
+		fmt.Println("filter: ", filter)
+		params := []string{
+			"-hide_banner",
+			"-i", filePath,
+			"-map", "0:" + strconv.Itoa(trackN),
+			"-filter:a",
+			"" +
+				filter +
+				",volumedetect" +
+				",ebur128" +
+				"=peak=true" +
+				"",
+			"-f", "null",
+			osNullDevice,
+		}
+		if GlobalDebug {
+			fmt.Println("### params: ", params)
+		}
+		time, err := ffmpeg.ParseTime("11:22:33.44")
+		if err != nil {
+			return nil, err
+		}
+		eburParser := ffmpeg.NewEburParser(true)
+		volumeParser := ffmpeg.NewVolumeParser()
+		err = ffmpeg.Run(
+			ffmpeg.NewCombineParser(
+				ffmpeg.NewAudioProgressParser(time, nil),
+				volumeParser,
+				eburParser,
+			),
+			params...,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		eburInfo, err := eburParser.GetData()
+		if err != nil {
+			return nil, err
+		}
+		// volumeInfo, err := volumeParser.GetData()
+		// if err != nil {
+		// 	return nil, err
+		// }
+
+		fmt.Printf("ebur: %v\n", eburInfo)
+		fmt.Printf("ti-0.5: %v\nti+0.5: %v\n", targetI-0.5, targetI+0.5)
+
+		if targetI-0.5 < eburInfo.I && eburInfo.I < targetI+0.5 {
+			// return &TLoudnessInfo{
+			// 	I:  eburInfo.I,
+			// 	RA: eburInfo.LRA,
+			// 	TP: eburInfo.TP,
+			// 	TH: eburInfo.Thresh,
+			// 	MP: volumeInfo.MaxVolume,
+			// 	CR: k * correction,
+			// }, nil
+			comp.PostAmp = targetI - eburInfo.I
+			if comp.PostAmp > 0.0 {
+				comp.PostAmp = 0.0
+			}
+			return comp, nil
+		}
+	}
 }
 
 // NormalizeTo -
