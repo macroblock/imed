@@ -282,7 +282,7 @@ func Normalize(filePath string, trackN int, li *TLoudnessInfo) (*TCompressParams
 	// s := fmt.Sprintf("%v.5", k)
 	// compStr := fmt.Sprintf("compand=0:0.01:-90/%v|0/0", s)
 
-	for {
+	for tries := 5; tries > 0; tries-- {
 		comp.Correction -= 0.1
 		filter := comp.BuildFilter()
 
@@ -350,6 +350,7 @@ func Normalize(filePath string, trackN int, li *TLoudnessInfo) (*TCompressParams
 			return comp, nil
 		}
 	}
+	return nil, fmt.Errorf("max tries with no result")
 }
 
 // NormalizeTo -

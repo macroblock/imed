@@ -206,7 +206,7 @@ func calculateParameters(fi *TFileInfo) error {
 				// 	filepath.Base(filename), index,
 				// 	li.I, li.RA, li.TP, li.TH, li.MP, li.CR,
 				// )
-				fmt.Printf("compression filter: %v\n", comp.BuildFilter())
+				fmt.Printf("-> compression filter: %v\n", comp.BuildFilter())
 			}
 			// stream.LoudnessInfo = li
 			stream.CompParams = comp
@@ -284,6 +284,107 @@ func DemuxAndNormalize(fi *TFileInfo) error {
 	wg.Wait()
 	if len(errors) != 0 {
 		return fmtErrors(errors)
+	}
+	return nil
+}
+
+// ProcessTo -
+func ProcessTo(fi *TFileInfo) error {
+	muxParams := []string{
+		"-y",
+		"-hide_banner",
+		"-i", fi.Filename,
+	}
+	inputIndex := 0
+	for _, stream := range fi.Streams {
+		switch stream.Type {
+		case "video":
+		case "subtitle":
+		case "audio":
+			if stream.ExtName != "" {
+				inputIndex++
+				stream.extInputIndex = inputIndex
+				muxParams = append(muxParams, "-i", stream.ExtName)
+			}
+		}
+	}
+	muxParams = append(muxParams,
+		"-map_metadata", "-1",
+		"-map_chapters", "-1",
+		"-id3v2_version", "3",
+		"-write_id3v1", "1",
+	)
+	videoIndex := -1
+	audioIndex := -1
+	subtitleIndex := -1
+	isFirstVideo := true
+	isFirstAudio := true
+	isFirstSubtitle := true
+	// metadata := []string{}
+	for _, stream := range fi.Streams {
+		switch stream.Type {
+		case "video":
+			videoIndex++
+			if isFirstVideo {
+			}
+			muxParams = append(muxParams,
+				"-map", "0:"+strconv.Itoa(videoIndex),
+				"-c:v", "copy",
+			)
+		case "subtitle":
+			subtitleIndex++
+			def := "none"
+			_ = def
+			if isFirstSubtitle {
+				isFirstSubtitle = false
+				def = "default"
+			}
+			muxParams = append(muxParams,
+				"-map", "0:"+strconv.Itoa(stream.Index),
+				"-c:s", "mov_text",
+				"-metadata:s:s:"+strconv.Itoa(subtitleIndex), "language="+stream.Lang,
+				// "-disposition:s:"+strconv.Itoa(subtitleIndex), def,
+			)
+		case "audio":
+			audioIndex++
+			def := "none"
+			if isFirstAudio {
+				isFirstAudio = false
+				def = "default"
+			}
+			mapParam := "0:" + strconv.Itoa(stream.Index)
+			if stream.ExtName != "" {
+				mapParam = strconv.Itoa(stream.extInputIndex) + ":0"
+			}
+			muxParams = append(muxParams,
+				"-map", mapParam, //strconv.Itoa(stream.tempInputIndex)+":0",
+				"-c:a", "copy",
+				"-metadata:s:a:"+strconv.Itoa(audioIndex), "language="+stream.Lang,
+				"-disposition:s:a:"+strconv.Itoa(audioIndex), def,
+				// "-metadata:s:a:"+strconv.Itoa(audioIndex), "handler_name"+
+				// 	"=AudioHandler\nL_I:test_string"+stream.LoudInfo.InputI+
+				// 	"\nL_RA:"+stream.LoudInfo.InputLRA+
+				// 	"\nL_TP:"+stream.LoudInfo.InputTP+
+				// 	"\nL_TH:"+stream.LoudInfo.InputThresh,
+			)
+			// metadata = append(metadata,
+			// 	fmt.Sprintf("[Stream #:%v]\nL_I  % 5.2f\nL_RA % 5.2f\nL_TP % 5.2f\nL_TH % 5.2f",
+			// 		inputIndex,
+			// 		stream.LoudnessInfo.I,
+			// 		stream.LoudnessInfo.RA,
+			// 		stream.LoudnessInfo.TP,
+			// 		stream.LoudnessInfo.TH,
+			// 	),
+			// )
+		}
+	}
+	muxParams = append(muxParams, "-metadata")
+	muxParams = append(muxParams, "comment="+PackLoudnessInfo(fi)) //+strings.Join(metadata, "\n"))
+	// muxParams = append(muxParams, "description="+strings.Join(metadata, "\n"))
+	muxParams = append(muxParams, generateOutputName(fi.Filename))
+	err := callFFMPEG(nil, muxParams...)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -415,31 +516,37 @@ func Process(filename string) error {
 		return err
 	}
 
-	fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
-	t = time.Now()
-	fmt.Println("demuxing and normalizing...")
-	err = DemuxAndNormalize(fi)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
+	// fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
+	// t = time.Now()
+	// fmt.Println("demuxing and normalizing...")
+	// err = DemuxAndNormalize(fi)
+	// if err != nil {
+	// 	return err
+	// }
+	// fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
 
-	t = time.Now()
-	fmt.Println("checking...")
-	err = ScanAudio(fi)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
+	// t = time.Now()
+	// fmt.Println("checking...")
+	// err = ScanAudio(fi)
+	// if err != nil {
+	// 	return err
+	// }
+	// fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
 
-	err = CheckIfReadyToCompile(fi)
-	if err != nil {
-		return err
-	}
+	// err = CheckIfReadyToCompile(fi)
+	// if err != nil {
+	// 	return err
+	// }
 
+	// t = time.Now()
+	// fmt.Println("muxing...")
+	// err = MuxTo(fi)
+	// if err != nil {
+	// 	return err
+	// }
 	t = time.Now()
 	fmt.Println("muxing...")
-	err = MuxTo(fi)
+	err = ProcessTo(fi)
 	if err != nil {
 		return err
 	}
