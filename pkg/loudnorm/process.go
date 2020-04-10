@@ -115,9 +115,7 @@ func printInfo(name string, si []*TStreamInfo) {
 
 // ScanAudio -
 func ScanAudio(fi *TFileInfo) error {
-	wg := sync.WaitGroup{}
-	mtx := sync.Mutex{}
-	errors := []error{}
+	streams := []*TStreamInfo{}
 	for _, stream := range fi.Streams {
 		if stream.Type != "audio" {
 			continue
@@ -130,42 +128,29 @@ func ScanAudio(fi *TFileInfo) error {
 			stream.validLoudness = true
 			continue
 		}
-		wg.Add(1)
-		go func(stream *TStreamInfo) {
-			defer wg.Done()
-			filename := stream.Parent.Filename
-			index := stream.Index
-			if stream.ExtName != "" {
-				filename = stream.ExtName
-				index = 0
-			}
-			li, err := Scan(filename, index)
-			defer mtx.Unlock()
-			mtx.Lock()
-			if err != nil {
-				errors = append(errors, err)
-				return
-			}
-			if GlobalDebug {
-				fmt.Printf("ebur128 %v:%v:\n  input: I: %v, LRA: %v, TP: %v, TH: %v, MP: %v\n",
-					filepath.Base(filename), index,
-					li.I, li.RA, li.TP, li.TH, li.MP,
-				)
-			}
-			stream.LoudnessInfo = li
-
-			stream.validLoudness = true
-			if !ValidLoudness(stream.LoudnessInfo) {
-				stream.ExtName = generateExtFilename(fi, stream)
-				stream.validLoudness = false
-			}
-		}(stream)
+		streams = append(streams, stream)
+	}
+	// li, err := Scan(filename, index)
+	err := Scan(streams)
+	if err != nil {
+		return err
+	}
+	for _, stream := range streams {
+		li := stream.LoudnessInfo
+		filename := stream.Parent.Filename
+		index := stream.Index
+		if GlobalDebug {
+			fmt.Printf("ebur128 %v:%v:\n  input: I: %v, LRA: %v, TP: %v, TH: %v, MP: %v\n",
+				filepath.Base(filename), index,
+				li.I, li.RA, li.TP, li.TH, li.MP,
+			)
+		}
+		stream.validLoudness = true
+		if !ValidLoudness(stream.LoudnessInfo) {
+			stream.validLoudness = false
+		}
 	}
 
-	wg.Wait()
-	if len(errors) != 0 {
-		return fmtErrors(errors)
-	}
 	return nil
 }
 

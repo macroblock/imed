@@ -22,6 +22,9 @@ type TEburInfo struct {
 
 // TEburParser -
 type TEburParser struct {
+	name        string
+	re          *regexp.Regexp
+	active      bool
 	truePeaks   bool
 	accepted    bool
 	finished    bool
@@ -30,43 +33,49 @@ type TEburParser struct {
 }
 
 // NewEburParser -
-func NewEburParser(truePeaks bool) *TEburParser {
+func NewEburParser(name string, truePeaks bool) *TEburParser {
 	linesToRead := 10
 	if truePeaks {
 		linesToRead = 13
 	}
-	o := &TEburParser{truePeaks: truePeaks, linesToRead: linesToRead}
+	o := &TEburParser{name: name, truePeaks: truePeaks, linesToRead: linesToRead}
+	o.re = regexp.MustCompile(fmt.Sprintf("\\[%v @ [^ ]+\\] Summary:.*", name))
 	return o
 }
 
-var reEbur128 = regexp.MustCompile("\\[Parsed_ebur128_\\d+ @ [^ ]+\\] Summary:.*")
+// var reEbur128 = regexp.MustCompile("\\[Parsed_ebur128_\\d+ @ [^ ]+\\] Summary:.*")
 
 // Parse -
 func (o *TEburParser) Parse(line string, eof bool) (accepted bool, finished bool, err error) {
 
-	if !o.accepted && !o.finished {
-		if reEbur128.MatchString(line) {
+	if !o.accepted && !o.active {
+		// if reEbur128.MatchString(line) {
+		if o.re.MatchString(line) {
 			o.accepted = true
+			o.active = true
 		}
-		return o.accepted, o.finished, nil
+		return o.accepted, false, nil
+	}
+	if line != "" && line[0] != ' ' {
+		o.accepted = false
+		o.active = false
+		return false, false, nil
 	}
 
-	if !o.finished {
-		o.lines = append(o.lines, line)
-	}
-	if len(o.lines) >= o.linesToRead {
-		o.finished = true
-		return o.accepted, o.finished, nil
-	}
+	o.lines = append(o.lines, line)
+	// if len(o.lines) >= o.linesToRead {
+	// 	o.finished = true
+	// 	return o.accepted, o.finished, nil
+	// }
 
 	return true, false, nil
 }
 
 // GetData -
 func (o *TEburParser) GetData() (*TEburInfo, error) {
-	if !o.finished {
-		return nil, fmt.Errorf("Ebur parser: uncompleted\n %v", strings.Join(o.lines, "\n"))
-	}
+	// if !o.finished {
+	// 	return nil, fmt.Errorf("Ebur parser: uncompleted\n %v", strings.Join(o.lines, "\n"))
+	// }
 
 	data, err := parseEbur128Summary(o.lines, o.truePeaks)
 	if err != nil {
@@ -77,61 +86,75 @@ func (o *TEburParser) GetData() (*TEburInfo, error) {
 }
 
 func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
+	st := map[string]string{}
+	prefix := ""
+
+	for _, line := range list {
+		name, val, err := parseNameVal(line, ":")
+		if err != nil {
+			return nil, err
+		}
+		switch name {
+		case "":
+			continue
+		case "Integrated loudness":
+			prefix = "IL"
+		case "Loudness range":
+			prefix = "LR"
+		case "True peak":
+			prefix = "TP"
+		}
+		st[prefix+"."+name] = val
+	}
+	ret := &TEburInfo{}
+	err := error(nil)
 	// fmt.Printf("$$$$$$$$\n%q\n", strings.Join(list, "\\n\n"))
-	list, _, err := parseValS(list, "Integrated loudness:", "")
+	// list, _, err := parseValS(list, "Integrated loudness:", "")
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// fmt.Printf("$$$$$$$$\n%q\n", st)
+	ret.I, err = getValF(st, "IL.I", "LUFS")
 	if err != nil {
 		return nil, err
 	}
-	list, I, err := parseValF(list, "I:", "LUFS")
+	ret.Thresh, err = getValF(st, "IL.Threshold", "LUFS")
 	if err != nil {
 		return nil, err
 	}
-	list, Threshold, err := parseValF(list, "Threshold:", "LUFS")
+	// _, err = getValS( "Loudness range", "")
+	// if err != nil {
+	// 	return nil, err
+	// }
+	ret.LRA, err = getValF(st, "LR.LRA", "LU")
 	if err != nil {
 		return nil, err
 	}
-	list, _, err = parseValS(list, "Loudness range:", "")
+	ret.Thresh2, err = getValF(st, "LR.Threshold", "LUFS")
 	if err != nil {
 		return nil, err
 	}
-	list, LRA, err := parseValF(list, "LRA:", "LU")
+	ret.LRALow, err = getValF(st, "LR.LRA low", "LUFS")
 	if err != nil {
 		return nil, err
 	}
-	list, Threshold2, err := parseValF(list, "Threshold:", "LUFS")
-	if err != nil {
-		return nil, err
-	}
-	list, LRALow, err := parseValF(list, "LRA low:", "LUFS")
-	if err != nil {
-		return nil, err
-	}
-	list, LRAHigh, err := parseValF(list, "LRA high:", "LUFS")
+	ret.LRAHigh, err = getValF(st, "LR.LRA high", "LUFS")
 	if err != nil {
 		return nil, err
 	}
 
-	TP := math.NaN()
+	ret.TP = math.NaN()
 	if truePeaks {
-		list, _, err = parseValS(list, "True peak:", "")
-		if err != nil {
-			return nil, err
-		}
+		// _, err = getValS(st, "True peak", "")
+		// if err != nil {
+		// 	return nil, err
+		// }
 
-		list, TP, err = parseValF(list, "Peak:", "dBFS")
+		ret.TP, err = getValF(st, "TP.Peak", "dBFS")
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	ret := &TEburInfo{
-		I:       I,
-		Thresh:  Threshold,
-		LRA:     LRA,
-		Thresh2: Threshold2,
-		LRALow:  LRALow,
-		LRAHigh: LRAHigh,
-		TP:      TP,
-	}
 	return ret, nil
 }

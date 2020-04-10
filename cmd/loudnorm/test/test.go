@@ -1,28 +1,20 @@
 package main
 
-import (
-	"fmt"
-	"path/filepath"
-	"time"
-
-	"github.com/macroblock/imed/pkg/loudnorm"
-)
-
 func testLoudness(I float64, path string) {
-	t := time.Now()
-	opts, err := loudnorm.Scan(path, 0)
-	dt := time.Since(t)
+	// t := time.Now()
+	// opts, err := loudnorm.Scan(path, 0)
+	// dt := time.Since(t)
 
-	if err != nil {
-		fmt.Printf("### error: %v\n", err)
-	}
-	res := "#FAILED"
-	if opts.I <= I+0.1 && opts.I >= I-0.1 {
-		res = " PASSED"
-	}
-	// fmt.Printf("%v: (%2.3f) %v2.3 %q\n", res, val, dt, filepath.Base(path))
-	fmt.Printf("%v: (%2.3f, LRA: %v, Thresh: %v, TP: %v) %v %q\n",
-		res, opts.I, opts.RA, opts.TH, opts.TP, dt, filepath.Base(path))
+	// if err != nil {
+	// 	fmt.Printf("### error: %v\n", err)
+	// }
+	// res := "#FAILED"
+	// if opts.I <= I+0.1 && opts.I >= I-0.1 {
+	// 	res = " PASSED"
+	// }
+	// // fmt.Printf("%v: (%2.3f) %v2.3 %q\n", res, val, dt, filepath.Base(path))
+	// fmt.Printf("%v: (%2.3f, LRA: %v, Thresh: %v, TP: %v) %v %q\n",
+	// 	res, opts.I, opts.RA, opts.TH, opts.TP, dt, filepath.Base(path))
 }
 
 func main() {

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
@@ -31,17 +30,17 @@ func doProcess(path string) {
 }
 
 func doScan() error {
-	if len(flagFiles) == 0 {
-		return cli.ErrorNotEnoughArguments()
-	}
-	for _, path := range flagFiles {
-		li, err := loudnorm.Scan(path, 0)
-		if err != nil {
-			log.Errorf("FAIL %v %q", fmt.Sprint(err), path)
-			continue
-		}
-		log.Infof("DONE (%v) %q:", li, filepath.Base(path))
-	}
+	// if len(flagFiles) == 0 {
+	// 	return cli.ErrorNotEnoughArguments()
+	// }
+	// for _, path := range flagFiles {
+	// 	li, err := loudnorm.Scan(path, 0)
+	// 	if err != nil {
+	// 		log.Errorf("FAIL %v %q", fmt.Sprint(err), path)
+	// 		continue
+	// 	}
+	// 	log.Infof("DONE (%v) %q:", li, filepath.Base(path))
+	// }
 	return nil
 }
 

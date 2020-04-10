@@ -48,7 +48,8 @@ func (o *tCombineParser) Parse(line string, eof bool) (accepted bool, finished b
 			finished = false
 		}
 	}
-	return accepted, finished, nil
+	// return accepted, finished, nil
+	return accepted, false, nil
 }
 
 func skipBlank(list []string) []string {
