@@ -150,6 +150,45 @@ func ScanAudio(fi *TFileInfo) error {
 			stream.validLoudness = false
 		}
 	}
+	return nil
+}
+
+func renderParameters(fi *TFileInfo) error {
+	streams := []*TStreamInfo{}
+	for _, stream := range fi.Streams {
+		if stream.Type != "audio" {
+			continue
+		}
+		stream.AudioParams = generateAudioParams(fi, stream)
+		if ValidLoudness(stream.LoudnessInfo) {
+			if GlobalDebug {
+				fmt.Printf("stream %v has valid loudness (%v)\n", stream.Index, stream.LoudnessInfo)
+			}
+			stream.validLoudness = true
+			continue
+		}
+		streams = append(streams, stream)
+	}
+	// li, err := Scan(filename, index)
+	err := RenderParameters(streams)
+	if err != nil {
+		return err
+	}
+	// for _, stream := range streams {
+	// 	li := stream.LoudnessInfo
+	// 	filename := stream.Parent.Filename
+	// 	index := stream.Index
+	// 	if GlobalDebug {
+	// 		fmt.Printf("ebur128 %v:%v:\n  input: I: %v, LRA: %v, TP: %v, TH: %v, MP: %v\n",
+	// 			filepath.Base(filename), index,
+	// 			li.I, li.RA, li.TP, li.TH, li.MP,
+	// 		)
+	// 	}
+	// 	stream.validLoudness = true
+	// 	if !ValidLoudness(stream.LoudnessInfo) {
+	// 		stream.validLoudness = false
+	// 	}
+	// }
 
 	return nil
 }
@@ -495,11 +534,17 @@ func Process(filename string) error {
 	fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
 
 	t = time.Now()
-	fmt.Println("calulating parameters...")
-	err = calculateParameters(fi)
+	fmt.Println("render parameters...")
+	err = renderParameters(fi)
 	if err != nil {
 		return err
 	}
+	// t = time.Now()
+	// fmt.Println("calulating parameters...")
+	// err = calculateParameters(fi)
+	// if err != nil {
+	// 	return err
+	// }
 
 	// fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
 	// t = time.Now()

@@ -28,10 +28,12 @@ type (
 		AudioParams []string
 		// Done          bool
 		LoudnessInfo  *TLoudnessInfo
+		TargetLI      *TLoudnessInfo
 		CompParams    *TCompressParams
 		W, H          int
 		validFormat   bool
 		validLoudness bool
+		done          bool
 		extInputIndex int
 	}
 )

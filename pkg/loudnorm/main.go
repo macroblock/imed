@@ -86,6 +86,11 @@ func (o TCompressParams) BuildFilter() string {
 	return ret
 }
 
+// GetK -
+func (o TCompressParams) GetK() float64 {
+	return o.Ratio * o.Correction
+}
+
 // SetTargetLI -
 func SetTargetLI(li float64) {
 	targetI = li
@@ -352,6 +357,126 @@ func calcCompressParams(li *TLoudnessInfo) *TCompressParams {
 	offs := -li.MP
 	k := targetI / (li.I + offs)
 	return &TCompressParams{PreAmp: offs, PostAmp: 0.0, Ratio: k, Correction: 1.0}
+}
+
+// RenderParameters -
+func RenderParameters(streams []*TStreamInfo) error {
+	const compressCorrectionStep = 0.1
+	type tempStruct struct{ vd, ebur, output string }
+	if len(streams) == 0 {
+		return nil
+	}
+
+	for _, stream := range streams {
+		if stream.LoudnessInfo == nil {
+			return fmt.Errorf("stream %v:%v has no loudness info", stream.Parent.Filename, stream.Index)
+		}
+		comp := calcCompressParams(stream.LoudnessInfo)
+		stream.CompParams = comp
+	}
+
+	for tries := 5; tries > 0; tries-- {
+		params := []string{
+			"-hide_banner",
+			"-i", streams[0].Parent.Filename,
+			"-filter_complex",
+		}
+		ffmpeg.UniqueReset()
+		filter := ""
+		n := 0
+		filterNames := []tempStruct{}
+		for _, stream := range streams {
+			if stream.done {
+				continue
+			}
+			stream.CompParams.Correction -= compressCorrectionStep
+			vdFilter := ffmpeg.UniqueName("volumedetect")
+			eburFilter := ffmpeg.UniqueName("ebur128")
+			output := fmt.Sprintf("[o%v]", n)
+			filter += fmt.Sprintf("[0:%v]%v,%v,%v=peak=true%v",
+				stream.Index, stream.CompParams.BuildFilter(), vdFilter, eburFilter, output)
+			filterNames = append(filterNames, tempStruct{vdFilter, eburFilter, output})
+			n++
+		}
+		params = append(params, filter)
+
+		volumeParsers := []*ffmpeg.TVolumeParser{}
+		eburParsers := []*ffmpeg.TEburParser{}
+		for _, name := range filterNames {
+			params = append(params, "-map", name.output, "-f", "null", os.DevNull)
+
+			volumeParsers = append(volumeParsers, ffmpeg.NewVolumeParser(name.vd))
+			eburParsers = append(eburParsers, ffmpeg.NewEburParser(name.ebur, true))
+		}
+
+		if GlobalDebug {
+			fmt.Println("### params: ", params)
+		}
+		time, err := ffmpeg.ParseTime("11:22:33.44")
+		if err != nil {
+			return err
+		}
+		parsers := []ffmpeg.IParser{}
+		parsers = append(parsers, ffmpeg.NewAudioProgressParser(time, nil))
+		for i := range streams {
+			if !streams[i].done {
+				parsers = append(parsers, volumeParsers[i], eburParsers[i])
+			}
+		}
+
+		err = ffmpeg.Run(
+			ffmpeg.NewCombineParser(parsers...), params...,
+		)
+		if err != nil {
+			return err
+		}
+
+		done := true
+		for i, stream := range streams {
+			eburInfo, err := eburParsers[i].GetData()
+			if err != nil {
+				return err
+			}
+			volumeInfo, err := volumeParsers[i].GetData()
+			if err != nil {
+				return err
+			}
+			stream.TargetLI = &TLoudnessInfo{
+				I:  eburInfo.I,
+				RA: eburInfo.LRA,
+				TP: eburInfo.TP,
+				TH: eburInfo.Thresh,
+				MP: volumeInfo.MaxVolume,
+				CR: stream.CompParams.GetK(),
+			}
+			fmt.Println("##### stream:", i,
+				"\n  ebur >", eburInfo,
+				"\n  vol  >", volumeInfo,
+				"\n  K    >", stream.CompParams.GetK(),
+				"\n  CR   >", 1/stream.CompParams.GetK(), ": 1")
+			if SuitableLoudness(stream.TargetLI) {
+				postAmp := targetI - stream.TargetLI.I
+				if postAmp > 0.0 {
+					postAmp = 0.0
+				}
+				stream.CompParams.PostAmp = postAmp
+				stream.TargetLI.I += postAmp
+				stream.TargetLI.TP += postAmp
+				stream.TargetLI.TH += postAmp
+				stream.TargetLI.MP += postAmp
+				stream.done = true
+				fmt.Println("##### stream:", i,
+					"\n  li      >", stream.TargetLI,
+					"\n  postAmp >", stream.CompParams.PostAmp)
+			}
+			done = done && stream.done
+
+		}
+		if done {
+			return nil
+		}
+	}
+	return fmt.Errorf("not enough tries")
 }
 
 // Normalize -
