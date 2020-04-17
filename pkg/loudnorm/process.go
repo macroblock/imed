@@ -517,7 +517,7 @@ func MuxTo(fi *TFileInfo) error {
 // Process -
 func Process(filename string) error {
 	fmt.Println("getting info...")
-	fi, err := LoadFile(filename)
+	fi, err := LoadFile(filename, 0)
 	if err != nil {
 		return err
 	}

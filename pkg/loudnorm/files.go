@@ -19,7 +19,9 @@ type (
 	// TStreamInfo -
 	TStreamInfo struct {
 		Parent      *TFileInfo
+		InputIndex  int
 		Index       int
+		LocalIndex  int
 		Type        string // "audio", "video", "subtitle"
 		ExtName     string
 		Codec       string
@@ -60,23 +62,29 @@ func (o *TFileInfo) String() string {
 }
 
 // LoadFile -
-func LoadFile(filename string) (*TFileInfo, error) {
+func LoadFile(filename string, inputIndex int) (*TFileInfo, error) {
 	finfo, err := ffinfo.Probe(filename)
 	if err != nil {
 		return nil, err
 	}
 
 	fi := &TFileInfo{Filename: filename}
-	for trackN, stream := range finfo.Streams {
+	vIndex := 0
+	aIndex := 0
+	sIndex := 0
+	for index, stream := range finfo.Streams {
 		switch stream.CodecType {
 		default:
 			return nil, fmt.Errorf("unknown stream codec type (%v)", stream.CodecType)
 		case "video":
-			addVideoStreamInfo(fi, filename, trackN, stream.Width, stream.Height)
+			addVideoStreamInfo(fi, filename, inputIndex, index, vIndex, stream.Width, stream.Height)
+			vIndex++
 		case "subtitle":
-			addSubtitleStreamInfo(fi, filename, trackN, stream.CodecName, stream.Tags.Language)
+			addSubtitleStreamInfo(fi, filename, inputIndex, index, sIndex, stream.CodecName, stream.Tags.Language)
+			sIndex++
 		case "audio":
-			addAudioStreamInfo(fi, filename, trackN, stream.CodecName, stream.Channels, stream.Tags.Language)
+			addAudioStreamInfo(fi, filename, inputIndex, index, sIndex, stream.CodecName, stream.Channels, stream.Tags.Language)
+			aIndex++
 		}
 	}
 
@@ -89,13 +97,15 @@ func LoadFile(filename string) (*TFileInfo, error) {
 	return fi, nil
 }
 
-func addVideoStreamInfo(fi *TFileInfo, filename string, index int, w, h int) {
+func addVideoStreamInfo(fi *TFileInfo, filename string, inputIndex, index, vIndex int, w, h int) {
 	o := &TStreamInfo{
-		Parent: fi,
-		Index:  index,
-		Type:   "video",
-		W:      w,
-		H:      h,
+		Parent:     fi,
+		InputIndex: inputIndex,
+		Index:      index,
+		LocalIndex: vIndex,
+		Type:       "video",
+		W:          w,
+		H:          h,
 		// Done:  true,
 		validLoudness: true,
 	}
@@ -106,26 +116,30 @@ func addVideoStreamInfo(fi *TFileInfo, filename string, index int, w, h int) {
 	fi.Streams = append(fi.Streams, o)
 }
 
-func addAudioStreamInfo(fi *TFileInfo, filename string, index int, codec string, ch int, lang string) {
+func addAudioStreamInfo(fi *TFileInfo, filename string, inputIndex, index, aIndex int, codec string, ch int, lang string) {
 	o := &TStreamInfo{
-		Parent:   fi,
-		Index:    index,
-		Type:     "audio",
-		Codec:    codec,
-		Channels: ch,
-		Lang:     lang,
+		Parent:     fi,
+		InputIndex: inputIndex,
+		Index:      index,
+		LocalIndex: aIndex,
+		Type:       "audio",
+		Codec:      codec,
+		Channels:   ch,
+		Lang:       lang,
 	}
 	fi.Streams = append(fi.Streams, o)
 	// recalcParams(fi, o)
 }
 
-func addSubtitleStreamInfo(fi *TFileInfo, filename string, index int, codec string, lang string) {
+func addSubtitleStreamInfo(fi *TFileInfo, filename string, inputIndex, index, sIndex int, codec string, lang string) {
 	o := &TStreamInfo{
-		Parent: fi,
-		Index:  index,
-		Type:   "subtitle",
-		Codec:  codec,
-		Lang:   lang,
+		Parent:     fi,
+		InputIndex: inputIndex,
+		Index:      index,
+		LocalIndex: sIndex,
+		Type:       "subtitle",
+		Codec:      codec,
+		Lang:       lang,
 	}
 	fi.Streams = append(fi.Streams, o)
 }
