@@ -123,6 +123,8 @@ func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
 			prefix = "LR"
 		case "True peak":
 			prefix = "TP"
+		case "Sample peak":
+			prefix = "SP"
 		}
 		st[prefix+"."+name] = val
 	}
@@ -165,11 +167,6 @@ func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
 
 	ret.TP = math.NaN()
 	if truePeaks {
-		// _, err = getValS(st, "True peak", "")
-		// if err != nil {
-		// 	return nil, err
-		// }
-
 		ret.TP, err = getValF(st, "TP.Peak", "dBFS")
 		if err != nil {
 			return nil, err

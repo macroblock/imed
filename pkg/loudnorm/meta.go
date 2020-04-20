@@ -8,7 +8,7 @@ import (
 
 // PackLoudnessInfoElement -
 func PackLoudnessInfoElement(streamNo int, li *TLoudnessInfo) string {
-	return fmt.Sprintf("[Stream #:%v]\nL_I  % 6.2f\nL_RA % 6.2f\nL_TP % 6.2f\nL_TH % 6.2f\nL_MP % 6.2f",
+	return fmt.Sprintf("[Stream #:%v]\nL_I  % 6.2f\nL_RA % 6.2f\nL_TP %v\nL_TH % 6.2f\nL_MP % 6.2f",
 		strconv.Itoa(streamNo),
 		li.I, li.RA, li.TP, li.TH, li.MP,
 	)
@@ -34,7 +34,7 @@ func AttachLoudnessInfo(fi *TFileInfo, data string) error {
 	for list = skipBlank(list); len(list) != 0; list = skipBlank(list) {
 		var (
 			streamNo          int
-			I, RA, TP, TH, MP float64
+			I, RA, TP, MP, TH float64
 			err               error
 		)
 
@@ -68,8 +68,8 @@ func AttachLoudnessInfo(fi *TFileInfo, data string) error {
 			I:  I,
 			RA: RA,
 			TP: TP,
-			TH: TH,
 			MP: MP,
+			TH: TH,
 		}
 		dict[streamNo] = li
 	}

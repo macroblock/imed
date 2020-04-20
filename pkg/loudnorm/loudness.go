@@ -34,3 +34,24 @@ func SuitableLoudness(li *TLoudnessInfo) bool {
 	// fmt.Printf("####### invalid %v\n", tI)
 	return false
 }
+
+// FixLoudness -
+func FixLoudness(li *TLoudnessInfo, compParams *TCompressParams) bool {
+	if !SuitableLoudness(li) {
+		return false
+	}
+	postAmp := targetI - li.I
+	if postAmp > 0.0 {
+		postAmp = 0.0
+	}
+	compParams.PostAmp = postAmp
+	li.I += postAmp
+	li.TP += postAmp
+	li.TH += postAmp
+	li.MP += postAmp
+	// stream.done = true
+	// fmt.Println("##### stream:", i,
+	// 	"\n  li      >", li,
+	// 	"\n  postAmp >", stream.CompParams.PostAmp)
+	return true
+}
