@@ -12,6 +12,11 @@ type tAudioProgressParser struct {
 
 var reAudioProgress = regexp.MustCompile("size=.+ time=(\\d{2}:\\d{2}:\\d{2}.\\d+) bitrate=.+ speed=.+")
 
+// Finish -
+func (o *tAudioProgressParser) Finish() error {
+	return nil
+}
+
 // Parse -
 func (o *tAudioProgressParser) Parse(line string, eof bool) (accepted bool, finished bool, err error) {
 	// if o == nil || o.callback == nil {

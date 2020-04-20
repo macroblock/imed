@@ -13,17 +13,37 @@ type IAudioProgress interface {
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-type tCombineParser struct {
+// TCombineParser -
+type TCombineParser struct {
 	parsers []IParser
 }
 
 // NewCombineParser -
-func NewCombineParser(parsers ...IParser) IParser {
-	return &tCombineParser{parsers: parsers}
+func NewCombineParser(parsers ...IParser) *TCombineParser {
+	return &TCombineParser{parsers: parsers}
+}
+
+// Append -
+func (o *TCombineParser) Append(parsers ...IParser) {
+	o.parsers = append(o.parsers, parsers...)
+}
+
+// Finish -
+func (o *TCombineParser) Finish() error {
+	for _, parser := range o.parsers {
+		if parser == nil {
+			continue
+		}
+		err := parser.Finish()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Parse -
-func (o *tCombineParser) Parse(line string, eof bool) (accepted bool, finished bool, err error) {
+func (o *TCombineParser) Parse(line string, eof bool) (accepted bool, finished bool, err error) {
 	accepted = false
 	finished = true
 	err = error(nil)
@@ -43,6 +63,10 @@ func (o *tCombineParser) Parse(line string, eof bool) (accepted bool, finished b
 			return false, true, e
 		}
 		if fin {
+			e := o.parsers[i].Finish()
+			if e != nil {
+				return false, true, e
+			}
 			o.parsers[i] = nil
 		} else {
 			finished = false

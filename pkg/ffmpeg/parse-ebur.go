@@ -30,20 +30,39 @@ type TEburParser struct {
 	finished    bool
 	linesToRead int
 	lines       []string
+	ret         *TEburInfo
 }
 
 // NewEburParser -
-func NewEburParser(name string, truePeaks bool) *TEburParser {
+func NewEburParser(name string, truePeaks bool, ret *TEburInfo) *TEburParser {
 	linesToRead := 10
 	if truePeaks {
 		linesToRead = 13
 	}
-	o := &TEburParser{name: name, truePeaks: truePeaks, linesToRead: linesToRead}
+	o := &TEburParser{name: name, truePeaks: truePeaks, linesToRead: linesToRead, ret: ret}
 	o.re = regexp.MustCompile(fmt.Sprintf("\\[%v @ [^ ]+\\] Summary:.*", name))
 	return o
 }
 
 // var reEbur128 = regexp.MustCompile("\\[Parsed_ebur128_\\d+ @ [^ ]+\\] Summary:.*")
+
+// Finish -
+func (o *TEburParser) Finish() error {
+	// if !o.finished {
+	// 	return nil, fmt.Errorf("Ebur parser: uncompleted\n %v", strings.Join(o.lines, "\n"))
+	// }
+
+	if o.ret == nil {
+		o.ret = &TEburInfo{}
+	}
+	data, err := parseEbur128Summary(o.lines, o.truePeaks)
+	if err != nil {
+		return fmt.Errorf("Ebur parser: %v\n %v", err, strings.Join(o.lines, "\n"))
+	}
+	*o.ret = *data
+
+	return nil
+}
 
 // Parse -
 func (o *TEburParser) Parse(line string, eof bool) (accepted bool, finished bool, err error) {
@@ -72,17 +91,18 @@ func (o *TEburParser) Parse(line string, eof bool) (accepted bool, finished bool
 }
 
 // GetData -
-func (o *TEburParser) GetData() (*TEburInfo, error) {
+func (o *TEburParser) GetData() *TEburInfo {
 	// if !o.finished {
 	// 	return nil, fmt.Errorf("Ebur parser: uncompleted\n %v", strings.Join(o.lines, "\n"))
 	// }
 
-	data, err := parseEbur128Summary(o.lines, o.truePeaks)
-	if err != nil {
-		return nil, fmt.Errorf("Ebur parser: %v\n %v", err, strings.Join(o.lines, "\n"))
-	}
+	// data, err := parseEbur128Summary(o.lines, o.truePeaks)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("Ebur parser: %v\n %v", err, strings.Join(o.lines, "\n"))
+	// }
 
-	return data, nil
+	// return data, nil
+	return o.ret
 }
 
 func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {

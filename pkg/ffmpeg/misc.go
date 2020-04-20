@@ -25,70 +25,36 @@ func UniqueName(name string) string {
 	return ret
 }
 
-// -
-const (
-	NodeUnknown TNodeType = iota
-	NodeInput
-	NodeOutput
-	NodeFilter
-)
-
-type (
-	// TNodeType -
-	TNodeType int
-
-	// TFilterLine -
-	TFilterLine struct {
-		owner     *TFilterChain
-		typ       TNodeType
-		key       string
-		cachedKey string
-		line      string
-		out       []*TFilterLine
+// ArgsToStrings -
+func ArgsToStrings(args []interface{}) ([]string, error) {
+	if len(args) == 0 {
+		return nil, nil
 	}
-	// TFilterChain -
-	TFilterChain struct {
-		TFilterLine
-
-		localBase int
-		inputIndex,
-		streamIndex,
-		localIndex int
+	ret := make([]string, 0, len(args))
+	for _, arg := range args {
+		switch arg.(type) {
+		default:
+			ret = append(ret, fmt.Sprintf("%v", arg))
+		}
 	}
-)
-
-// NewFilterChain -
-func NewFilterChain(input, stream, local int) *TFilterChain {
-	ret := &TFilterChain{inputIndex: input, streamIndex: stream, localIndex: local}
-	ret.key = ret.GetKey()
-	return ret
+	return ret, nil
 }
 
-// GetKey -
-func (o *TFilterChain) GetKey() string {
-	if o.key == "" {
-		o.key = fmt.Sprintf("%vx%v", o.inputIndex, o.streamIndex)
-		o.key = strings.ReplaceAll(o.key, "-", "m")
+func getFilter(typ TStreamType, name string, args ...interface{}) (string, error) {
+	a, err := ArgsToStrings(args)
+	if err != nil {
+		return "", err
 	}
-	return o.key
-}
-
-func newFilterLine(owner *TFilterChain, typ TNodeType) *TFilterLine {
-	if owner == nil {
-		panic("newFilterLine: owner must be not null")
+	switch typ {
+	default:
+		return "", fmt.Errorf("only video and audio stream types are allowed")
+	case streamTypeVideo:
+	case streamTypeAudio:
+		name = "a" + name
 	}
-	ret := &TFilterLine{owner: owner, typ: typ}
-	ret.key = ret.getLocalKey()
-	return ret
-}
-
-func (o *TFilterLine) getLocalKey() string {
-	ret := fmt.Sprintf("%v", o.owner.localBase)
-	o.owner.localBase++
-	return ret
-}
-
-// Split -
-func (o *TFilterLine) Split() *TFilterLine {
-	return newFilterLine(o.owner, NodeFilter)
+	ret := strings.Join(
+		append([]string{name}, a...),
+		"=",
+	)
+	return ret, nil
 }

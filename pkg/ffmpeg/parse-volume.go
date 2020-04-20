@@ -20,16 +20,30 @@ type TVolumeParser struct {
 	name  string
 	re    *regexp.Regexp
 	lines []string
+	ret   *TVolumeInfo
 }
 
 // NewVolumeParser -
-func NewVolumeParser(name string) *TVolumeParser {
-	o := &TVolumeParser{name: name}
+func NewVolumeParser(name string, ret *TVolumeInfo) *TVolumeParser {
+	o := &TVolumeParser{name: name, ret: ret}
 	o.re = regexp.MustCompile(fmt.Sprintf("\\[%v @ [^ ]+\\] (.*)", name))
 	return o
 }
 
 // var reVolumeDetect = regexp.MustCompile("\\[Parsed_volumedetect_\\d+ @ [^ ]+\\] (.*)")
+
+// Finish -
+func (o *TVolumeParser) Finish() error {
+	if o.ret == nil {
+		o.ret = &TVolumeInfo{}
+	}
+	data, err := parseVolumeDetect(o.lines)
+	if err != nil {
+		return fmt.Errorf("VolumeDetect parser: %v\n%v", err, strings.Join(o.lines, "\n"))
+	}
+	*o.ret = *data
+	return nil
+}
 
 // Parse -
 func (o *TVolumeParser) Parse(line string, eof bool) (accepted bool, finished bool, err error) {
@@ -45,17 +59,18 @@ func (o *TVolumeParser) Parse(line string, eof bool) (accepted bool, finished bo
 }
 
 // GetData -
-func (o *TVolumeParser) GetData() (*TVolumeInfo, error) {
+func (o *TVolumeParser) GetData() *TVolumeInfo {
 	// if !o.finished {
 	// 	return nil, fmt.Errorf("Ebur parser: incomplete data\n %v", strings.Join(o.lines, "\n"))
 	// }
 
-	data, err := parseVolumeDetect(o.lines)
-	if err != nil {
-		return nil, fmt.Errorf("VolumeDetect parser: %v\n%v", err, strings.Join(o.lines, "\n"))
-	}
+	// data, err := parseVolumeDetect(o.lines)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("VolumeDetect parser: %v\n%v", err, strings.Join(o.lines, "\n"))
+	// }
 
-	return data, nil
+	// return data, nil
+	return o.ret
 }
 
 func parseNameVal(line, delim string) (string, string, error) {

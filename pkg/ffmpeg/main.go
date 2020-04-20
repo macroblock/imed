@@ -10,6 +10,7 @@ import (
 // IParser -
 type IParser interface {
 	Parse(line string, eof bool) (accepted bool, finished bool, err error)
+	Finish() error
 }
 
 func scanLines(data []byte, atEOF bool) (advance int, token []byte, err error) {
@@ -84,6 +85,10 @@ func Run(parser IParser, args ...string) error {
 		}
 	}
 	err = c.Wait()
+	if err != nil {
+		return err
+	}
+	err = parser.Finish()
 	if err != nil {
 		return err
 	}

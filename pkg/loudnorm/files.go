@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/macroblock/imed/pkg/ffmpeg"
 	"github.com/malashin/ffinfo"
 )
 
@@ -29,6 +30,8 @@ type (
 		Lang        string
 		AudioParams []string
 		// Done          bool
+		volumeInfo    *ffmpeg.TVolumeInfo
+		eburInfo      *ffmpeg.TEburInfo
 		LoudnessInfo  *TLoudnessInfo
 		TargetLI      *TLoudnessInfo
 		CompParams    *TCompressParams
