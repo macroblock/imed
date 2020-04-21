@@ -113,7 +113,7 @@ func SetTargetTP(tp float64) {
 func replaceStatic(pattern string, vals ...string) string {
 	for _, val := range vals {
 		if strings.Contains(pattern, val) {
-			pattern = strings.ReplaceAll(pattern, val, fmt.Sprintf("%v", appendBranchStaticValue))
+			pattern = strings.Replace(pattern, val, fmt.Sprintf("%v", appendBranchStaticValue), -1)
 			appendBranchStaticValue++
 		}
 	}
@@ -128,7 +128,7 @@ func appendPattern(branches []string, stream *TStreamInfo, comb *ffmpeg.TCombine
 			stream.volumeInfo = &ffmpeg.TVolumeInfo{}
 			name := ffmpeg.UniqueName("volumedetect")
 			comb.Append(ffmpeg.NewVolumeParser(name, stream.volumeInfo))
-			pattern = strings.ReplaceAll(pattern, "~vd~", name)
+			pattern = strings.Replace(pattern, "~vd~", name, -1)
 		}
 
 		if strings.Contains(pattern, "~ebur~") {
@@ -141,15 +141,15 @@ func appendPattern(branches []string, stream *TStreamInfo, comb *ffmpeg.TCombine
 			}
 			comb.Append(ffmpeg.NewEburParser(name, targetUseTP, stream.eburInfo))
 			name += params
-			pattern = strings.ReplaceAll(pattern, "~ebur~", name)
+			pattern = strings.Replace(pattern, "~ebur~", name, -1)
 		}
 
 		if strings.Contains(pattern, "~compressor~") {
-			pattern = strings.ReplaceAll(pattern, "~compressor~", stream.CompParams.BuildFilter())
+			pattern = strings.Replace(pattern, "~compressor~", stream.CompParams.BuildFilter(), -1)
 		}
 
 		if strings.Contains(pattern, "~idx~") {
-			pattern = strings.ReplaceAll(pattern, "~idx~", fmt.Sprintf("%v", stream.Index))
+			pattern = strings.Replace(pattern, "~idx~", fmt.Sprintf("%v", stream.Index), -1)
 		}
 
 		pattern = replaceStatic(pattern, "~u~", "~u0~", "~u1~", "~u2~", "~u3~")
