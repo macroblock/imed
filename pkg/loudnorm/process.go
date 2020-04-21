@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/macroblock/imed/pkg/ffmpeg"
 )
 
 // GlobalDebug -
@@ -191,12 +193,20 @@ func CheckIfReadyToCompile(fi *TFileInfo) error {
 
 // ProcessTo -
 func ProcessTo(fi *TFileInfo) error {
-	muxParams := []string{
+	params := []string{
 		"-y",
 		"-hide_banner",
 		"-i", fi.Filename,
 	}
 	filters := []string{}
+	outputs := []string{}
+	ffmpeg.UniqueReset()
+
+	time := ffmpeg.FloatToTime(fi.Duration)
+	combParser := ffmpeg.NewCombineParser(
+		ffmpeg.NewAudioProgressParser(time, nil),
+	)
+
 	inputIndex := 0
 	for _, stream := range fi.Streams {
 		switch stream.Type {
@@ -206,11 +216,11 @@ func ProcessTo(fi *TFileInfo) error {
 			if stream.ExtName != "" {
 				inputIndex++
 				stream.extInputIndex = inputIndex
-				muxParams = append(muxParams, "-i", stream.ExtName)
+				params = append(params, "-i", stream.ExtName)
 			}
 		}
 	}
-	muxParams = append(muxParams,
+	params = append(params,
 		"-map_metadata", "-1",
 		"-map_chapters", "-1",
 		"-id3v2_version", "3",
@@ -229,7 +239,7 @@ func ProcessTo(fi *TFileInfo) error {
 			videoIndex++
 			if isFirstVideo {
 			}
-			muxParams = append(muxParams,
+			outputs = append(outputs,
 				"-map", "0:"+strconv.Itoa(videoIndex),
 				"-c:v", "copy",
 			)
@@ -241,7 +251,7 @@ func ProcessTo(fi *TFileInfo) error {
 				isFirstSubtitle = false
 				def = "default"
 			}
-			muxParams = append(muxParams,
+			outputs = append(outputs,
 				"-map", "0:"+strconv.Itoa(stream.Index),
 				"-c:s", "mov_text",
 				"-metadata:s:s:"+strconv.Itoa(subtitleIndex), "language="+stream.Lang,
@@ -249,29 +259,36 @@ func ProcessTo(fi *TFileInfo) error {
 			)
 		case "audio":
 			audioIndex++
-			_ = filters
+
 			def := "none"
 			if isFirstAudio {
 				isFirstAudio = false
 				def = "default"
 			}
-			mapParam := "0:" + strconv.Itoa(stream.Index)
-			if stream.ExtName != "" {
-				mapParam = strconv.Itoa(stream.extInputIndex) + ":0"
-			}
-			muxParams = append(muxParams,
-				"-map", mapParam, //strconv.Itoa(stream.tempInputIndex)+":0",
-				"-c:a", "copy",
+
+			filters = appendPattern(filters, stream, combParser,
+				"[0:~idx~]~compressor~,asplit[s~u~][o~idx~];"+
+					"[s~u~]~vd~,~ebur~,anullsink")
+			outputs = appendPattern(outputs, stream, nil,
+				"-map", "[o~idx~]")
+			outputs = append(outputs, stream.AudioParams...)
+			outputs = append(outputs,
 				"-metadata:s:a:"+strconv.Itoa(audioIndex), "language="+stream.Lang,
 				"-disposition:s:a:"+strconv.Itoa(audioIndex), def,
 			)
 		}
 	}
-	muxParams = append(muxParams, "-metadata")
-	muxParams = append(muxParams, "comment="+PackLoudnessInfo(fi)) //+strings.Join(metadata, "\n"))
-	// muxParams = append(muxParams, "description="+strings.Join(metadata, "\n"))
-	muxParams = append(muxParams, generateOutputName(fi.Filename))
-	err := callFFMPEG(nil, muxParams...)
+	params = append(params, "-filter_complex")
+	params = append(params, strings.Join(filters, ";"))
+	params = append(params, outputs...)
+	params = append(params, "-metadata")
+	params = append(params, "comment="+PackLoudnessInfo(fi)) //+strings.Join(metadata, "\n"))
+	// params = append(params, "description="+strings.Join(metadata, "\n"))
+	params = append(params, generateOutputName(fi.Filename))
+	if GlobalDebug {
+		fmt.Println("### params: ", params)
+	}
+	err := ffmpeg.Run(combParser, params...)
 	if err != nil {
 		return err
 	}
@@ -303,6 +320,12 @@ func Process(filename string) error {
 	if err != nil {
 		return err
 	}
+
+	err = CheckIfReadyToCompile(fi)
+	if err != nil {
+		return err
+	}
+
 	t = time.Now()
 	fmt.Println("muxing...")
 	err = ProcessTo(fi)

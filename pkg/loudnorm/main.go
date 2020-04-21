@@ -142,10 +142,7 @@ func Scan(streams []*TStreamInfo) error {
 		"-filter_complex",
 	}
 
-	time, err := ffmpeg.ParseTime("11:22:33.44")
-	if err != nil {
-		return err
-	}
+	time := ffmpeg.FloatToTime(streams[0].Parent.Duration)
 	combParser := ffmpeg.NewCombineParser(
 		ffmpeg.NewAudioProgressParser(time, nil),
 	)
@@ -164,7 +161,7 @@ func Scan(streams []*TStreamInfo) error {
 		fmt.Println("### params: ", params)
 	}
 
-	err = ffmpeg.Run(combParser, params...)
+	err := ffmpeg.Run(combParser, params...)
 	if err != nil {
 		return err
 	}
@@ -201,8 +198,15 @@ type TCompressParams struct {
 	Correction             float64
 }
 
+func newCompressParams() *TCompressParams {
+	return &TCompressParams{Ratio: -1.0}
+}
+
 // BuildFilter -
-func (o TCompressParams) BuildFilter() string {
+func (o *TCompressParams) BuildFilter() string {
+	if o == nil {
+		return "anull"
+	}
 	if o.Ratio < 0.0 {
 		return fmt.Sprintf("volume=%.4fdB", o.PreAmp+o.PostAmp)
 	}
@@ -215,11 +219,11 @@ func (o TCompressParams) BuildFilter() string {
 }
 
 // GetK -
-func (o TCompressParams) GetK() float64 {
-	ret := o.Ratio * o.Correction
-	if ret < 0.0 {
+func (o *TCompressParams) GetK() float64 {
+	if o.Ratio < 0.0 {
 		return 1.0
 	}
+	ret := o.Ratio * o.Correction
 	return ret
 }
 
@@ -259,10 +263,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 			"-filter_complex",
 		}
 
-		time, err := ffmpeg.ParseTime("11:22:33.44")
-		if err != nil {
-			return err
-		}
+		time := ffmpeg.FloatToTime(streams[0].Parent.Duration)
 		combParser := ffmpeg.NewCombineParser(
 			ffmpeg.NewAudioProgressParser(time, nil),
 		)
@@ -290,7 +291,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 		if GlobalDebug {
 			fmt.Println("### params: ", params)
 		}
-		err = ffmpeg.Run(combParser, params...)
+		err := ffmpeg.Run(combParser, params...)
 		if err != nil {
 			return err
 		}

@@ -18,6 +18,11 @@ type (
 
 var errHHMMSSMs = fmt.Errorf("hh:mm:ss.ms parser error")
 
+// FloatToTime -
+func FloatToTime(f float64) Time {
+	return Time(f * 1000)
+}
+
 // ParseTime -
 func ParseTime(str string) (Time, error) {
 	o := Time(0)
@@ -62,6 +67,11 @@ func (o Time) HHMMSSMs() THHMMSSMs {
 	m := v % 60
 	h := v / 60
 	return THHMMSSMs{HH: h, MM: m, SS: s, Ms: ms}
+}
+
+// Float -
+func (o Time) Float() float64 {
+	return float64(o) / 1000.0
 }
 
 // String -

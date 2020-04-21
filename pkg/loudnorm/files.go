@@ -2,6 +2,7 @@ package loudnorm
 
 import (
 	"fmt"
+	"math"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -15,6 +16,7 @@ type (
 	TFileInfo struct {
 		Filename string
 		Mode     TMode
+		Duration float64
 		Streams  []*TStreamInfo
 	}
 	// TStreamInfo -
@@ -70,12 +72,14 @@ func LoadFile(filename string, inputIndex int) (*TFileInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	fi := &TFileInfo{Filename: filename}
+	fi := &TFileInfo{Filename: filename, Duration: -1.0}
 	vIndex := 0
 	aIndex := 0
 	sIndex := 0
+	duration := -1.0
 	for index, stream := range finfo.Streams {
+		dur, _ := finfo.StreamDuration(index)
+		duration = math.Max(duration, dur)
 		switch stream.CodecType {
 		default:
 			return nil, fmt.Errorf("unknown stream codec type (%v)", stream.CodecType)
@@ -89,6 +93,9 @@ func LoadFile(filename string, inputIndex int) (*TFileInfo, error) {
 			addAudioStreamInfo(fi, filename, inputIndex, index, sIndex, stream.CodecName, stream.Channels, stream.Tags.Language)
 			aIndex++
 		}
+	}
+	if duration > 1.0 { // !!!HACK!!!
+		fi.Duration = duration
 	}
 
 	err = AttachLoudnessInfo(fi, finfo.Format.Tags.Comment)

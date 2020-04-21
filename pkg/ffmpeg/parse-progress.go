@@ -2,7 +2,9 @@ package ffmpeg
 
 import (
 	"fmt"
+	"math"
 	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -14,7 +16,9 @@ var reAudioProgress = regexp.MustCompile("size=.+ time=(\\d{2}:\\d{2}:\\d{2}.\\d
 
 // Finish -
 func (o *tAudioProgressParser) Finish() error {
-	return nil
+	err := o.callback.Callback(-1)
+	fmt.Println()
+	return err
 }
 
 // Parse -
@@ -39,12 +43,20 @@ type tDefaultAudioProgressCallback struct {
 }
 
 func (o *tDefaultAudioProgressCallback) Callback(t Time) error {
+	if t < 0 {
+		t = o.total
+	}
 	ct := time.Now()
 	zeroTime := time.Time{}
 	if o.lastTime == zeroTime {
 		o.lastTime = ct
 	}
-	fmt.Printf("%v / %v, delta: %v\n", t, o.total, time.Since(o.lastTime))
+	percents := "N/A"
+	if o.total > 0 {
+		percents = strconv.Itoa(int(math.Round(100*t.Float()/o.total.Float()))) + "%"
+	}
+	fmt.Printf(" %v %v / %v, elapsed: %v            \r",
+		percents, t, o.total, time.Since(o.lastTime))
 	return nil
 }
 
@@ -52,6 +64,9 @@ func (o *tDefaultAudioProgressCallback) Callback(t Time) error {
 func NewAudioProgressParser(totalLen Time, callback IAudioProgress) IParser {
 	// fmt.Printf("@@@@: %q\n", line)
 	if callback == nil {
+		if totalLen < 1000 { // !!!HACK!!!
+			totalLen = -1000
+		}
 		callback = &tDefaultAudioProgressCallback{total: totalLen}
 	}
 	return &tAudioProgressParser{
