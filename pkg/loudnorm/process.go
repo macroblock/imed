@@ -14,7 +14,7 @@ import (
 )
 
 // GlobalDebug -
-const GlobalDebug = true
+var GlobalDebug = false
 
 var (
 	ac3Params2 = []string{
@@ -104,15 +104,15 @@ func fmtErrors(errors []error) error {
 	return fmt.Errorf("%s", ret)
 }
 
-func printInfo(name string, si []*TStreamInfo) {
-	fmt.Printf("    %s:\n", name)
-	for _, stream := range si {
-		if stream.Type != "audio" {
-			continue
-		}
-		fmt.Printf("        %2d: %v\n", stream.Index, stream.LoudnessInfo)
-	}
-}
+// func printInfo(name string, si []*TStreamInfo) {
+// 	fmt.Printf("    %s:\n", name)
+// 	for _, stream := range si {
+// 		if stream.Type != "audio" {
+// 			continue
+// 		}
+// 		fmt.Printf("        %2d: %v\n", stream.Index, stream.LoudnessInfo)
+// 	}
+// }
 
 // ScanAudio -
 func ScanAudio(fi *TFileInfo) error {
@@ -292,6 +292,30 @@ func ProcessTo(fi *TFileInfo) error {
 	if err != nil {
 		return err
 	}
+
+	errStrs := []string{}
+	for i, stream := range fi.Streams {
+		stream.LoudnessInfo = &TLoudnessInfo{
+			I:  stream.eburInfo.I,
+			RA: stream.eburInfo.LRA,
+			TP: stream.eburInfo.TP,
+			TH: stream.eburInfo.Thresh,
+			MP: stream.volumeInfo.MaxVolume,
+			CR: stream.TargetLI.CR, //-1.0,
+		}
+		if !LoudnessIsEqual(stream.LoudnessInfo, stream.TargetLI) {
+			errStrs = append(errStrs, fmt.Sprintf("stream #%v: loudness info is not equal to the planned one", i))
+		}
+		if GlobalDebug {
+			fmt.Println("##### stream:", i,
+				"\n  ebur >", stream.eburInfo,
+				"\n  vol  >", stream.volumeInfo)
+		}
+	}
+	if len(errStrs) != 0 {
+		return fmt.Errorf("%v", strings.Join(errStrs, "\n"))
+	}
+
 	return nil
 }
 
@@ -302,7 +326,9 @@ func Process(filename string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("loaded:\n%v", fi)
+	if GlobalDebug {
+		fmt.Printf("loaded:\n%v", fi)
+	}
 
 	gt := time.Now()
 	t := time.Now()
@@ -312,11 +338,16 @@ func Process(filename string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
+	if GlobalDebug {
+		fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
+	}
 
 	t = time.Now()
-	fmt.Println("render parameters...")
+	fmt.Println("calculating parameters...")
 	err = renderParameters(fi)
+	for _, stream := range fi.Streams {
+		fmt.Printf("        #%v: %v\n", stream.Index, stream.CompParams)
+	}
 	if err != nil {
 		return err
 	}
@@ -327,15 +358,16 @@ func Process(filename string) error {
 	}
 
 	t = time.Now()
-	fmt.Println("muxing...")
+	fmt.Println("processing...")
 	err = ProcessTo(fi)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
+	if GlobalDebug {
+		fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
+	}
 
-	// fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
-	fmt.Println("Ok.")
+	fmt.Printf("Ok. Elapsed time: %v\n", time.Since(gt))
 
 	return nil
 }

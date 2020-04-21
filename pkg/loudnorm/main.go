@@ -2,7 +2,9 @@ package loudnorm
 
 import (
 	"fmt"
+	"math"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/macroblock/imed/pkg/ffmpeg"
@@ -63,21 +65,31 @@ func (o *TLoudnessInfo) String() string {
 	if o == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("I: %v, RA: %v, TP: %v, TH: %v, MP: %v", o.I, o.RA, o.TP, o.TH, o.MP)
+	return fmt.Sprintf("I: %v, RA: %v, TP: %v, TH: %v, MP: %v, CR: %v", o.I, o.RA, o.TP, o.TH, o.MP, o.CR)
 }
 
 // SetTargetLI -
 func SetTargetLI(li float64) {
+	if math.IsNaN(li) || math.IsInf(li, +1) || math.IsInf(li, -1) {
+		panic("'-li' flag must not be 'inf' or 'NaN'")
+	}
 	targetI = li
 }
 
 // SetTargetLRA -
 func SetTargetLRA(lra float64) {
+	if math.IsNaN(lra) {
+		lra = math.Inf(+1)
+	}
 	targetLRA = lra
 }
 
 // SetTargetTP -
 func SetTargetTP(tp float64) {
+	if math.IsNaN(tp) {
+		targetUseTP = false
+		tp = math.Inf(+1)
+	}
 	targetTP = tp
 }
 
@@ -106,11 +118,11 @@ func appendPattern(branches []string, stream *TStreamInfo, comb *ffmpeg.TCombine
 			stream.eburInfo = &ffmpeg.TEburInfo{}
 			name := ffmpeg.UniqueName("ebur128")
 			params := "=peak=none" // none sample true
-			TruePeaksOn := false
-			if TruePeaksOn {
+			// TruePeaksOn := false
+			if targetUseTP {
 				params = "=peak=true"
 			}
-			comb.Append(ffmpeg.NewEburParser(name, TruePeaksOn, stream.eburInfo))
+			comb.Append(ffmpeg.NewEburParser(name, targetUseTP, stream.eburInfo))
 			name += params
 			pattern = strings.ReplaceAll(pattern, "~ebur~", name)
 		}
@@ -175,15 +187,17 @@ func Scan(streams []*TStreamInfo) error {
 			MP: stream.volumeInfo.MaxVolume,
 			CR: -1.0,
 		}
-		fmt.Println("##### stream:", i,
-			"\n  ebur >", stream.eburInfo,
-			"\n  vol  >", stream.volumeInfo)
+		if GlobalDebug {
+			fmt.Println("##### stream:", i,
+				"\n  ebur >", stream.eburInfo,
+				"\n  vol  >", stream.volumeInfo)
+		}
 
 		comp := &TCompressParams{Ratio: -1.0}
 		stream.CompParams = comp
 
 		stream.done = FixLoudness(stream.TargetLI, stream.CompParams)
-		if stream.done {
+		if GlobalDebug && stream.done {
 			fmt.Println("##### stream:", i,
 				"\n  li      >", stream.TargetLI,
 				"\n  postAmp >", stream.CompParams.PostAmp)
@@ -200,6 +214,19 @@ type TCompressParams struct {
 
 func newCompressParams() *TCompressParams {
 	return &TCompressParams{Ratio: -1.0}
+}
+
+// String -
+func (o *TCompressParams) String() string {
+	if o == nil {
+		return "<nil>"
+	}
+	ret := ""
+	ret += "[" + strconv.FormatFloat(o.PreAmp, 'f', 2, 64) + ","
+	ret += " " + strconv.FormatFloat(1/o.GetK(), 'f', 2, 64) + ":1,"
+	ret += " " + strconv.FormatFloat(o.PostAmp, 'f', 2, 64) + ""
+	ret += "]"
+	return ret
 }
 
 // BuildFilter -
@@ -282,7 +309,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 			outputs = appendPattern(outputs, stream, nil, "-map", "[o~idx~]", "-f", "null", os.DevNull)
 		}
 		if done {
-			fmt.Println("--- All ok. continue ---")
+			// fmt.Println("--- All ok. continue ---")
 			return nil
 		}
 		params = append(params, strings.Join(filters, ";"))
@@ -306,14 +333,16 @@ func RenderParameters(streams []*TStreamInfo) error {
 				MP: stream.volumeInfo.MaxVolume,
 				CR: stream.CompParams.GetK(),
 			}
-			fmt.Println("##### stream:", i,
-				"\n  ebur >", stream.eburInfo,
-				"\n  vol  >", stream.volumeInfo,
-				"\n  K    >", stream.CompParams.GetK(),
-				"\n  CR   >", 1/stream.CompParams.GetK(), ": 1")
+			if GlobalDebug {
+				fmt.Println("##### stream:", i,
+					"\n  ebur >", stream.eburInfo,
+					"\n  vol  >", stream.volumeInfo,
+					"\n  K    >", stream.CompParams.GetK(),
+					"\n  CR   >", 1/stream.CompParams.GetK(), ": 1")
+			}
 
 			stream.done = FixLoudness(stream.TargetLI, stream.CompParams)
-			if stream.done {
+			if GlobalDebug && stream.done {
 				fmt.Println("##### stream:", i,
 					"\n  li      >", stream.TargetLI,
 					"\n  postAmp >", stream.CompParams.PostAmp)

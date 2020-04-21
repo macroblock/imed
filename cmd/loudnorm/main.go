@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"math"
 	"os"
 	"strconv"
-	"time"
+	"strings"
 
 	"github.com/macroblock/imed/pkg/cli"
 	"github.com/macroblock/imed/pkg/loudnorm"
@@ -17,8 +17,8 @@ var (
 	log   = zlog.Instance("main")
 	retif = log.Catcher()
 
-	flagFiles []string
-	flagLight bool
+	flagFiles     []string
+	flagVerbosity bool
 
 	flagLI,
 	flagLRA,
@@ -49,6 +49,8 @@ func mainFunc() error {
 		return cli.ErrorNotEnoughArguments()
 	}
 
+	loudnorm.GlobalDebug = flagVerbosity
+
 	if flagLI != "" {
 		val, err := strconv.ParseFloat(flagLI, 64)
 		if err != nil {
@@ -58,48 +60,35 @@ func mainFunc() error {
 	}
 
 	if flagLRA != "" {
-		val, err := strconv.ParseFloat(flagLRA, 64)
-		if err != nil {
-			return err
+		val := math.NaN()
+		if strings.ToUpper(flagLRA) != "OFF" {
+			err := error(nil)
+			val, err = strconv.ParseFloat(flagLRA, 64)
+			if err != nil {
+				return err
+			}
 		}
 		loudnorm.SetTargetLRA(val)
 	}
 
 	if flagTP != "" {
-		val, err := strconv.ParseFloat(flagTP, 64)
-		if err != nil {
-			return err
+		val := math.NaN()
+		if strings.ToUpper(flagTP) != "OFF" {
+			err := error(nil)
+			val, err = strconv.ParseFloat(flagTP, 64)
+			if err != nil {
+				return err
+			}
 		}
 		loudnorm.SetTargetTP(val)
 	}
 
-	t := time.Now()
-	// fmt.Println("scanning...")
-	// opts, err := loudnorm.ScanLight(flagFiles[0], 0)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// fmt.Println("delta time ", time.Since(t))
-
-	// // fmt.Println("opts: ", opts)
-	// fmt.Printf("(%v, LRA: %v, Thresh: %v, TP: %v) time: %v\n",
-	// 	opts.InputI, opts.InputLRA, opts.InputThresh, opts.InputTP, time.Since(t))
-
-	// fmt.Println("processing...")
-	// err = loudnorm.Process(flagFiles[0], flagFiles[0]+".flac", 0,
-	// 	opts.InputI, opts.InputLRA, opts.InputThresh, opts.InputTP)
-	// if err != nil {
-	// 	return err
-	// }
-	// fmt.Printf("(%v, LRA: %v, Thresh: %v, TP: %v) time: %v\n",
-	// 	opts.InputI, opts.InputLRA, opts.InputThresh, opts.InputTP, time.Since(t))
-
+	// t := time.Now()
 	err := loudnorm.Process(flagFiles[0])
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%v", time.Since(t))
+	// fmt.Printf("%v", time.Since(t))
 	return nil
 }
 
@@ -122,14 +111,16 @@ func main() {
 	}()
 
 	// command line interface
-	cmdLine := cli.New("!PROG! the program that translit text in filenames or|and clipboard.", mainFunc)
+	cmdLine := cli.New("!PROG! loudness normalization tool.", mainFunc)
 	cmdLine.Elements(
 		cli.Usage("!PROG! {flags|<...>}"),
 		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
 		cli.Flag("-h -help      : help", cmdLine.PrintHelp).Terminator(), // Why is this works ?
-		cli.Flag("-li           : light mode (whithout TP)", &flagLI),
-		cli.Flag("-lra           : light mode (whithout TP)", &flagLRA),
-		cli.Flag("-tp           : light mode (whithout TP)", &flagTP),
+		cli.Flag("-v            : verbosity", &flagVerbosity),
+		cli.Flag("-li           : targeted integrated loudness (LUFS)", &flagLI),
+		cli.Flag("-li           : targeted integrated loudness (LUFS)", &flagLI),
+		cli.Flag("-lra          : max allowed loudness range (LU) or 'off' to disable LRA check", &flagLRA),
+		cli.Flag("-tp           : max allowed true peaks (dBFS) or 'off' to disable TP calculation", &flagTP),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.Command("scan       : scan loudnes parameters", doScan,
 			// cli.Flag("-l --light: light mode (whithout TP)", &flagLight),
