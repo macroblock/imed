@@ -82,7 +82,9 @@ func (o *TLoudnessInfo) String() string {
 	if o == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("I: %v, RA: %v, TP: %v, TH: %v, MP: %v, CR: %v", o.I, o.RA, o.TP, o.TH, o.MP, o.CR)
+	return fmt.Sprintf("I: %v, RA: %v, TP: %v, TH: %v, MP: %v, CR: %v",
+		o.I, o.RA, o.TP, o.TH, o.MP,
+		strconv.FormatFloat(o.CR, 'f', 2, 64))
 }
 
 // SetTargetLI -
@@ -203,6 +205,9 @@ func Scan(streams []*TStreamInfo) error {
 			MP: stream.volumeInfo.MaxVolume,
 			CR: -1.0,
 		}
+		stream.TargetLI = &TLoudnessInfo{}
+		*stream.TargetLI = *stream.LoudnessInfo
+
 		if GlobalDebug {
 			fmt.Println("##### stream:", i,
 				"\n  ebur >", stream.eburInfo,
@@ -284,9 +289,11 @@ func calcCompressParams(li *TLoudnessInfo) *TCompressParams {
 	return &TCompressParams{PreAmp: offs, PostAmp: 0.0, Ratio: k, Correction: 1.0}
 }
 
+// GlobalCompressCorrectionStep -
+var GlobalCompressCorrectionStep = float64(0.1)
+
 // RenderParameters -
 func RenderParameters(streams []*TStreamInfo) error {
-	const compressCorrectionStep = 0.05
 	if len(streams) == 0 {
 		return nil
 	}
@@ -319,9 +326,10 @@ func RenderParameters(streams []*TStreamInfo) error {
 				continue
 			}
 			done = false
-			stream.CompParams.Correction -= compressCorrectionStep
+			stream.CompParams.Correction -= GlobalCompressCorrectionStep
 			filters = appendPattern(filters, stream, combParser, "[0:~idx~]~compressor~,~vd~,~ebur~[o~idx~]")
 			outputs = appendPattern(outputs, stream, nil, "-map", "[o~idx~]", "-f", "null", os.DevNull)
+			fmt.Printf("        #%v: %v\n          : %v\n", stream.Index, stream.TargetLI, stream.CompParams)
 		}
 		if done {
 			// fmt.Println("--- All ok. continue ---")

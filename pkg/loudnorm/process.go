@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -313,6 +314,10 @@ func ProcessTo(fi *TFileInfo) error {
 		}
 	}
 	if len(errStrs) != 0 {
+		err := os.Remove(generateOutputName(fi.Filename))
+		if err != nil {
+			fmt.Printf("!!! error while removing file %v: %v", generateOutputName(fi.Filename), err)
+		}
 		return fmt.Errorf("%v", strings.Join(errStrs, "\n"))
 	}
 

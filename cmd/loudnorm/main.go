@@ -24,6 +24,7 @@ var (
 	flagLRA,
 	flagTP string
 
+	flagStep,
 	flagT,
 	flagSS string
 )
@@ -55,6 +56,13 @@ func mainFunc() error {
 	loudnorm.GlobalDebug = flagVerbosity
 	loudnorm.GlobalFlagT = flagT
 	loudnorm.GlobalFlagSS = flagSS
+	if flagStep != "" {
+		val, err := strconv.ParseFloat(flagStep, 64)
+		if err != nil {
+			return err
+		}
+		loudnorm.GlobalCompressCorrectionStep = val
+	}
 
 	if flagLI != "" {
 		val, err := strconv.ParseFloat(flagLI, 64)
@@ -126,6 +134,7 @@ func main() {
 		cli.Flag("-li           : targeted integrated loudness (LUFS)", &flagLI),
 		cli.Flag("-lra          : max allowed loudness range (LU) or 'off' to disable LRA check", &flagLRA),
 		cli.Flag("-tp           : max allowed true peaks (dBFS) or 'off' to disable TP calculation", &flagTP),
+		cli.Flag("-step         : compress correction step (default = 0.1)", &flagStep),
 		cli.Flag("-t            : same as ffmpeg", &flagT),
 		cli.Flag("-ss           : same as ffmpeg", &flagSS),
 		cli.Flag(": files to be processed", &flagFiles),
