@@ -10,6 +10,23 @@ import (
 	"github.com/macroblock/imed/pkg/ffmpeg"
 )
 
+// -
+var (
+	GlobalFlagT  = ""
+	GlobalFlagSS = ""
+)
+
+func getGloblaFlags() []string {
+	ret := []string{}
+	if GlobalFlagSS != "" {
+		ret = append(ret, "-ss", GlobalFlagSS)
+	}
+	if GlobalFlagT != "" {
+		ret = append(ret, "-t", GlobalFlagT)
+	}
+	return ret
+}
+
 type optionsJSON struct {
 	InputI            string `json:"input_i"`
 	InputTP           string `json:"input_tp"`
@@ -148,11 +165,9 @@ func Scan(streams []*TStreamInfo) error {
 	if len(streams) == 0 {
 		return nil
 	}
-	params := []string{
-		"-hide_banner",
-		"-i", streams[0].Parent.Filename,
-		"-filter_complex",
-	}
+	params := []string{"-hide_banner"}
+	params = append(params, getGloblaFlags()...)
+	params = append(params, "-i", streams[0].Parent.Filename)
 
 	time := ffmpeg.FloatToTime(streams[0].Parent.Duration)
 	combParser := ffmpeg.NewCombineParser(
@@ -166,6 +181,7 @@ func Scan(streams []*TStreamInfo) error {
 		filters = appendPattern(filters, stream, combParser, "[0:~idx~]~vd~,~ebur~[o~idx~]")
 		outputs = appendPattern(outputs, stream, nil, "-map", "[o~idx~]", "-f", "null", os.DevNull)
 	}
+	params = append(params, "-filter_complex")
 	params = append(params, strings.Join(filters, ";"))
 	params = append(params, outputs...)
 
@@ -198,9 +214,9 @@ func Scan(streams []*TStreamInfo) error {
 
 		stream.done = FixLoudness(stream.TargetLI, stream.CompParams)
 		if GlobalDebug && stream.done {
-			fmt.Println("##### stream:", i,
-				"\n  li      >", stream.TargetLI,
-				"\n  postAmp >", stream.CompParams.PostAmp)
+			fmt.Println("##### fixed stream:", i,
+				"\n  li   >", stream.TargetLI,
+				"\n  comp >", stream.CompParams)
 		}
 	}
 	return nil
@@ -284,11 +300,10 @@ func RenderParameters(streams []*TStreamInfo) error {
 	}
 
 	for tries := 5; tries > 0; tries-- {
-		params := []string{
-			"-hide_banner",
-			"-i", streams[0].Parent.Filename,
-			"-filter_complex",
-		}
+
+		params := []string{"-hide_banner"}
+		params = append(params, getGloblaFlags()...)
+		params = append(params, "-i", streams[0].Parent.Filename)
 
 		time := ffmpeg.FloatToTime(streams[0].Parent.Duration)
 		combParser := ffmpeg.NewCombineParser(
@@ -312,6 +327,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 			// fmt.Println("--- All ok. continue ---")
 			return nil
 		}
+		params = append(params, "-filter_complex")
 		params = append(params, strings.Join(filters, ";"))
 		params = append(params, outputs...)
 
@@ -337,15 +353,16 @@ func RenderParameters(streams []*TStreamInfo) error {
 				fmt.Println("##### stream:", i,
 					"\n  ebur >", stream.eburInfo,
 					"\n  vol  >", stream.volumeInfo,
-					"\n  K    >", stream.CompParams.GetK(),
-					"\n  CR   >", 1/stream.CompParams.GetK(), ": 1")
+					// "\n  K    >", stream.CompParams.GetK(),
+					// "\n  CR   >", 1/stream.CompParams.GetK(), ": 1")
+					"\n  comp >", stream.CompParams)
 			}
 
 			stream.done = FixLoudness(stream.TargetLI, stream.CompParams)
 			if GlobalDebug && stream.done {
-				fmt.Println("##### stream:", i,
-					"\n  li      >", stream.TargetLI,
-					"\n  postAmp >", stream.CompParams.PostAmp)
+				fmt.Println("##### fixed stream:", i,
+					"\n  li   >", stream.TargetLI,
+					"\n  comp >", stream.CompParams)
 			}
 			done = done && stream.done
 		}

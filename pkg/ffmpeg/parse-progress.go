@@ -45,6 +45,7 @@ type tDefaultAudioProgressCallback struct {
 func (o *tDefaultAudioProgressCallback) Callback(t Time) error {
 	if t < 0 {
 		t = o.total
+		return nil
 	}
 	ct := time.Now()
 	zeroTime := time.Time{}

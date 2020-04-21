@@ -193,11 +193,11 @@ func CheckIfReadyToCompile(fi *TFileInfo) error {
 
 // ProcessTo -
 func ProcessTo(fi *TFileInfo) error {
-	params := []string{
-		"-y",
-		"-hide_banner",
-		"-i", fi.Filename,
-	}
+
+	params := []string{"-y", "-hide_banner"}
+	params = append(params, getGloblaFlags()...)
+	params = append(params, "-i", fi.Filename)
+
 	filters := []string{}
 	outputs := []string{}
 	ffmpeg.UniqueReset()
