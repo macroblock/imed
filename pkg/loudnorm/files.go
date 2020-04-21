@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/macroblock/imed/pkg/ffmpeg"
@@ -18,15 +17,17 @@ type (
 		Mode     TMode
 		Duration float64
 		Streams  []*TStreamInfo
+		hasAudio bool
+		hasVideo bool
 	}
 	// TStreamInfo -
 	TStreamInfo struct {
-		Parent      *TFileInfo
-		InputIndex  int
-		Index       int
-		LocalIndex  int
-		Type        string // "audio", "video", "subtitle"
-		ExtName     string
+		Parent     *TFileInfo
+		InputIndex int
+		Index      int
+		LocalIndex int
+		Type       string // "audio", "video", "subtitle"
+		// ExtName     string
 		Codec       string
 		Channels    int
 		Lang        string
@@ -41,7 +42,7 @@ type (
 		validFormat   bool
 		validLoudness bool
 		done          bool
-		extInputIndex int
+		// extInputIndex int
 	}
 )
 
@@ -84,14 +85,16 @@ func LoadFile(filename string, inputIndex int) (*TFileInfo, error) {
 		default:
 			return nil, fmt.Errorf("unknown stream codec type (%v)", stream.CodecType)
 		case "video":
+			fi.hasVideo = true
 			addVideoStreamInfo(fi, filename, inputIndex, index, vIndex, stream.Width, stream.Height)
 			vIndex++
+		case "audio":
+			fi.hasAudio = true
+			addAudioStreamInfo(fi, filename, inputIndex, index, sIndex, stream.CodecName, stream.Channels, stream.Tags.Language)
+			aIndex++
 		case "subtitle":
 			addSubtitleStreamInfo(fi, filename, inputIndex, index, sIndex, stream.CodecName, stream.Tags.Language)
 			sIndex++
-		case "audio":
-			addAudioStreamInfo(fi, filename, inputIndex, index, sIndex, stream.CodecName, stream.Channels, stream.Tags.Language)
-			aIndex++
 		}
 	}
 	if duration > 1.0 { // !!!HACK!!!
@@ -154,51 +157,69 @@ func addSubtitleStreamInfo(fi *TFileInfo, filename string, inputIndex, index, sI
 	fi.Streams = append(fi.Streams, o)
 }
 
-func generateOutputName(filename string) string {
-	path, name := filepath.Split(filename)
-	ext := filepath.Ext(name)
-	name = strings.TrimSuffix(name, ext)
-	return path + name + "-ebur128.mov"
-}
-
-func generateExtFilename(fi *TFileInfo, si *TStreamInfo) string {
+func generateOutputName(fi *TFileInfo) string {
 	path, name := filepath.Split(fi.Filename)
 	ext := filepath.Ext(name)
 	name = strings.TrimSuffix(name, ext)
-	base := path + name + "-" + strconv.Itoa(si.Index) + "-" + si.Lang //+ "-" + si.Codec
-	return base + ".m4a"
+	ext = ".m4a"
+	if len(fi.Streams) == 1 {
+		ext = ".ac3"
+	}
+	if fi.hasVideo {
+		ext = ".mp4"
+	}
+	return path + name + "-ebur128" + ext
 }
 
-func generateAudioParams(fi *TFileInfo, si *TStreamInfo) []string {
-	switch fi.Mode {
+// func generateExtFilename(fi *TFileInfo, si *TStreamInfo) string {
+// 	path, name := filepath.Split(fi.Filename)
+// 	ext := filepath.Ext(name)
+// 	name = strings.TrimSuffix(name, ext)
+// 	base := path + name + "-" + strconv.Itoa(si.Index) + "-" + si.Lang //+ "-" + si.Codec
+// 	return base + ".m4a"
+// }
+
+func inferAudioParams(si *TStreamInfo) []string {
+	switch si.Channels {
 	default:
-		panic(fmt.Sprintf("invalid mode (%d) %v", fi.Mode, fi.Mode))
-	case ModeHD:
-		switch si.Channels {
-		default:
-			panic(fmt.Sprintf("wrong audio stream parameters: Mode %v, channels: %v", fi.Mode, si.Channels))
-		case 2:
-			return ac3Params2
-		case 6:
-			return ac3Params6
-		}
-	case ModeSD:
-		switch si.Channels {
-		default:
-			panic(fmt.Sprintf("wrong audio stream parameters: Mode %v, channels: %v", fi.Mode, si.Channels))
-		case 2:
-			return mp2Params2
-		case 6:
-			return mp2Params6
-		}
-	case ModeUnknown:
-		switch si.Channels {
-		default:
-			panic(fmt.Sprintf("wrong audio stream parameters: codec %v, channels: %v", si.Codec, si.Channels))
-		case 2:
-			return alacParams
-		case 6:
-			return alacParams
-		}
+		panic(fmt.Sprintf("unsupported number of channels: %v", si.Channels))
+	case 2:
+		return ac3Params2
+	case 6:
+		return ac3Params6
 	}
 }
+
+// func generateAudioParams(fi *TFileInfo, si *TStreamInfo) []string {
+// 	switch fi.Mode {
+// 	default:
+// 		panic(fmt.Sprintf("invalid mode (%d) %v", fi.Mode, fi.Mode))
+// 	case ModeHD:
+// 		switch si.Channels {
+// 		default:
+// 			panic(fmt.Sprintf("wrong audio stream parameters: Mode %v, channels: %v", fi.Mode, si.Channels))
+// 		case 2:
+// 			return ac3Params2
+// 		case 6:
+// 			return ac3Params6
+// 		}
+// 	case ModeSD:
+// 		switch si.Channels {
+// 		default:
+// 			panic(fmt.Sprintf("wrong audio stream parameters: Mode %v, channels: %v", fi.Mode, si.Channels))
+// 		case 2:
+// 			return mp2Params2
+// 		case 6:
+// 			return mp2Params6
+// 		}
+// 	case ModeUnknown:
+// 		switch si.Channels {
+// 		default:
+// 			panic(fmt.Sprintf("wrong audio stream parameters: codec %v, channels: %v", si.Codec, si.Channels))
+// 		case 2:
+// 			return alacParams
+// 		case 6:
+// 			return alacParams
+// 		}
+// 	}
+// }

@@ -94,25 +94,15 @@ func callFFMPEG(parse func([]byte) (interface{}, error), args ...string) error {
 	return nil
 }
 
-func fmtErrors(errors []error) error {
-	if len(errors) == 0 {
-		return nil
-	}
-	ret := "errors occured:\n"
-	for i, err := range errors {
-		ret = fmt.Sprintf("%v%2d: %v\n", ret, i, err)
-	}
-	return fmt.Errorf("%s", ret)
-}
-
-// func printInfo(name string, si []*TStreamInfo) {
-// 	fmt.Printf("    %s:\n", name)
-// 	for _, stream := range si {
-// 		if stream.Type != "audio" {
-// 			continue
-// 		}
-// 		fmt.Printf("        %2d: %v\n", stream.Index, stream.LoudnessInfo)
+// func fmtErrors(errors []error) error {
+// 	if len(errors) == 0 {
+// 		return nil
 // 	}
+// 	ret := "errors occured:\n"
+// 	for i, err := range errors {
+// 		ret = fmt.Sprintf("%v%2d: %v\n", ret, i, err)
+// 	}
+// 	return fmt.Errorf("%s", ret)
 // }
 
 // ScanAudio -
@@ -122,7 +112,7 @@ func ScanAudio(fi *TFileInfo) error {
 		if stream.Type != "audio" {
 			continue
 		}
-		stream.AudioParams = generateAudioParams(fi, stream)
+		stream.AudioParams = inferAudioParams(stream)
 		if ValidLoudness(stream.LoudnessInfo) {
 			if GlobalDebug {
 				fmt.Printf("stream %v has valid loudness (%v)\n", stream.Index, stream.LoudnessInfo)
@@ -146,10 +136,6 @@ func ScanAudio(fi *TFileInfo) error {
 				li.I, li.RA, li.TP, li.TH, li.MP,
 			)
 		}
-		// stream.validLoudness = true
-		// if !ValidLoudness(stream.LoudnessInfo) {
-		// 	stream.validLoudness = false
-		// }
 	}
 	return nil
 }
@@ -182,10 +168,10 @@ func CheckIfReadyToCompile(fi *TFileInfo) error {
 		if !(stream.done || stream.validLoudness) {
 			filename := fi.Filename
 			index := stream.Index
-			if stream.ExtName != "" {
-				filename = stream.ExtName
-				index = 0
-			}
+			// if stream.ExtName != "" {
+			// 	filename = stream.ExtName
+			// 	index = 0
+			// }
 			return fmt.Errorf("%v:%v is not ready to compile (%v)", filename, index, stream.LoudnessInfo)
 		}
 	}
@@ -208,19 +194,19 @@ func ProcessTo(fi *TFileInfo) error {
 		ffmpeg.NewAudioProgressParser(time, nil),
 	)
 
-	inputIndex := 0
-	for _, stream := range fi.Streams {
-		switch stream.Type {
-		case "video":
-		case "subtitle":
-		case "audio":
-			if stream.ExtName != "" {
-				inputIndex++
-				stream.extInputIndex = inputIndex
-				params = append(params, "-i", stream.ExtName)
-			}
-		}
-	}
+	// inputIndex := 0
+	// for _, stream := range fi.Streams {
+	// 	switch stream.Type {
+	// 	case "video":
+	// 	case "subtitle":
+	// 	case "audio":
+	// 		if stream.ExtName != "" {
+	// 			inputIndex++
+	// 			stream.extInputIndex = inputIndex
+	// 			params = append(params, "-i", stream.ExtName)
+	// 		}
+	// 	}
+	// }
 	params = append(params,
 		"-map_metadata", "-1",
 		"-map_chapters", "-1",
@@ -285,7 +271,7 @@ func ProcessTo(fi *TFileInfo) error {
 	params = append(params, "-metadata")
 	params = append(params, "comment="+PackLoudnessInfo(fi)) //+strings.Join(metadata, "\n"))
 	// params = append(params, "description="+strings.Join(metadata, "\n"))
-	params = append(params, generateOutputName(fi.Filename))
+	params = append(params, generateOutputName(fi))
 	if GlobalDebug {
 		fmt.Println("### params: ", params)
 	}
@@ -314,9 +300,9 @@ func ProcessTo(fi *TFileInfo) error {
 		}
 	}
 	if len(errStrs) != 0 {
-		err := os.Remove(generateOutputName(fi.Filename))
+		err := os.Remove(generateOutputName(fi))
 		if err != nil {
-			fmt.Printf("!!! error while removing file %v: %v", generateOutputName(fi.Filename), err)
+			fmt.Printf("!!! error while removing file %v: %v", generateOutputName(fi), err)
 		}
 		return fmt.Errorf("%v", strings.Join(errStrs, "\n"))
 	}
