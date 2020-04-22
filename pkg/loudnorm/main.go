@@ -10,82 +10,6 @@ import (
 	"github.com/macroblock/imed/pkg/ffmpeg"
 )
 
-// -
-var (
-	GlobalFlagT  = ""
-	GlobalFlagSS = ""
-)
-
-func calcDuration(duration float64) (float64, error) {
-	if duration <= 0 {
-		return -1.0, nil
-	}
-	if GlobalFlagSS != "" {
-		val, err := ffmpeg.ParseTime(GlobalFlagSS)
-		if err != nil {
-			return duration, err
-		}
-		duration -= val.Float()
-	}
-	if GlobalFlagT != "" {
-		val, err := ffmpeg.ParseTime(GlobalFlagT)
-		if err != nil {
-			return duration, err
-		}
-		duration -= val.Float()
-	}
-	return duration, nil
-}
-
-func getGloblaFlags() []string {
-	ret := []string{}
-	if GlobalFlagSS != "" {
-		ret = append(ret, "-ss", GlobalFlagSS)
-	}
-	if GlobalFlagT != "" {
-		ret = append(ret, "-t", GlobalFlagT)
-	}
-	return ret
-}
-
-type optionsJSON struct {
-	InputI            string `json:"input_i"`
-	InputTP           string `json:"input_tp"`
-	InputLRA          string `json:"input_lra"`
-	InputThresh       string `json:"input_thresh"`
-	OutputI           string `json:"output_i"`
-	OutputTP          string `json:"output_tp"`
-	OutputThresh      string `json:"output_thresh"`
-	NormalizationType string `json:"normalization_type"`
-	TargetOffset      string `json:"target_offset"`
-}
-
-// // Options -
-// type Options struct {
-// 	InputI            float64
-// 	InputTP           float64
-// 	InputLRA          float64
-// 	InputThresh       float64
-// 	OutputI           float64
-// 	OutputTP          float64
-// 	OutputThresh      float64
-// 	NormalizationType string
-// 	TargetOffset      float64
-// }
-
-// OptionsLight -
-type OptionsLight struct {
-	InputI      float64
-	InputThresh float64
-
-	InputLRA     float64
-	InputThresh2 float64
-	InputLRALow  float64
-	InputLRAHigh float64
-
-	InputTP float64
-}
-
 // TLoudnessInfo -
 type TLoudnessInfo struct {
 	I  float64 // integrated
@@ -109,29 +33,29 @@ func (o *TLoudnessInfo) String() string {
 }
 
 // SetTargetLI -
-func SetTargetLI(li float64) {
-	if math.IsNaN(li) || math.IsInf(li, +1) || math.IsInf(li, -1) {
-		panic("'-li' flag must not be 'inf' or 'NaN'")
-	}
-	targetI = li
-}
+// func SetTargetLI(li float64) {
+// 	if math.IsNaN(li) || math.IsInf(li, +1) || math.IsInf(li, -1) {
+// 		panic("'-li' flag must not be 'inf' or 'NaN'")
+// 	}
+// 	targetI = li
+// }
 
 // SetTargetLRA -
-func SetTargetLRA(lra float64) {
-	if math.IsNaN(lra) {
-		lra = math.Inf(+1)
-	}
-	targetLRA = lra
-}
+// func SetTargetLRA(lra float64) {
+// 	if math.IsNaN(lra) {
+// 		lra = math.Inf(+1)
+// 	}
+// 	targetLRA = lra
+// }
 
 // SetTargetTP -
-func SetTargetTP(tp float64) {
-	if math.IsNaN(tp) {
-		targetUseTP = false
-		tp = math.Inf(+1)
-	}
-	targetTP = tp
-}
+// func SetTargetTP(tp float64) {
+// 	if math.IsNaN(tp) {
+// 		targetUseTP = false
+// 		tp = math.Inf(+1)
+// 	}
+// 	targetTP = tp
+// }
 
 func replaceStatic(pattern string, vals ...string) string {
 	for _, val := range vals {
@@ -159,10 +83,11 @@ func appendPattern(branches []string, stream *TStreamInfo, comb *ffmpeg.TCombine
 			name := ffmpeg.UniqueName("ebur128")
 			params := "=peak=none" // none sample true
 			// TruePeaksOn := false
-			if targetUseTP {
+			useTP := !math.IsNaN(targetTP())
+			if useTP {
 				params = "=peak=true"
 			}
-			comb.Append(ffmpeg.NewEburParser(name, targetUseTP, stream.eburInfo))
+			comb.Append(ffmpeg.NewEburParser(name, useTP, stream.eburInfo))
 			name += params
 			pattern = strings.Replace(pattern, "~ebur~", name, -1)
 		}
@@ -297,7 +222,7 @@ func (o *TCompressParams) GetK() float64 {
 }
 
 func calcCompressParams(li *TLoudnessInfo) *TCompressParams {
-	diffLU := targetI - li.I
+	diffLU := targetI() - li.I
 	if diffLU <= 0.0 {
 		return &TCompressParams{PreAmp: diffLU, PostAmp: 0.0, Ratio: -1.0, Correction: 1.0}
 	}
@@ -306,12 +231,12 @@ func calcCompressParams(li *TLoudnessInfo) *TCompressParams {
 		return &TCompressParams{PreAmp: diffLU, PostAmp: 0.0, Ratio: -1.0, Correction: 1.0}
 	}
 	offs := -li.MP
-	k := targetI / (li.I + offs)
+	k := targetI() / (li.I + offs)
 	return &TCompressParams{PreAmp: offs, PostAmp: 0.0, Ratio: k, Correction: 1.0}
 }
 
 // GlobalCompressCorrectionStep -
-var GlobalCompressCorrectionStep = float64(0.1)
+// var GlobalCompressCorrectionStep = float64(0.1)
 
 // RenderParameters -
 func RenderParameters(streams []*TStreamInfo) error {
@@ -347,7 +272,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 				continue
 			}
 			done = false
-			stream.CompParams.Correction -= GlobalCompressCorrectionStep
+			stream.CompParams.Correction -= settings.Compressor.CorrectionStep
 			filters = appendPattern(filters, stream, combParser, "[0:~idx~]~compressor~,~vd~,~ebur~[o~idx~]")
 			outputs = appendPattern(outputs, stream, nil, "-map", "[o~idx~]", "-f", "null", os.DevNull)
 			fmt.Printf("        #%v: %v\n          : %v\n", stream.Index, stream.TargetLI, stream.CompParams)

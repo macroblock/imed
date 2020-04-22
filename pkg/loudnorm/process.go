@@ -310,8 +310,24 @@ func ProcessTo(fi *TFileInfo) error {
 	return nil
 }
 
+func formatSettings() string {
+	const pad = "####"
+	s := fmt.Sprintf("%+v", settings)
+	s = pad + s[1:len(s)-1]
+	s = strings.Replace(s, "} ", "\n"+pad, -1)
+	s = strings.Replace(s, "}", "", -1)
+	s = strings.Replace(s, "{", "\n"+pad+pad, -1)
+	s = strings.Replace(s, " ", "\n"+pad+pad, -1)
+	s = strings.Replace(s, "#", " ", -1)
+	s = strings.Replace(s, ":", ": ", -1)
+	return s
+}
+
 // Process -
 func Process(filename string) error {
+	if GlobalDebug {
+		fmt.Printf("###settings:\n%+v\n\n", formatSettings())
+	}
 	fmt.Println("getting info...")
 	fi, err := LoadFile(filename, 0)
 	if err != nil {

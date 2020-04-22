@@ -4,13 +4,37 @@ import (
 	"strconv"
 )
 
-var (
-	targetI     = -23.0
-	targetLRA   = 20.0
-	targetTP    = -1.0
-	targetUseTP = true
-	samplerate  = "48k"
-)
+// var (
+// 	targetI     = -23.0
+// 	targetLRA   = 20.0
+// 	targetTP    = -1.0
+// 	targetUseTP = true
+// 	samplerate  = "48k"
+// )
+
+func targetI() float64 {
+	return settings.Loudness.I
+}
+
+func targetIMin() float64 {
+	return settings.Loudness.I - settings.Loudness.Precision
+}
+
+func targetIMax() float64 {
+	return settings.Loudness.I + settings.Loudness.Precision
+}
+
+func targetLRA() float64 {
+	return settings.Loudness.RA
+}
+
+func targetTP() float64 {
+	return settings.Loudness.TP
+}
+
+func targetMP() float64 {
+	return settings.Loudness.MP
+}
 
 const loudnessDeltaLI = 0.5
 
@@ -19,13 +43,13 @@ func ValidLoudness(li *TLoudnessInfo) bool {
 	if li == nil {
 		return false
 	}
-	if targetI+loudnessDeltaLI <= li.I || li.I <= targetI-loudnessDeltaLI {
+	if targetIMax() <= li.I || li.I <= targetIMin() {
 		return false
 	}
-	if li.TP > targetTP {
+	if li.TP > targetTP() {
 		return false
 	}
-	if li.RA > targetLRA {
+	if li.RA > targetLRA() {
 		return false
 	}
 	return true
@@ -36,13 +60,13 @@ func SuitableLoudness(li *TLoudnessInfo) bool {
 	if li == nil {
 		return false
 	}
-	if li.I <= targetI-loudnessDeltaLI {
+	if li.I <= targetIMin() {
 		return false
 	}
-	if li.TP > targetTP {
+	if li.TP > targetTP() {
 		return false
 	}
-	if li.RA > targetLRA {
+	if li.RA > targetLRA() {
 		return false
 	}
 	return true
@@ -81,7 +105,7 @@ func FixLoudness(li *TLoudnessInfo, compParams *TCompressParams) bool {
 	if !SuitableLoudness(li) {
 		return false
 	}
-	postAmp := targetI - li.I
+	postAmp := targetI() - li.I
 	if postAmp > 0.0 {
 		postAmp = 0.0
 	}
