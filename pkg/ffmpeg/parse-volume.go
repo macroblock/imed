@@ -46,16 +46,12 @@ func (o *TVolumeParser) Finish() error {
 }
 
 // Parse -
-func (o *TVolumeParser) Parse(line string, eof bool) (accepted bool, finished bool, err error) {
-
-	// if val := reVolumeDetect.FindAllStringSubmatch(line, 1); val != nil {
+func (o *TVolumeParser) Parse(line string, eof bool) (bool, error) {
 	if val := o.re.FindAllStringSubmatch(line, 1); val != nil {
-		accepted = true
 		o.lines = append(o.lines, val[0][1])
-		return accepted, eof, nil
+		return true, nil
 	}
-
-	return accepted, eof, nil
+	return false, nil
 }
 
 // GetData -

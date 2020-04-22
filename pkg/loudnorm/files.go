@@ -2,7 +2,6 @@ package loudnorm
 
 import (
 	"fmt"
-	"math"
 	"path/filepath"
 	"strings"
 
@@ -79,8 +78,11 @@ func LoadFile(filename string, inputIndex int) (*TFileInfo, error) {
 	sIndex := 0
 	duration := -1.0
 	for index, stream := range finfo.Streams {
-		dur, _ := finfo.StreamDuration(index)
-		duration = math.Max(duration, dur)
+		duration, _ = finfo.StreamDuration(index)
+		duration, err = calcDuration(duration)
+		if err != nil {
+			return nil, err
+		}
 		switch stream.CodecType {
 		default:
 			return nil, fmt.Errorf("unknown stream codec type (%v)", stream.CodecType)

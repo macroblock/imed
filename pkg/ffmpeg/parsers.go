@@ -43,37 +43,17 @@ func (o *TCombineParser) Finish() error {
 }
 
 // Parse -
-func (o *TCombineParser) Parse(line string, eof bool) (accepted bool, finished bool, err error) {
-	accepted = false
-	finished = true
-	err = error(nil)
+func (o *TCombineParser) Parse(line string, eof bool) (bool, error) {
 	for i := range o.parsers {
-		if o.parsers[i] == nil {
-			continue
+		accepted, err := o.parsers[i].Parse(line, eof)
+		if err != nil {
+			return false, err
 		}
 		if accepted {
-			if o.parsers[i] != nil {
-				finished = false
-			}
-			continue
-		}
-		acc, fin, e := o.parsers[i].Parse(line, eof)
-		accepted = acc
-		if e != nil {
-			return false, true, e
-		}
-		if fin {
-			e := o.parsers[i].Finish()
-			if e != nil {
-				return false, true, e
-			}
-			o.parsers[i] = nil
-		} else {
-			finished = false
+			return true, nil
 		}
 	}
-	// return accepted, finished, nil
-	return accepted, false, nil
+	return false, nil
 }
 
 func skipBlank(list []string) []string {

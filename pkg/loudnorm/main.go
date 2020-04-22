@@ -16,6 +16,27 @@ var (
 	GlobalFlagSS = ""
 )
 
+func calcDuration(duration float64) (float64, error) {
+	if duration <= 0 {
+		return -1.0, nil
+	}
+	if GlobalFlagSS != "" {
+		val, err := ffmpeg.ParseTime(GlobalFlagSS)
+		if err != nil {
+			return duration, err
+		}
+		duration -= val.Float()
+	}
+	if GlobalFlagT != "" {
+		val, err := ffmpeg.ParseTime(GlobalFlagT)
+		if err != nil {
+			return duration, err
+		}
+		duration -= val.Float()
+	}
+	return duration, nil
+}
+
 func getGloblaFlags() []string {
 	ret := []string{}
 	if GlobalFlagSS != "" {

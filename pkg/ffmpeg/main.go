@@ -4,12 +4,14 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"os/exec"
+	"strings"
 )
 
 // IParser -
 type IParser interface {
-	Parse(line string, eof bool) (accepted bool, finished bool, err error)
+	Parse(line string, eof bool) (accepted bool, err error)
 	Finish() error
 }
 
@@ -69,6 +71,7 @@ func Run(parser IParser, args ...string) error {
 		return err
 	}
 
+	buffer := []string{}
 	scanner := bufio.NewScanner(errPipe)
 	scanner.Split(scanLines)
 	ok := scanner.Scan()
@@ -76,12 +79,12 @@ func Run(parser IParser, args ...string) error {
 		line := scanner.Text()
 		// fmt.Printf("@@@@: %q\n", line)
 		ok = scanner.Scan()
-		_, finished, err := parser.Parse(line, !ok) // !ok ==> EOF
+		accepted, err := parser.Parse(line, !ok) // !ok ==> EOF
 		if err != nil {
 			return err
 		}
-		if finished {
-			break
+		if !accepted {
+			buffer = append(buffer, line)
 		}
 	}
 	err = c.Wait()
@@ -90,6 +93,7 @@ func Run(parser IParser, args ...string) error {
 	}
 	err = parser.Finish()
 	if err != nil {
+		err = fmt.Errorf("somewhere below:\n%v\n\nError: %v", strings.Join(buffer, "\n"), err)
 		return err
 	}
 	return nil

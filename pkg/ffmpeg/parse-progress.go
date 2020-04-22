@@ -22,19 +22,19 @@ func (o *tAudioProgressParser) Finish() error {
 }
 
 // Parse -
-func (o *tAudioProgressParser) Parse(line string, eof bool) (accepted bool, finished bool, err error) {
+func (o *tAudioProgressParser) Parse(line string, eof bool) (accepted bool, err error) {
 	// if o == nil || o.callback == nil {
 	// 	return false, false, fmt.Errorf("audio progress parser: either receiver or callback is nil")
 	// }
 	if val := reAudioProgress.FindAllStringSubmatch(line, 1); val != nil {
 		t, err := ParseTime(val[0][1])
 		if err != nil {
-			return true, eof, err
+			return true, err
 		}
 		err = o.callback.Callback(t)
-		return true, eof, err
+		return true, err
 	}
-	return false, eof, nil
+	return false, nil
 }
 
 type tDefaultAudioProgressCallback struct {

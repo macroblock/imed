@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"os"
 	"strconv"
@@ -29,6 +30,20 @@ var (
 	flagSS string
 )
 
+func adobeTimeToFFMPEG(s string) (string, error) {
+	x := strings.Split(s, ":")
+	val, err := strconv.Atoi(x[len(x)-1])
+	if err != nil {
+		return "", fmt.Errorf("while converting timecode %v: %v", s, err)
+	}
+	x = x[:len(x)-1]
+	if len(x) == 0 {
+		x = []string{"0"}
+	}
+	ret := fmt.Sprintf("%v.%v", strings.Join(x, ":"), strconv.Itoa(val*40))
+	return ret, nil
+}
+
 func doProcess(path string) {
 	log.Notice("result: ", path)
 }
@@ -54,8 +69,23 @@ func mainFunc() error {
 	}
 
 	loudnorm.GlobalDebug = flagVerbosity
-	loudnorm.GlobalFlagT = flagT
-	loudnorm.GlobalFlagSS = flagSS
+
+	if flagT != "" {
+		err := error(nil)
+		loudnorm.GlobalFlagT, err = adobeTimeToFFMPEG(flagT)
+		if err != nil {
+			return err
+		}
+	}
+	if flagSS != "" {
+		err := error(nil)
+		loudnorm.GlobalFlagSS, err = adobeTimeToFFMPEG(flagSS)
+		// fmt.Println("---flag ", loudnorm.GlobalFlagSS)
+		if err != nil {
+			return err
+		}
+	}
+
 	if flagStep != "" {
 		val, err := strconv.ParseFloat(flagStep, 64)
 		if err != nil {
@@ -135,8 +165,8 @@ func main() {
 		cli.Flag("-lra          : max allowed loudness range (LU) or 'off' to disable LRA check", &flagLRA),
 		cli.Flag("-tp           : max allowed true peaks (dBFS) or 'off' to disable TP calculation", &flagTP),
 		cli.Flag("-step         : compress correction step (default = 0.1)", &flagStep),
-		cli.Flag("-t            : same as ffmpeg", &flagT),
-		cli.Flag("-ss           : same as ffmpeg", &flagSS),
+		cli.Flag("-t            : same meaning in ffmpeg but different format (hh:mm:ss:fr)", &flagT),
+		cli.Flag("-ss           : same meaning in ffmpeg but different format (hh:mm:ss:fr)", &flagSS),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.Command("scan       : scan loudnes parameters", doScan,
 			// cli.Flag("-l --light: light mode (whithout TP)", &flagLight),

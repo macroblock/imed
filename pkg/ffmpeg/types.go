@@ -16,7 +16,11 @@ type (
 	}
 )
 
-var errHHMMSSMs = fmt.Errorf("hh:mm:ss.ms parser error")
+var errHHMMSSMsTemplate = "%v parse error: %v"
+
+func errHHMMSSMs(val string, err error) error {
+	return fmt.Errorf(errHHMMSSMsTemplate, val, err)
+}
 
 // FloatToTime -
 func FloatToTime(f float64) Time {
@@ -24,33 +28,47 @@ func FloatToTime(f float64) Time {
 }
 
 // ParseTime -
-func ParseTime(str string) (Time, error) {
+func ParseTime(t string) (Time, error) {
 	o := Time(0)
-	x := strings.Split(str, ":")
-	if len(x) != 3 {
-		return o, errHHMMSSMs
+	// fmt.Printf("here %v", t)
+	x := strings.Split(t, ":")
+	if len(x) > 3 {
+		return o, errHHMMSSMs(t, fmt.Errorf("too many colons"))
 	}
-	y := strings.Split(x[2], ".")
-	if len(y) > 2 {
-		return o, errHHMMSSMs
-	}
-	h, err := strconv.Atoi(x[0])
-	if err != nil {
-		return o, errHHMMSSMs
-	}
-	m, err := strconv.Atoi(x[1])
-	if err != nil {
-		return o, errHHMMSSMs
-	}
-	s, err := strconv.Atoi(y[0])
-	if err != nil {
-		return o, errHHMMSSMs
-	}
-	ms := 0
-	if len(y) == 2 {
-		ms, err = strconv.Atoi(y[1])
-		if err != nil {
-			return o, errHHMMSSMs
+	h, m, s, ms := 0, 0, 0, 0
+	done := false
+	for _, str := range x {
+		if done {
+			return o, errHHMMSSMs(t, fmt.Errorf("unreachable"))
+		}
+		switch {
+		default:
+			val, err := strconv.Atoi(str)
+			if err != nil {
+				return o, errHHMMSSMs(t, err)
+			}
+			h = m
+			m = s
+			s = ms
+			ms = val
+		case strings.Contains(str, "."):
+			done = true
+			y := strings.Split(str, ".")
+			if len(y) != 2 {
+				return o, errHHMMSSMs(t, fmt.Errorf("too many dots"))
+			}
+			a, err := strconv.Atoi(y[0])
+			if err != nil {
+				return o, errHHMMSSMs(t, err)
+			}
+			b, err := strconv.Atoi(y[1])
+			if err != nil {
+				return o, errHHMMSSMs(t, err)
+			}
+			h = s
+			m = ms
+			s = a
+			ms = b
 		}
 	}
 	o = Time(((h*60+m)*60+s)*1000 + ms)

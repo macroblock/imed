@@ -65,29 +65,24 @@ func (o *TEburParser) Finish() error {
 }
 
 // Parse -
-func (o *TEburParser) Parse(line string, eof bool) (accepted bool, finished bool, err error) {
+func (o *TEburParser) Parse(line string, eof bool) (bool, error) {
 
 	if !o.accepted && !o.active {
-		// if reEbur128.MatchString(line) {
 		if o.re.MatchString(line) {
 			o.accepted = true
 			o.active = true
 		}
-		return o.accepted, false, nil
+		return o.accepted, nil
 	}
 	if line != "" && line[0] != ' ' {
 		o.accepted = false
 		o.active = false
-		return false, false, nil
+		return false, nil
 	}
 
 	o.lines = append(o.lines, line)
-	// if len(o.lines) >= o.linesToRead {
-	// 	o.finished = true
-	// 	return o.accepted, o.finished, nil
-	// }
 
-	return true, false, nil
+	return true, nil
 }
 
 // GetData -
