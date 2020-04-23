@@ -149,9 +149,16 @@ func mainFunc() error {
 
 	loudnorm.SetSettings(settings)
 
-	err := loudnorm.Process(flagFiles[0])
-	if err != nil {
-		return err
+	errors := []string{}
+	for n, filename := range flagFiles {
+		fmt.Printf("== [%v/%v] == file: %q\n", n+1, len(flagFiles), filename)
+		err := loudnorm.Process(filename)
+		if err != nil {
+			errors = append(errors, fmt.Sprintf("%q: %v", filename, err.Error()))
+		}
+	}
+	if len(errors) > 0 {
+		return fmt.Errorf("Error(s):\n    %v", strings.Join(errors, "\n    "))
 	}
 	return nil
 }
