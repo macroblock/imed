@@ -85,6 +85,7 @@ func (o *tErrorGroup) adobeTime(flag string, val **ffmpeg.Time) bool {
 	if flag != "" {
 		ret, err := ffmpeg.ParseTime(flag)
 		if err != nil {
+			o.err = nil
 			return false
 		}
 		*val = &ret
@@ -101,9 +102,11 @@ func (o *tErrorGroup) float(flag string, val *float64, keyVal map[string]float64
 		v, ok := keyVal[strings.ToUpper(flag)]
 		if ok {
 			*val = v
+			return true
 		}
 		ret, err := strconv.ParseFloat(flag, 64)
 		if err != nil {
+			o.err = err
 			return false
 		}
 		*val = ret
@@ -131,8 +134,8 @@ func mainFunc() error {
 	parse.float(flagStep, &settings.Compressor.CorrectionStep, nil)
 
 	parse.float(flagLI, &settings.Loudness.I, nil)
-	parse.float(flagLRA, &settings.Loudness.RA, tuples{"off": math.NaN()})
-	parse.float(flagTP, &settings.Loudness.TP, tuples{"off": math.NaN()})
+	parse.float(flagLRA, &settings.Loudness.RA, tuples{"OFF": math.NaN()})
+	parse.float(flagTP, &settings.Loudness.TP, tuples{"OFF": math.NaN()})
 	parse.float(flagMP, &settings.Loudness.MP, nil)
 	parse.float(flagPrecision, &settings.Loudness.Precision, nil)
 
@@ -164,7 +167,7 @@ func main() {
 		// if log.State().Intersect(loglevel.Warning.OrLower()) != 0 {
 		// 	misc.PauseTerminal()
 		// }
-		misc.PauseTerminal()
+		// misc.PauseTerminal()
 	}()
 
 	// command line interface

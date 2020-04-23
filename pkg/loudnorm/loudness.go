@@ -1,6 +1,8 @@
 package loudnorm
 
 import (
+	"fmt"
+	"math"
 	"strconv"
 )
 
@@ -46,10 +48,10 @@ func ValidLoudness(li *TLoudnessInfo) bool {
 	if targetIMax() <= li.I || li.I <= targetIMin() {
 		return false
 	}
-	if li.TP > targetTP() {
+	if !math.IsNaN(targetTP()) && li.TP > targetTP() {
 		return false
 	}
-	if li.RA > targetLRA() {
+	if !math.IsNaN(targetTP()) && li.RA > targetLRA() {
 		return false
 	}
 	return true
@@ -57,16 +59,20 @@ func ValidLoudness(li *TLoudnessInfo) bool {
 
 // SuitableLoudness -
 func SuitableLoudness(li *TLoudnessInfo) bool {
+	// defer fmt.Printf("@@@@@@@@@ !!!!! %+v", li)
 	if li == nil {
 		return false
 	}
 	if li.I <= targetIMin() {
+		// fmt.Println("IMin")
 		return false
 	}
-	if li.TP > targetTP() {
+	if !math.IsNaN(targetTP()) && li.TP > targetTP() {
+		// fmt.Println("TP")
 		return false
 	}
-	if li.RA > targetLRA() {
+	if !math.IsNaN(targetTP()) && li.RA > targetLRA() {
+		// fmt.Println("LRA")
 		return false
 	}
 	return true
@@ -76,24 +82,36 @@ func ftostr(f float64) string {
 	return strconv.FormatFloat(f, 'f', 2, 64)
 }
 
-func feq(a, b float64) bool {
+func feq(a, b float64, okNaN bool) bool {
 	// in order to "-0" != "0"
+	if okNaN {
+		// fmt.Printf("0@@@@@ ok\n")
+		return true
+	}
+	// fmt.Printf("1@@@@@ %v, %v\n", a, b)
 	if a == b {
 		return true
 	}
+	// fmt.Printf("2@@@@@ %v, %v\n", a, b)
 	return ftostr(a) == ftostr(b)
+}
+
+func isNaN(a, b float64) bool {
+	return math.IsNaN(a) || math.IsNaN(b)
 }
 
 // LoudnessIsEqual -
 func LoudnessIsEqual(a, b *TLoudnessInfo) bool {
-	// fmt.Printf("@@a: %v\n", a)
-	// fmt.Printf("@@b: %v\n", a)
-	if feq(a.I, b.I) &&
-		feq(a.RA, b.RA) &&
-		feq(a.TP, b.TP) &&
-		feq(a.MP, b.MP) &&
-		feq(a.TH, b.TH) &&
-		feq(a.CR, b.CR) &&
+	if GlobalDebug {
+		fmt.Printf("@@a: %v\n", a)
+		fmt.Printf("@@b: %v\n", b)
+	}
+	if feq(a.I, b.I, false) &&
+		feq(a.RA, b.RA, isNaN(a.RA, b.RA)) &&
+		feq(a.TP, b.TP, isNaN(a.TP, b.TP)) &&
+		feq(a.MP, b.MP, false) &&
+		feq(a.TH, b.TH, false) &&
+		feq(a.CR, b.CR, false) &&
 		true {
 		return true
 	}
@@ -114,6 +132,7 @@ func FixLoudness(li *TLoudnessInfo, compParams *TCompressParams) bool {
 	li.TP += postAmp
 	li.TH += postAmp
 	li.MP += postAmp
+	// fmt.Printf("@@@@@ Post Amp: %v\n", postAmp)
 	// stream.done = true
 	// fmt.Println("##### stream:", i,
 	// 	"\n  li      >", li,

@@ -14,12 +14,12 @@ func PackLoudnessInfoElement(streamNo int, li *TLoudnessInfo) string {
 	)
 }
 
-// PackLoudnessInfo -
-func PackLoudnessInfo(fi *TFileInfo) string {
+// PackTargetLoudnessInfo -
+func PackTargetLoudnessInfo(fi *TFileInfo) string {
 	list := []string{}
 	for _, stream := range fi.Streams {
-		if stream.LoudnessInfo != nil {
-			list = append(list, PackLoudnessInfoElement(stream.Index, stream.LoudnessInfo))
+		if stream.TargetLI != nil {
+			list = append(list, PackLoudnessInfoElement(stream.Index, stream.TargetLI))
 		}
 	}
 	return strings.Join(list, "\n")

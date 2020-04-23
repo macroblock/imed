@@ -21,8 +21,8 @@ var settings = TSettings{
 		Precision: 0.5,
 	},
 	Compressor: tCompressorSettings{
-		Attack:         0.0,  // 0.001,
-		Release:        0.01, // 0.050,
+		Attack:         0.001, // 0.000,
+		Release:        0.050, // 0.010,
 		CorrectionStep: 0.1,
 	},
 	Edit: tEditSettings{

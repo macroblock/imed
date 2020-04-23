@@ -269,7 +269,7 @@ func ProcessTo(fi *TFileInfo) error {
 	params = append(params, strings.Join(filters, ";"))
 	params = append(params, outputs...)
 	params = append(params, "-metadata")
-	params = append(params, "comment="+PackLoudnessInfo(fi)) //+strings.Join(metadata, "\n"))
+	params = append(params, "comment="+PackTargetLoudnessInfo(fi)) //+strings.Join(metadata, "\n"))
 	// params = append(params, "description="+strings.Join(metadata, "\n"))
 	params = append(params, generateOutputName(fi))
 	if GlobalDebug {
@@ -290,13 +290,13 @@ func ProcessTo(fi *TFileInfo) error {
 			MP: stream.volumeInfo.MaxVolume,
 			CR: stream.TargetLI.CR, //-1.0,
 		}
-		if !LoudnessIsEqual(stream.LoudnessInfo, stream.TargetLI) {
-			errStrs = append(errStrs, fmt.Sprintf("stream #%v: loudness info is not equal to the planned one", i))
-		}
 		if GlobalDebug {
 			fmt.Println("##### stream:", i,
 				"\n  ebur >", stream.eburInfo,
 				"\n  vol  >", stream.volumeInfo)
+		}
+		if !LoudnessIsEqual(stream.LoudnessInfo, stream.TargetLI) {
+			errStrs = append(errStrs, fmt.Sprintf("stream #%v: loudness info is not equal to the planned one", i))
 		}
 	}
 	if len(errStrs) != 0 {
@@ -326,7 +326,7 @@ func formatSettings() string {
 // Process -
 func Process(filename string) error {
 	if GlobalDebug {
-		fmt.Printf("###settings:\n%+v\n\n", formatSettings())
+		fmt.Printf("%+v\n\n", formatSettings())
 	}
 	fmt.Println("getting info...")
 	fi, err := LoadFile(filename, 0)

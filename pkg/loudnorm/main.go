@@ -205,9 +205,14 @@ func (o *TCompressParams) BuildFilter() string {
 		return fmt.Sprintf("volume=%.4fdB", o.PreAmp+o.PostAmp)
 	}
 	r := o.Ratio * o.Correction
-	ret := fmt.Sprintf("volume=%.4fdB,compand=0:0.01:-90/-%.4f|0/0", o.PreAmp, 90.0*r)
+	ret := fmt.Sprintf("volume=%.4fdB,compand=attacks=%v:decays=%v:"+
+		"points=-90/-%.4f|0/0|90/0",
+		o.PreAmp,
+		settings.Compressor.Attack,
+		settings.Compressor.Release,
+		90.0*r)
 	if o.PostAmp != 0.0 {
-		ret = fmt.Sprintf("%v,volume=%.4fdB", ret, o.PostAmp)
+		ret += fmt.Sprintf(",volume=%.4fdB", o.PostAmp)
 	}
 	return ret
 }
