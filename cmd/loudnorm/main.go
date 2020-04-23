@@ -22,6 +22,8 @@ var (
 	flagFiles     []string
 	flagVerbosity bool
 
+	flagScanOnly bool
+
 	flagLI,
 	flagLRA,
 	flagTP,
@@ -125,6 +127,8 @@ func mainFunc() error {
 
 	settings := loudnorm.GetSettings()
 
+	settings.Behavior.ScanOnly = flagScanOnly
+
 	parse := &tErrorGroup{}
 	parse.adobeTime(flagSS, &settings.Edit.ClipPoint)
 	parse.adobeTime(flagT, &settings.Edit.ClipDuration)
@@ -177,6 +181,7 @@ func main() {
 		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
 		cli.Flag("-h -help      : help", cmdLine.PrintHelp).Terminator(), // Why is this works ?
 		cli.Flag("-v            : verbosity", &flagVerbosity),
+		cli.Flag("-scan         : do not process files (scan only)", &flagScanOnly),
 		cli.Flag("-li           : targeted integrated loudness (LUFS)", &flagLI),
 		cli.Flag("-lra          : max allowed loudness range (LU) or 'off' to disable LRA check", &flagLRA),
 		cli.Flag("-tp           : max allowed true peaks (dBFS) or 'off' to disable TP calculation", &flagTP),

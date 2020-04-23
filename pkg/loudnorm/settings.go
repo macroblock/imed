@@ -13,6 +13,9 @@ import (
 // )
 
 var settings = TSettings{
+	Behavior: tBehavior{
+		ScanOnly: false,
+	},
 	Loudness: tLoudnessSettings{
 		I:         -23,
 		RA:        math.Inf(+1),
@@ -21,7 +24,7 @@ var settings = TSettings{
 		Precision: 0.5,
 	},
 	Compressor: tCompressorSettings{
-		Attack:         0.001, // 0.000,
+		Attack:         0.000, // 0.000,
 		Release:        0.050, // 0.010,
 		CorrectionStep: 0.1,
 	},
@@ -34,9 +37,14 @@ var settings = TSettings{
 type (
 	// TSettings -
 	TSettings struct {
+		Behavior   tBehavior
 		Loudness   tLoudnessSettings
 		Compressor tCompressorSettings
 		Edit       tEditSettings
+	}
+
+	tBehavior struct {
+		ScanOnly bool
 	}
 
 	tLoudnessSettings struct {

@@ -349,6 +349,15 @@ func Process(filename string) error {
 		fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
 	}
 
+	if settings.Behavior.ScanOnly {
+		for _, stream := range fi.Streams {
+			if stream.LoudnessInfo != nil {
+				fmt.Printf("        #%v: %v\n", stream.Index, stream.LoudnessInfo)
+			}
+		}
+		return nil
+	}
+
 	t = time.Now()
 	fmt.Println("calculating parameters...")
 	err = renderParameters(fi)

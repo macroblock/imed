@@ -32,31 +32,6 @@ func (o *TLoudnessInfo) String() string {
 		strconv.FormatFloat(o.CR, 'f', 2, 64))
 }
 
-// SetTargetLI -
-// func SetTargetLI(li float64) {
-// 	if math.IsNaN(li) || math.IsInf(li, +1) || math.IsInf(li, -1) {
-// 		panic("'-li' flag must not be 'inf' or 'NaN'")
-// 	}
-// 	targetI = li
-// }
-
-// SetTargetLRA -
-// func SetTargetLRA(lra float64) {
-// 	if math.IsNaN(lra) {
-// 		lra = math.Inf(+1)
-// 	}
-// 	targetLRA = lra
-// }
-
-// SetTargetTP -
-// func SetTargetTP(tp float64) {
-// 	if math.IsNaN(tp) {
-// 		targetUseTP = false
-// 		tp = math.Inf(+1)
-// 	}
-// 	targetTP = tp
-// }
-
 func replaceStatic(pattern string, vals ...string) string {
 	for _, val := range vals {
 		if strings.Contains(pattern, val) {
@@ -280,6 +255,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 			stream.CompParams.Correction -= settings.Compressor.CorrectionStep
 			filters = appendPattern(filters, stream, combParser, "[0:~idx~]~compressor~,~vd~,~ebur~[o~idx~]")
 			outputs = appendPattern(outputs, stream, nil, "-map", "[o~idx~]", "-f", "null", os.DevNull)
+
 			fmt.Printf("        #%v: %v\n          : %v\n", stream.Index, stream.TargetLI, stream.CompParams)
 		}
 		if done {
