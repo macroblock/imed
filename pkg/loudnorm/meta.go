@@ -8,7 +8,7 @@ import (
 
 // PackLoudnessInfoElement -
 func PackLoudnessInfoElement(streamNo int, li *TLoudnessInfo) string {
-	return fmt.Sprintf("[Stream #:%v]\nL_I  % 6.2f\nL_RA % 6.2f\nL_TP %v\nL_TH % 6.2f\nL_MP % 6.2f\nL_CR % 6.2f",
+	return fmt.Sprintf("[Stream #:%v]\nL_I : % 6.2f\nL_RA: % 6.2f\nL_TP: %v\nL_TH: % 6.2f\nL_MP: % 6.2f\nL_CR: % 6.2f",
 		strconv.Itoa(streamNo),
 		li.I, li.RA, li.TP, li.TH, li.MP, li.CR,
 	)

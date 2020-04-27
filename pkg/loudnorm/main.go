@@ -150,6 +150,7 @@ func Scan(streams []*TStreamInfo) error {
 
 // TCompressParams -
 type TCompressParams struct {
+	li                     TLoudnessInfo
 	PreAmp, PostAmp, Ratio float64
 	Correction             float64
 }
@@ -171,6 +172,30 @@ func (o *TCompressParams) String() string {
 	return ret
 }
 
+// 0.3:1:-30/-30|-20/-5|0/-3:6:0:-90:0.3
+func (o *TCompressParams) filterPro() string {
+	r := o.Ratio * o.Correction
+	atk := 0.3
+	rls := 1.0
+	TH0 := o.li.TH - 10 // 10dB seems to be constant value
+	TH := o.li.TH
+	overhead := 0.0
+	CLow := (TH - -overhead)*r + -overhead
+	CHigh := -overhead
+	ret := fmt.Sprintf("%v:%v:", atk, rls) +
+		fmt.Sprintf("%v/%v|", TH0, TH0) +
+		fmt.Sprintf("%v/%v|0/%v:", TH, CLow, CHigh) +
+		// fmt.Sprintf("6:%v:0:%v", -overhead, rls) +
+		fmt.Sprintf("6:%v:0:%v", 0, rls) +
+		// fmt.Sprintf(",alimiter=attack=%v:release=%v:level_in=%vdB:level_out=%vdB:level=true", atk, rls, -overhead/2, -overhead/2)+
+		// fmt.Sprintf(",alimiter=level_in=%vdB:level_out=%vdB:level=false", -1.0, -1.5) +
+		// fmt.Sprintf(",alimiter=level_in=%v:level_out=%v:level=false", 1.0, 1.0) +
+		fmt.Sprintf(",alimiter=attack=%v:release=%v:level_in=%v:level_out=%v:level=true", 5, 50, 1.0, 1.0) + // try atk:7 rls:100
+		""
+
+	return ret
+}
+
 // BuildFilter -
 func (o *TCompressParams) BuildFilter() string {
 	if o == nil {
@@ -186,6 +211,7 @@ func (o *TCompressParams) BuildFilter() string {
 		settings.Compressor.Attack,
 		settings.Compressor.Release,
 		90.0*r)
+	ret = fmt.Sprintf("volume=%.4fdB,compand=%v", o.PreAmp, o.filterPro())
 	if o.PostAmp != 0.0 {
 		ret += fmt.Sprintf(",volume=%.4fdB", o.PostAmp)
 	}
@@ -202,21 +228,19 @@ func (o *TCompressParams) GetK() float64 {
 }
 
 func calcCompressParams(li *TLoudnessInfo) *TCompressParams {
+
 	diffLU := targetI() - li.I
 	if diffLU <= 0.0 {
-		return &TCompressParams{PreAmp: diffLU, PostAmp: 0.0, Ratio: -1.0, Correction: 1.0}
+		return &TCompressParams{li: *li, PreAmp: diffLU, PostAmp: 0.0, Ratio: -1.0, Correction: 1.0}
 	}
 	exceededVal := li.MP + diffLU
 	if exceededVal <= 0.0 {
-		return &TCompressParams{PreAmp: diffLU, PostAmp: 0.0, Ratio: -1.0, Correction: 1.0}
+		return &TCompressParams{li: *li, PreAmp: diffLU, PostAmp: 0.0, Ratio: -1.0, Correction: 1.0}
 	}
 	offs := -li.MP
 	k := targetI() / (li.I + offs)
-	return &TCompressParams{PreAmp: offs, PostAmp: 0.0, Ratio: k, Correction: 1.0}
+	return &TCompressParams{li: *li, PreAmp: offs, PostAmp: 0.0, Ratio: k, Correction: 1.0}
 }
-
-// GlobalCompressCorrectionStep -
-// var GlobalCompressCorrectionStep = float64(0.1)
 
 // RenderParameters -
 func RenderParameters(streams []*TStreamInfo) error {
@@ -244,6 +268,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 		)
 
 		done := true
+		first := true
 		ffmpeg.UniqueReset()
 		outputs := []string{}
 		filters := []string{}
@@ -252,7 +277,10 @@ func RenderParameters(streams []*TStreamInfo) error {
 				continue
 			}
 			done = false
-			stream.CompParams.Correction -= settings.Compressor.CorrectionStep
+			if !first {
+				stream.CompParams.Correction -= settings.Compressor.CorrectionStep
+				first = false
+			}
 			filters = appendPattern(filters, stream, combParser, "[0:~idx~]~compressor~,~vd~,~ebur~[o~idx~]")
 			outputs = appendPattern(outputs, stream, nil, "-map", "[o~idx~]", "-f", "null", os.DevNull)
 

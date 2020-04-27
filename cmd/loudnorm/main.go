@@ -196,7 +196,7 @@ func main() {
 		cli.Flag("-lprec        : integrated loudness precision", &flagLI),
 		cli.Flag("-a            : compressor attack time (seconds)", &flagAttack),
 		cli.Flag("-r            : compressor release time (seconds)", &flagRelease),
-		cli.Flag("-step         : compress correction step (default = 0.1)", &flagStep),
+		cli.Flag("-step         : compress correction step (default = 0.01)", &flagStep),
 		cli.Flag("-t            : same meaning in ffmpeg but different format (hh:mm:ss:fr)", &flagT),
 		cli.Flag("-ss           : same meaning in ffmpeg but different format (hh:mm:ss:fr)", &flagSS),
 		cli.Flag(": files to be processed", &flagFiles),
