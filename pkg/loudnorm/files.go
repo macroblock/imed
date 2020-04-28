@@ -33,6 +33,7 @@ type (
 		AudioParams []string
 		// Done          bool
 		volumeInfo    *ffmpeg.TVolumeInfo
+		astatsInfo    *ffmpeg.TAStatsInfo
 		eburInfo      *ffmpeg.TEburInfo
 		LoudnessInfo  *TLoudnessInfo
 		TargetLI      *TLoudnessInfo

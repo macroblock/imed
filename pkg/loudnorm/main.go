@@ -52,6 +52,12 @@ func appendPattern(branches []string, stream *TStreamInfo, comb *ffmpeg.TCombine
 			comb.Append(ffmpeg.NewVolumeParser(name, stream.volumeInfo))
 			pattern = strings.Replace(pattern, "~vd~", name, -1)
 		}
+		if strings.Contains(pattern, "~astats~") {
+			stream.astatsInfo = &ffmpeg.TAStatsInfo{}
+			name := ffmpeg.UniqueName("astats")
+			comb.Append(ffmpeg.NewAStatsParser(name, stream.astatsInfo))
+			pattern = strings.Replace(pattern, "~astats~", name, -1)
+		}
 
 		if strings.Contains(pattern, "~ebur~") {
 			stream.eburInfo = &ffmpeg.TEburInfo{}
@@ -101,7 +107,7 @@ func Scan(streams []*TStreamInfo) error {
 	outputs := []string{}
 	filters := []string{}
 	for _, stream := range streams {
-		filters = appendPattern(filters, stream, combParser, "[0:~idx~]~vd~,~ebur~[o~idx~]")
+		filters = appendPattern(filters, stream, combParser, "[0:~idx~]~astats~,~vd~,~ebur~[o~idx~]")
 		outputs = appendPattern(outputs, stream, nil, "-map", "[o~idx~]", "-f", "null", os.DevNull)
 	}
 	params = append(params, "-filter_complex")
@@ -123,7 +129,8 @@ func Scan(streams []*TStreamInfo) error {
 			RA: stream.eburInfo.LRA,
 			TP: stream.eburInfo.TP,
 			TH: stream.eburInfo.Thresh,
-			MP: stream.volumeInfo.MaxVolume,
+			// MP: stream.volumeInfo.MaxVolume,
+			MP: stream.astatsInfo.PeakLevel,
 			CR: -1.0,
 		}
 		stream.TargetLI = &TLoudnessInfo{}
@@ -132,7 +139,8 @@ func Scan(streams []*TStreamInfo) error {
 		if GlobalDebug {
 			fmt.Println("##### stream:", i,
 				"\n  ebur >", stream.eburInfo,
-				"\n  vol  >", stream.volumeInfo)
+				"\n  vol  >", stream.volumeInfo,
+				"\n  stat >", stream.astatsInfo)
 		}
 
 		comp := &TCompressParams{Ratio: -1.0}
@@ -179,18 +187,18 @@ func (o *TCompressParams) filterPro() string {
 	rls := 1.0
 	TH0 := o.li.TH - 10 // 10dB seems to be constant value
 	TH := o.li.TH
-	overhead := 0.0
+	overhead := 3.0
 	CLow := (TH - -overhead)*r + -overhead
 	CHigh := -overhead
 	ret := fmt.Sprintf("%v:%v:", atk, rls) +
 		fmt.Sprintf("%v/%v|", TH0, TH0) +
-		fmt.Sprintf("%v/%v|0/%v:", TH, CLow, CHigh) +
+		fmt.Sprintf("%v/%v|%v/%v|100/%v:", TH, CLow, CHigh, CHigh, CHigh) +
 		// fmt.Sprintf("6:%v:0:%v", -overhead, rls) +
 		fmt.Sprintf("6:%v:0:%v", 0, rls) +
 		// fmt.Sprintf(",alimiter=attack=%v:release=%v:level_in=%vdB:level_out=%vdB:level=true", atk, rls, -overhead/2, -overhead/2)+
 		// fmt.Sprintf(",alimiter=level_in=%vdB:level_out=%vdB:level=false", -1.0, -1.5) +
 		// fmt.Sprintf(",alimiter=level_in=%v:level_out=%v:level=false", 1.0, 1.0) +
-		fmt.Sprintf(",alimiter=attack=%v:release=%v:level_in=%v:level_out=%v:level=true", 5, 50, 1.0, 1.0) + // try atk:7 rls:100
+		fmt.Sprintf(",alimiter=attack=%v:release=%v:level_in=%v:level_out=%v:level=true", 50, 100, 0.95, 1.0) + // try atk:7 rls:100
 		""
 
 	return ret
@@ -268,7 +276,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 		)
 
 		done := true
-		first := true
+		// first := true
 		ffmpeg.UniqueReset()
 		outputs := []string{}
 		filters := []string{}
@@ -277,11 +285,11 @@ func RenderParameters(streams []*TStreamInfo) error {
 				continue
 			}
 			done = false
-			if !first {
-				stream.CompParams.Correction -= settings.Compressor.CorrectionStep
-				first = false
-			}
-			filters = appendPattern(filters, stream, combParser, "[0:~idx~]~compressor~,~vd~,~ebur~[o~idx~]")
+			// if !first {
+			stream.CompParams.Correction -= settings.Compressor.CorrectionStep
+			// first = false
+			// }
+			filters = appendPattern(filters, stream, combParser, "[0:~idx~]~compressor~,~astats~,~vd~,~ebur~[o~idx~]")
 			outputs = appendPattern(outputs, stream, nil, "-map", "[o~idx~]", "-f", "null", os.DevNull)
 
 			fmt.Printf("        #%v: %v\n          : %v\n", stream.Index, stream.TargetLI, stream.CompParams)
@@ -309,7 +317,8 @@ func RenderParameters(streams []*TStreamInfo) error {
 				RA: stream.eburInfo.LRA,
 				TP: stream.eburInfo.TP,
 				TH: stream.eburInfo.Thresh,
-				MP: stream.volumeInfo.MaxVolume,
+				// MP: stream.volumeInfo.MaxVolume,
+				MP: stream.astatsInfo.PeakLevel,
 				CR: stream.CompParams.GetK(),
 			}
 			if GlobalDebug {
@@ -318,6 +327,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 					"\n  vol  >", stream.volumeInfo,
 					// "\n  K    >", stream.CompParams.GetK(),
 					// "\n  CR   >", 1/stream.CompParams.GetK(), ": 1")
+					"\n  stats>", stream.astatsInfo,
 					"\n  comp >", stream.CompParams)
 			}
 

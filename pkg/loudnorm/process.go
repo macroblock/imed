@@ -19,12 +19,12 @@ var GlobalDebug = false
 var (
 	ac3Params2 = []string{
 		"-c:a", "ac3",
-		"-b:a", "256k",
+		"-b:a", "320", //"256k",
 		"-ac:a", "2",
 	}
 	ac3Params6 = []string{
 		"-c:a", "ac3",
-		"-b:a", "448k",
+		"-b:a", "640k", //"448k",
 		"-ac:a", "6",
 	}
 	mp2Params2 = []string{
@@ -254,7 +254,7 @@ func ProcessTo(fi *TFileInfo) error {
 
 			filters = appendPattern(filters, stream, combParser,
 				"[0:~idx~]~compressor~,asplit[s~u~][o~idx~];"+
-					"[s~u~]~vd~,~ebur~,anullsink")
+					"[s~u~]~vd~,~astats~,~ebur~,anullsink")
 			outputs = appendPattern(outputs, stream, nil,
 				"-map", "[o~idx~]")
 			outputs = append(outputs, stream.AudioParams...)
@@ -286,16 +286,20 @@ func ProcessTo(fi *TFileInfo) error {
 			RA: stream.eburInfo.LRA,
 			TP: stream.eburInfo.TP,
 			TH: stream.eburInfo.Thresh,
-			MP: stream.volumeInfo.MaxVolume,
+			// MP: stream.volumeInfo.MaxVolume,
+			MP: stream.astatsInfo.PeakLevel,
 			CR: stream.TargetLI.CR, //-1.0,
 		}
 		if GlobalDebug {
 			fmt.Println("##### stream:", i,
 				"\n  ebur >", stream.eburInfo,
-				"\n  vol  >", stream.volumeInfo)
+				"\n  vol  >", stream.volumeInfo,
+				"\n  stats>", stream.astatsInfo)
 		}
 		if !LoudnessIsEqual(stream.LoudnessInfo, stream.TargetLI) {
-			errStrs = append(errStrs, fmt.Sprintf("stream #%v: loudness info is not equal to the planned one", i))
+			errStrs = append(errStrs, fmt.Sprintf("stream #%v: actual loudness info is not equal to the planned one"+
+				"\n    planned: %v"+
+				"\n    actual : %v", i, stream.TargetLI, stream.LoudnessInfo))
 		}
 	}
 	if len(errStrs) != 0 {

@@ -87,21 +87,11 @@ func (o *TEburParser) Parse(line string, eof bool) (bool, error) {
 
 // GetData -
 func (o *TEburParser) GetData() *TEburInfo {
-	// if !o.finished {
-	// 	return nil, fmt.Errorf("Ebur parser: uncompleted\n %v", strings.Join(o.lines, "\n"))
-	// }
-
-	// data, err := parseEbur128Summary(o.lines, o.truePeaks)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("Ebur parser: %v\n %v", err, strings.Join(o.lines, "\n"))
-	// }
-
-	// return data, nil
 	return o.ret
 }
 
 func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
-	st := map[string]string{}
+	vals := NewArgMap()
 	prefix := ""
 
 	for _, line := range list {
@@ -113,59 +103,30 @@ func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
 		case "":
 			continue
 		case "Integrated loudness":
-			prefix = "IL"
+			prefix = "IL."
 		case "Loudness range":
-			prefix = "LR"
+			prefix = "LR."
 		case "True peak":
-			prefix = "TP"
+			prefix = "TP."
 		case "Sample peak":
-			prefix = "SP"
+			prefix = "SP."
 		}
-		st[prefix+"."+name] = val
-	}
-	ret := &TEburInfo{}
-	err := error(nil)
-	// fmt.Printf("$$$$$$$$\n%q\n", strings.Join(list, "\\n\n"))
-	// list, _, err := parseValS(list, "Integrated loudness:", "")
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// fmt.Printf("$$$$$$$$\n%q\n", st)
-	ret.I, err = getValF(st, "IL.I", "LUFS")
-	if err != nil {
-		return nil, err
-	}
-	ret.Thresh, err = getValF(st, "IL.Threshold", "LUFS")
-	if err != nil {
-		return nil, err
-	}
-	// _, err = getValS( "Loudness range", "")
-	// if err != nil {
-	// 	return nil, err
-	// }
-	ret.LRA, err = getValF(st, "LR.LRA", "LU")
-	if err != nil {
-		return nil, err
-	}
-	ret.Thresh2, err = getValF(st, "LR.Threshold", "LUFS")
-	if err != nil {
-		return nil, err
-	}
-	ret.LRALow, err = getValF(st, "LR.LRA low", "LUFS")
-	if err != nil {
-		return nil, err
-	}
-	ret.LRAHigh, err = getValF(st, "LR.LRA high", "LUFS")
-	if err != nil {
-		return nil, err
+		vals.Add(prefix+name, val)
 	}
 
+	ret := &TEburInfo{}
+	vals.GetF("IL.I", "LUFS", &ret.I)
+	vals.GetF("IL.Threshold", "LUFS", &ret.Thresh)
+	vals.GetF("LR.LRA", "LU", &ret.LRA)
+	vals.GetF("LR.Threshold", "LUFS", &ret.Thresh2)
+	vals.GetF("LR.LRA low", "LUFS", &ret.LRALow)
+	vals.GetF("LR.LRA high", "LUFS", &ret.LRAHigh)
 	ret.TP = math.NaN()
 	if truePeaks {
-		ret.TP, err = getValF(st, "TP.Peak", "dBFS")
-		if err != nil {
-			return nil, err
-		}
+		vals.GetF("TP.Peak", "dBFS", &ret.TP)
+	}
+	if vals.Error() != nil {
+		return nil, vals.Error()
 	}
 
 	return ret, nil

@@ -26,7 +26,7 @@ var settings = TSettings{
 	Compressor: tCompressorSettings{
 		Attack:         0.000, // 0.000,
 		Release:        0.050, // 0.010,
-		CorrectionStep: 0.01,
+		CorrectionStep: 0.1,
 	},
 	Edit: tEditSettings{
 		ClipPoint:    nil,
