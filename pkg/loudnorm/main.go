@@ -277,6 +277,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 		stream.CompParams = comp
 	}
 
+	first := true
 	for tries := 5; tries > 0; tries-- {
 
 		params := []string{"-hide_banner"}
@@ -289,7 +290,6 @@ func RenderParameters(streams []*TStreamInfo) error {
 		)
 
 		done := true
-		first := true
 		ffmpeg.UniqueReset()
 		outputs := []string{}
 		filters := []string{}
