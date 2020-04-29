@@ -298,8 +298,8 @@ func RenderParameters(streams []*TStreamInfo) error {
 			done = false
 			if !first {
 				stream.CompParams.Correction -= settings.Compressor.CorrectionStep
-				first = false
 			}
+			first = false
 			filters = appendPattern(filters, stream, combParser,
 				"[0:~idx~]~header~,~compressor~,asplit[~u0~][~u1~];"+
 					"[~u0~]~astats~,anullsink;"+
