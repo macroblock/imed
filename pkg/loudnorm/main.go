@@ -137,6 +137,8 @@ func Scan(streams []*TStreamInfo) error {
 			MP: stream.astatsInfo.PeakLevel,
 			CR: -1.0,
 		}
+		fmt.Printf("        #%v: %v\n", stream.Index, stream.LoudnessInfo)
+
 		stream.TargetLI = &TLoudnessInfo{}
 		*stream.TargetLI = *stream.LoudnessInfo
 
