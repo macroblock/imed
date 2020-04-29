@@ -77,6 +77,10 @@ func appendPattern(branches []string, stream *TStreamInfo, comb *ffmpeg.TCombine
 			pattern = strings.Replace(pattern, "~compressor~", stream.CompParams.BuildFilter(), -1)
 		}
 
+		if strings.Contains(pattern, "~header~") {
+			pattern = strings.Replace(pattern, "~header~", "anull", -1)
+		}
+
 		if strings.Contains(pattern, "~idx~") {
 			pattern = strings.Replace(pattern, "~idx~", fmt.Sprintf("%v", stream.Index), -1)
 		}
@@ -107,8 +111,8 @@ func Scan(streams []*TStreamInfo) error {
 	outputs := []string{}
 	filters := []string{}
 	for _, stream := range streams {
-		filters = appendPattern(filters, stream, combParser, "[0:~idx~]~astats~,~vd~,~ebur~[o~idx~]")
-		outputs = appendPattern(outputs, stream, nil, "-map", "[o~idx~]", "-f", "null", os.DevNull)
+		filters = appendPattern(filters, stream, combParser, "[0:~idx~]~header~,~astats~,~ebur~,anullsink") //[o~idx~]")
+		outputs = appendPattern(outputs, stream, nil /*"-map", "[o~idx~]",*/, "-f", "null", os.DevNull)
 	}
 	params = append(params, "-filter_complex")
 	params = append(params, strings.Join(filters, ";"))
@@ -187,18 +191,20 @@ func (o *TCompressParams) filterPro() string {
 	rls := 1.0
 	TH0 := o.li.TH - 10 // 10dB seems to be constant value
 	TH := o.li.TH
-	overhead := 3.0
+	overhead := 0.0
 	CLow := (TH - -overhead)*r + -overhead
 	CHigh := -overhead
+	limit := -0.1
 	ret := fmt.Sprintf("%v:%v:", atk, rls) +
 		fmt.Sprintf("%v/%v|", TH0, TH0) +
-		fmt.Sprintf("%v/%v|%v/%v|100/%v:", TH, CLow, CHigh, CHigh, CHigh) +
+		fmt.Sprintf("%v/%v|%v/%v|20/%v:", TH, CLow, CHigh, CHigh, CHigh) +
 		// fmt.Sprintf("6:%v:0:%v", -overhead, rls) +
 		fmt.Sprintf("6:%v:0:%v", 0, rls) +
 		// fmt.Sprintf(",alimiter=attack=%v:release=%v:level_in=%vdB:level_out=%vdB:level=true", atk, rls, -overhead/2, -overhead/2)+
 		// fmt.Sprintf(",alimiter=level_in=%vdB:level_out=%vdB:level=false", -1.0, -1.5) +
 		// fmt.Sprintf(",alimiter=level_in=%v:level_out=%v:level=false", 1.0, 1.0) +
-		fmt.Sprintf(",alimiter=attack=%v:release=%v:level_in=%v:level_out=%v:level=true", 50, 100, 0.95, 1.0) + // try atk:7 rls:100
+		// fmt.Sprintf(",alimiter=attack=%v:release=%v:level_in=%v:level_out=%v:level=true", 50, 100, 0.95, 1.0) + // try atk:7 rls:100
+		fmt.Sprintf(",compand=attacks=%v:points=-80/-80|%v/%v|20/%v", 0, limit, limit, limit) +
 		""
 
 	return ret
@@ -212,14 +218,14 @@ func (o *TCompressParams) BuildFilter() string {
 	if o.Ratio < 0.0 {
 		return fmt.Sprintf("volume=%.4fdB", o.PreAmp+o.PostAmp)
 	}
-	r := o.Ratio * o.Correction
-	ret := fmt.Sprintf("volume=%.4fdB,compand=attacks=%v:decays=%v:"+
-		"points=-90/-%.4f|0/0|90/0",
-		o.PreAmp,
-		settings.Compressor.Attack,
-		settings.Compressor.Release,
-		90.0*r)
-	ret = fmt.Sprintf("volume=%.4fdB,compand=%v", o.PreAmp, o.filterPro())
+	// r := o.Ratio * o.Correction
+	// ret := fmt.Sprintf("volume=%.4fdB,compand=attacks=%v:decays=%v:"+
+	// 	"points=-90/-%.4f|0/0|90/0",
+	// 	o.PreAmp,
+	// 	settings.Compressor.Attack,
+	// 	settings.Compressor.Release,
+	// 	90.0*r)
+	ret := fmt.Sprintf("volume=%.4fdB,compand=%v", o.PreAmp, o.filterPro())
 	if o.PostAmp != 0.0 {
 		ret += fmt.Sprintf(",volume=%.4fdB", o.PostAmp)
 	}
@@ -250,6 +256,11 @@ func calcCompressParams(li *TLoudnessInfo) *TCompressParams {
 	return &TCompressParams{li: *li, PreAmp: offs, PostAmp: 0.0, Ratio: k, Correction: 1.0}
 }
 
+func printStreamParams(stream *TStreamInfo) {
+	fmt.Printf("        #%v: %v\n", stream.Index, stream.TargetLI)
+	fmt.Printf("          : compression %v\n", stream.CompParams)
+}
+
 // RenderParameters -
 func RenderParameters(streams []*TStreamInfo) error {
 	if len(streams) == 0 {
@@ -276,7 +287,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 		)
 
 		done := true
-		// first := true
+		first := true
 		ffmpeg.UniqueReset()
 		outputs := []string{}
 		filters := []string{}
@@ -285,16 +296,20 @@ func RenderParameters(streams []*TStreamInfo) error {
 				continue
 			}
 			done = false
-			// if !first {
-			stream.CompParams.Correction -= settings.Compressor.CorrectionStep
-			// first = false
-			// }
-			filters = appendPattern(filters, stream, combParser, "[0:~idx~]~compressor~,~astats~,~vd~,~ebur~[o~idx~]")
-			outputs = appendPattern(outputs, stream, nil, "-map", "[o~idx~]", "-f", "null", os.DevNull)
+			if !first {
+				stream.CompParams.Correction -= settings.Compressor.CorrectionStep
+				first = false
+			}
+			filters = appendPattern(filters, stream, combParser,
+				"[0:~idx~]~header~,~compressor~,asplit[~u0~][~u1~];"+
+					"[~u0~]~astats~,anullsink;"+
+					"[~u1~]~ebur~,anullsink") //[o~idx~]")
+			outputs = appendPattern(outputs, stream, nil /*"-map", "[o~idx~]",*/, "-f", "null", os.DevNull)
 
-			fmt.Printf("        #%v: %v\n          : %v\n", stream.Index, stream.TargetLI, stream.CompParams)
+			printStreamParams(stream)
 		}
-		if done {
+
+		if done || settings.Behavior.ScanOnly {
 			// fmt.Println("--- All ok. continue ---")
 			return nil
 		}

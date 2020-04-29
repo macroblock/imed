@@ -26,6 +26,7 @@ var settings = TSettings{
 	Compressor: tCompressorSettings{
 		Attack:         0.000, // 0.000,
 		Release:        0.050, // 0.010,
+		NumTries:       5,
 		CorrectionStep: 0.1,
 	},
 	Edit: tEditSettings{
@@ -57,6 +58,7 @@ type (
 	tCompressorSettings struct {
 		Attack         float64
 		Release        float64
+		NumTries       int
 		CorrectionStep float64
 	}
 	tEditSettings struct {

@@ -19,12 +19,12 @@ var GlobalDebug = false
 var (
 	ac3Params2 = []string{
 		"-c:a", "ac3",
-		"-b:a", "320", //"256k",
+		"-b:a", "256k",
 		"-ac:a", "2",
 	}
 	ac3Params6 = []string{
 		"-c:a", "ac3",
-		"-b:a", "640k", //"448k",
+		"-b:a", "448k",
 		"-ac:a", "6",
 	}
 	mp2Params2 = []string{
@@ -253,8 +253,9 @@ func ProcessTo(fi *TFileInfo) error {
 			}
 
 			filters = appendPattern(filters, stream, combParser,
-				"[0:~idx~]~compressor~,asplit[s~u~][o~idx~];"+
-					"[s~u~]~vd~,~astats~,~ebur~,anullsink")
+				"[0:~idx~]~header~,~compressor~,asplit=3[s~u0~][s~u1~][o~idx~];"+
+					"[s~u0~]~header~,~astats~,anullsink;"+
+					"[s~u1~]~header~,~ebur~,anullsink")
 			outputs = appendPattern(outputs, stream, nil,
 				"-map", "[o~idx~]")
 			outputs = append(outputs, stream.AudioParams...)
@@ -263,6 +264,7 @@ func ProcessTo(fi *TFileInfo) error {
 				"-disposition:s:a:"+strconv.Itoa(audioIndex), def,
 			)
 		}
+		printStreamParams(stream)
 	}
 	params = append(params, "-filter_complex")
 	params = append(params, strings.Join(filters, ";"))
@@ -352,22 +354,19 @@ func Process(filename string) error {
 		fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
 	}
 
-	if settings.Behavior.ScanOnly {
-		for _, stream := range fi.Streams {
-			if stream.LoudnessInfo != nil {
-				fmt.Printf("        #%v: %v\n", stream.Index, stream.LoudnessInfo)
-			}
-		}
-		return nil
-	}
+	// if settings.Behavior.ScanOnly {
+	// 	for _, stream := range fi.Streams {
+	// 		if stream.LoudnessInfo != nil {
+	// 			printParams(stream)
+	// 		}
+	// 	}
+	// 	return nil
+	// }
 
 	t = time.Now()
 	fmt.Println("calculating parameters...")
 	err = renderParameters(fi)
-	for _, stream := range fi.Streams {
-		fmt.Printf("        #%v: %v\n", stream.Index, stream.CompParams)
-	}
-	if err != nil {
+	if err != nil || settings.Behavior.ScanOnly {
 		return err
 	}
 

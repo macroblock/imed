@@ -32,6 +32,7 @@ var (
 
 	flagAttack,
 	flagRelease,
+	flagTries,
 	flagStep string
 
 	flagT,
@@ -117,6 +118,22 @@ func (o *tErrorGroup) float(flag string, val *float64, keyVal map[string]float64
 	return false
 }
 
+func (o *tErrorGroup) int(flag string, val *int, keyVal map[string]float64) bool {
+	if o.err != nil {
+		return false
+	}
+	if flag != "" {
+		ret, err := strconv.ParseInt(flag, 10, 64)
+		if err != nil {
+			o.err = err
+			return false
+		}
+		*val = int(ret)
+		return true
+	}
+	return false
+}
+
 func mainFunc() error {
 
 	if len(flagFiles) == 0 {
@@ -135,6 +152,7 @@ func mainFunc() error {
 
 	parse.float(flagAttack, &settings.Compressor.Attack, nil)
 	parse.float(flagRelease, &settings.Compressor.Release, nil)
+	parse.int(flagTries, &settings.Compressor.NumTries, nil)
 	parse.float(flagStep, &settings.Compressor.CorrectionStep, nil)
 
 	parse.float(flagLI, &settings.Loudness.I, nil)
@@ -196,6 +214,7 @@ func main() {
 		cli.Flag("-lprec        : integrated loudness precision", &flagLI),
 		cli.Flag("-a            : compressor attack time (seconds)", &flagAttack),
 		cli.Flag("-r            : compressor release time (seconds)", &flagRelease),
+		cli.Flag("-tries        : number of tries (default 5)", &flagTries),
 		cli.Flag("-step         : compress correction step (default = 0.1)", &flagStep),
 		cli.Flag("-t            : same meaning as in ffmpeg but has different format (hh:mm:ss:fr)", &flagT),
 		cli.Flag("-ss           : same meaning as in ffmpeg but has different format (hh:mm:ss:fr)", &flagSS),
