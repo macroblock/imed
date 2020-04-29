@@ -145,13 +145,12 @@ func renderParameters(fi *TFileInfo) error {
 		if stream.Type != "audio" {
 			continue
 		}
-		// stream.AudioParams = generateAudioParams(fi, stream)
-		if stream.done || stream.validLoudness {
-			if GlobalDebug {
-				fmt.Printf("stream %v has valid loudness (%v)\n", stream.Index, stream.LoudnessInfo)
-			}
-			continue
-		}
+		// if stream.done || stream.validLoudness {
+		// 	if GlobalDebug {
+		// 		fmt.Printf("stream %v has valid loudness (%v)\n", stream.Index, stream.LoudnessInfo)
+		// 	}
+		// 	continue
+		// }
 		streams = append(streams, stream)
 	}
 	err := RenderParameters(streams)
