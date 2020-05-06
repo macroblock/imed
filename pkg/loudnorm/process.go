@@ -1,10 +1,7 @@
 package loudnorm
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -43,66 +40,6 @@ var (
 		"-sample_fmt", "s16p",
 	}
 )
-
-// TMode -
-type TMode int
-
-// -
-const (
-	ModeUnknown = TMode(iota)
-	ModeSD
-	ModeHD
-)
-
-func (o TMode) String() string {
-	switch o {
-	default:
-		return "<error>"
-	case ModeUnknown:
-		return "unknown"
-	case ModeSD:
-		return "SD"
-	case ModeHD:
-		return "HD"
-	}
-}
-
-func callFFMPEG(parse func([]byte) (interface{}, error), args ...string) error {
-	if GlobalDebug {
-		fmt.Println("### params: ", args)
-	}
-
-	c := exec.Command("ffmpeg", args...)
-	var o bytes.Buffer
-	var e bytes.Buffer
-	c.Stdout = &o
-	c.Stderr = &e
-	err := c.Run()
-	if err != nil {
-		return errors.New(string(e.Bytes()))
-	}
-
-	if parse == nil {
-		return nil
-	}
-	result, err := parse(e.Bytes())
-	_ = result
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// func fmtErrors(errors []error) error {
-// 	if len(errors) == 0 {
-// 		return nil
-// 	}
-// 	ret := "errors occured:\n"
-// 	for i, err := range errors {
-// 		ret = fmt.Sprintf("%v%2d: %v\n", ret, i, err)
-// 	}
-// 	return fmt.Errorf("%s", ret)
-// }
 
 // ScanAudio -
 func ScanAudio(fi *TFileInfo) error {
@@ -166,10 +103,6 @@ func CheckIfReadyToCompile(fi *TFileInfo) error {
 		if !(stream.done || stream.validLoudness) {
 			filename := fi.Filename
 			index := stream.Index
-			// if stream.ExtName != "" {
-			// 	filename = stream.ExtName
-			// 	index = 0
-			// }
 			return fmt.Errorf("%v:%v is not ready to compile (%v)", filename, index, stream.LoudnessInfo)
 		}
 	}
@@ -180,7 +113,7 @@ func CheckIfReadyToCompile(fi *TFileInfo) error {
 func ProcessTo(fi *TFileInfo) error {
 
 	params := []string{"-y", "-hide_banner"}
-	params = append(params, getGloblaFlags()...)
+	params = append(params, GetSettings().getGlobalFlags()...)
 	params = append(params, "-i", fi.Filename)
 
 	filters := []string{}
@@ -192,19 +125,6 @@ func ProcessTo(fi *TFileInfo) error {
 		ffmpeg.NewAudioProgressParser(time, nil),
 	)
 
-	// inputIndex := 0
-	// for _, stream := range fi.Streams {
-	// 	switch stream.Type {
-	// 	case "video":
-	// 	case "subtitle":
-	// 	case "audio":
-	// 		if stream.ExtName != "" {
-	// 			inputIndex++
-	// 			stream.extInputIndex = inputIndex
-	// 			params = append(params, "-i", stream.ExtName)
-	// 		}
-	// 	}
-	// }
 	params = append(params,
 		"-map_metadata", "-1",
 		"-map_chapters", "-1",
@@ -323,23 +243,24 @@ func formatSettings() string {
 	s = strings.Replace(s, "{", "\n"+pad+pad, -1)
 	s = strings.Replace(s, " ", "\n"+pad+pad, -1)
 	s = strings.Replace(s, "#", " ", -1)
-	s = strings.Replace(s, ":", ": ", -1)
+	x := strings.Split(s, "\n")
+	for i := range x {
+		x[i] = strings.Replace(x[i], ":", ": ", 1)
+	}
+	s = strings.Join(x, "\n")
 	return s
 }
 
 // Process -
 func Process(filename string) error {
-	if GlobalDebug {
-		fmt.Printf("%+v\n\n", formatSettings())
-	}
+	debugPrintf("%+v\n\n", formatSettings())
+
 	fmt.Println("getting info...")
 	fi, err := LoadFile(filename, 0)
 	if err != nil {
 		return err
 	}
-	if GlobalDebug {
-		fmt.Printf("loaded:\n%v", fi)
-	}
+	debugPrintf("loaded:\n%v", fi)
 
 	gt := time.Now()
 	t := time.Now()
@@ -349,18 +270,7 @@ func Process(filename string) error {
 	if err != nil {
 		return err
 	}
-	if GlobalDebug {
-		fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
-	}
-
-	// if settings.Behavior.ScanOnly {
-	// 	for _, stream := range fi.Streams {
-	// 		if stream.LoudnessInfo != nil {
-	// 			printParams(stream)
-	// 		}
-	// 	}
-	// 	return nil
-	// }
+	debugPrintf("local %v, global %v\n", time.Since(t), time.Since(gt))
 
 	t = time.Now()
 	fmt.Println("calculating parameters...")
@@ -380,27 +290,9 @@ func Process(filename string) error {
 	if err != nil {
 		return err
 	}
-	if GlobalDebug {
-		fmt.Printf("local %v, global %v\n", time.Since(t), time.Since(gt))
-	}
+	debugPrintf("local %v, global %v\n", time.Since(t), time.Since(gt))
 
 	fmt.Printf("Ok. Elapsed time: %v\n", time.Since(gt))
 
 	return nil
-}
-
-func alignStr(w int, s string) string {
-	if len(s) == 0 {
-		return s
-	}
-	for _, r := range s {
-		if r == '.' {
-			break
-		}
-		w--
-	}
-	if w < 0 {
-		w = 0
-	}
-	return strings.Repeat(" ", w) + s
 }

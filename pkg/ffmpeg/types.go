@@ -22,12 +22,42 @@ func errHHMMSSMs(val string, err error) error {
 	return fmt.Errorf(errHHMMSSMsTemplate, val, err)
 }
 
+func errHHMMSSFr(val string, err error) error {
+	return fmt.Errorf(errHHMMSSMsTemplate, val, err)
+}
+
 // FloatToTime -
 func FloatToTime(f float64) Time {
 	return Time(f * 1000)
 }
 
-// ParseTime -
+// ParseHHMMSSFr - hh:mm:ss:fr format
+func ParseHHMMSSFr(t string, msPerFrame int) (Time, error) {
+	o := Time(0)
+	x := strings.Split(t, ":")
+	if len(x) > 4 {
+		return o, errHHMMSSFr(t, fmt.Errorf("too many colons"))
+	}
+	h, m, s, fr := 0, 0, 0, 0
+	done := false
+	for _, str := range x {
+		if done {
+			return o, errHHMMSSFr(t, fmt.Errorf("unreachable"))
+		}
+		val, err := strconv.Atoi(str)
+		if err != nil {
+			return o, errHHMMSSFr(t, err)
+		}
+		h = m
+		m = s
+		s = fr
+		fr = val
+	}
+	o = Time(((h*60+m)*60+s)*1000 + fr*msPerFrame)
+	return o, nil
+}
+
+// ParseTime - hh:mm:ss.ms format
 func ParseTime(t string) (Time, error) {
 	o := Time(0)
 	// fmt.Printf("here %v", t)

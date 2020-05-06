@@ -86,9 +86,9 @@ func (o *tErrorGroup) adobeTime(flag string, val **ffmpeg.Time) bool {
 		return false
 	}
 	if flag != "" {
-		ret, err := ffmpeg.ParseTime(flag)
+		ret, err := ffmpeg.ParseHHMMSSFr(flag, 40)
 		if err != nil {
-			o.err = nil
+			o.err = err
 			return false
 		}
 		*val = &ret

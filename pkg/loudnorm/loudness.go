@@ -6,6 +6,25 @@ import (
 	"strconv"
 )
 
+// TLoudnessInfo -
+type TLoudnessInfo struct {
+	I  float64 // integrated
+	RA float64 // range
+	TP float64 // true peaks
+	MP float64 // max peaks
+	TH float64 // threshold
+	CR float64 // compress ratio
+}
+
+func (o *TLoudnessInfo) String() string {
+	if o == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("I: %v, RA: %v, TP: %v, TH: %v, MP: %v, CR: %v",
+		o.I, o.RA, o.TP, o.TH, o.MP,
+		strconv.FormatFloat(o.CR, 'f', 2, 64))
+}
+
 // var (
 // 	targetI     = -23.0
 // 	targetLRA   = 20.0

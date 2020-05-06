@@ -77,46 +77,26 @@ func SetSettings(x TSettings) {
 	settings = x
 }
 
-func calcDuration(duration float64) (float64, error) {
+func (o TSettings) calcDuration(duration float64) (float64, error) {
 	if duration <= 0 {
 		return -1.0, nil
 	}
-	if settings.Edit.ClipPoint != nil {
-		duration -= settings.Edit.ClipPoint.Float()
+	if o.Edit.ClipPoint != nil {
+		duration -= o.Edit.ClipPoint.Float()
 	}
-	if settings.Edit.ClipDuration != nil {
-		duration -= settings.Edit.ClipDuration.Float()
+	if o.Edit.ClipDuration != nil {
+		duration = math.Min(duration, o.Edit.ClipDuration.Float())
 	}
-	// if GlobalFlagSS != "" {
-	// 	val, err := ffmpeg.ParseTime(GlobalFlagSS)
-	// 	if err != nil {
-	// 		return duration, err
-	// 	}
-	// 	duration -= val.Float()
-	// }
-	// if GlobalFlagT != "" {
-	// 	val, err := ffmpeg.ParseTime(GlobalFlagT)
-	// 	if err != nil {
-	// 		return duration, err
-	// 	}
-	// 	duration -= val.Float()
-	// }
 	return duration, nil
 }
 
-func getGloblaFlags() []string {
+func (o TSettings) getGlobalFlags() []string {
 	ret := []string{}
-	if settings.Edit.ClipPoint != nil {
-		ret = append(ret, "-ss", settings.Edit.ClipPoint.String())
+	if o.Edit.ClipPoint != nil {
+		ret = append(ret, "-ss", o.Edit.ClipPoint.String())
 	}
-	if settings.Edit.ClipDuration != nil {
-		ret = append(ret, "-t", settings.Edit.ClipDuration.String())
+	if o.Edit.ClipDuration != nil {
+		ret = append(ret, "-t", o.Edit.ClipDuration.String())
 	}
-	// if GlobalFlagSS != "" {
-	// 	ret = append(ret, "-ss", GlobalFlagSS)
-	// }
-	// if GlobalFlagT != "" {
-	// 	ret = append(ret, "-t", GlobalFlagT)
-	// }
 	return ret
 }

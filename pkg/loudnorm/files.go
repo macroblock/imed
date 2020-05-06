@@ -13,7 +13,6 @@ type (
 	// TFileInfo -
 	TFileInfo struct {
 		Filename string
-		Mode     TMode
 		Duration float64
 		Streams  []*TStreamInfo
 		hasAudio bool
@@ -51,7 +50,7 @@ func (o *TFileInfo) String() string {
 		return "<nil>"
 	}
 	ret := fmt.Sprintf("input filename: %v\n", o.Filename)
-	ret = fmt.Sprintf("%vmode: %v\n", ret, o.Mode)
+	// ret = fmt.Sprintf("%vmode: %v\n", ret, o.Mode)
 
 	for N, stream := range o.Streams {
 		ret = fmt.Sprintf("%vn: %v\n", ret, N)
@@ -80,7 +79,7 @@ func LoadFile(filename string, inputIndex int) (*TFileInfo, error) {
 	duration := -1.0
 	for index, stream := range finfo.Streams {
 		duration, _ = finfo.StreamDuration(index)
-		duration, err = calcDuration(duration)
+		duration, err = GetSettings().calcDuration(duration)
 		if err != nil {
 			return nil, err
 		}
@@ -124,10 +123,6 @@ func addVideoStreamInfo(fi *TFileInfo, filename string, inputIndex, index, vInde
 		H:          h,
 		// Done:  true,
 		validLoudness: true,
-	}
-	fi.Mode = ModeHD
-	if w <= 720 && h <= 576 {
-		fi.Mode = ModeSD
 	}
 	fi.Streams = append(fi.Streams, o)
 }
