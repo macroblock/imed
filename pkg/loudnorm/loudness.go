@@ -20,9 +20,9 @@ func (o *TLoudnessInfo) String() string {
 	if o == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("I: %v, RA: %v, TP: %v, TH: %v, MP: %v, CR: %v",
-		o.I, o.RA, o.TP, o.TH, o.MP,
-		strconv.FormatFloat(o.CR, 'f', 2, 64))
+	return fmt.Sprintf("I: %s, RA: %s, TP: %s, TH: %s, MP: %s, CR: %s",
+		fround(o.I), fround(o.RA), fround(o.TP), fround(o.TH), fround(o.MP),
+		fround(o.CR))
 }
 
 // var (

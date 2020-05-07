@@ -2,8 +2,9 @@ package loudnorm
 
 import (
 	"fmt"
-	"strconv"
 )
+
+const peakSafeZone = -0.1
 
 // TCompressParams -
 type TCompressParams struct {
@@ -13,21 +14,34 @@ type TCompressParams struct {
 }
 
 func newEmptyCompressParams() *TCompressParams {
-	return &TCompressParams{Ratio: -1.0}
+	return &TCompressParams{Ratio: -1.0, Correction: 1.0}
 }
 
 func newCompressParams(li *TLoudnessInfo) *TCompressParams {
 	diffLU := targetI() - li.I
 	if diffLU <= 0.0 {
-		return &TCompressParams{li: *li, PreAmp: diffLU, PostAmp: 0.0, Ratio: -1.0, Correction: 1.0}
+		cp := newEmptyCompressParams()
+		cp.li = *li
+		cp.PreAmp = diffLU
+		return cp
+		// {li: *li, PreAmp: diffLU, PostAmp: 0.0, Ratio: -1.0, Correction: 1.0}
 	}
-	exceededVal := li.MP + diffLU
+	exceededVal := li.MP /*- peakSafeZone */ + diffLU
 	if exceededVal <= 0.0 {
-		return &TCompressParams{li: *li, PreAmp: diffLU, PostAmp: 0.0, Ratio: -1.0, Correction: 1.0}
+		cp := newEmptyCompressParams()
+		cp.li = *li
+		cp.PreAmp = diffLU
+		// return &TCompressParams{li: *li, PreAmp: diffLU, PostAmp: 0.0, Ratio: -1.0, Correction: 1.0}
 	}
-	offs := -li.MP
+	offs := -(li.MP /* - peakSafeZone */)
+
 	k := targetI() / (li.I + offs)
-	return &TCompressParams{li: *li, PreAmp: offs, PostAmp: 0.0, Ratio: k, Correction: 1.0}
+	cp := newEmptyCompressParams()
+	cp.li = *li
+	cp.PreAmp = offs
+	cp.Ratio = k
+	return cp
+	// return &TCompressParams{li: *li, PreAmp: offs, PostAmp: 0.0, Ratio: k, Correction: 1.0}
 }
 
 // String -
@@ -35,11 +49,12 @@ func (o *TCompressParams) String() string {
 	if o == nil {
 		return "<nil>"
 	}
-	ret := ""
-	ret += "[" + strconv.FormatFloat(o.PreAmp, 'f', 2, 64) + ","
-	ret += " " + strconv.FormatFloat(1/o.GetK(), 'f', 2, 64) + ":1,"
-	ret += " " + strconv.FormatFloat(o.PostAmp, 'f', 2, 64) + ""
-	ret += "]"
+	// ret := ""
+	// ret += "[" + strconv.FormatFloat(o.PreAmp, 'f', 2, 64) + ","
+	// ret += " " + strconv.FormatFloat(1/o.GetK(), 'f', 2, 64) + ":1,"
+	// ret += " " + strconv.FormatFloat(o.PostAmp, 'f', 2, 64) + ""
+	// ret += "]"
+	ret := fmt.Sprintf("[%s, %s:1, %s]", fdown(o.PreAmp), fround(1.0/o.GetK()), fdown(o.PostAmp))
 	return ret
 }
 
@@ -54,16 +69,16 @@ func (o *TCompressParams) filterPro() string {
 	CLow := (TH - -overhead)*r + -overhead
 	CHigh := -overhead
 	limit := -0.1
-	ret := fmt.Sprintf("%v:%v:", atk, rls) +
-		fmt.Sprintf("%v/%v|", TH0, TH0) +
-		fmt.Sprintf("%v/%v|%v/%v|20/%v:", TH, CLow, CHigh, CHigh, CHigh) +
+	ret := fmt.Sprintf("%s:%s:", fround(atk), fround(rls)) +
+		fmt.Sprintf("%s/%s|", fdown(TH0), fdown(TH0)) +
+		fmt.Sprintf("%s/%s|%s/%s|20/%s:", fdown(TH), fdown(CLow), fdown(CHigh), fdown(CHigh), fdown(CHigh)) +
 		// fmt.Sprintf("6:%v:0:%v", -overhead, rls) +
-		fmt.Sprintf("6:%v:0:%v", 0, rls) +
+		fmt.Sprintf("6:%s:0:%s", fround(0.0), fround(atk)) +
 		// fmt.Sprintf(",alimiter=attack=%v:release=%v:level_in=%vdB:level_out=%vdB:level=true", atk, rls, -overhead/2, -overhead/2)+
 		// fmt.Sprintf(",alimiter=level_in=%vdB:level_out=%vdB:level=false", -1.0, -1.5) +
 		// fmt.Sprintf(",alimiter=level_in=%v:level_out=%v:level=false", 1.0, 1.0) +
 		// fmt.Sprintf(",alimiter=attack=%v:release=%v:level_in=%v:level_out=%v:level=true", 50, 100, 0.95, 1.0) + // try atk:7 rls:100
-		fmt.Sprintf(",compand=attacks=%v:points=-80/-80|%v/%v|20/%v", 0, limit, limit, limit) +
+		fmt.Sprintf(",compand=attacks=%s:points=-80/-80|%s/%s|20/%s", fround(0), fdown(limit), fdown(limit), fdown(limit)) +
 		""
 
 	return ret
@@ -75,7 +90,7 @@ func (o *TCompressParams) BuildFilter() string {
 		return "anull"
 	}
 	if o.Ratio < 0.0 {
-		return fmt.Sprintf("volume=%.4fdB", o.PreAmp+o.PostAmp)
+		return fmt.Sprintf("volume=%sdB", fdown(o.PreAmp+o.PostAmp))
 	}
 	// r := o.Ratio * o.Correction
 	// ret := fmt.Sprintf("volume=%.4fdB,compand=attacks=%v:decays=%v:"+
@@ -84,9 +99,9 @@ func (o *TCompressParams) BuildFilter() string {
 	// 	settings.Compressor.Attack,
 	// 	settings.Compressor.Release,
 	// 	90.0*r)
-	ret := fmt.Sprintf("volume=%.4fdB,compand=%v", o.PreAmp, o.filterPro())
+	ret := fmt.Sprintf("volume=%sdB,compand=%v", fdown(o.PreAmp), o.filterPro())
 	if o.PostAmp != 0.0 {
-		ret += fmt.Sprintf(",volume=%.4fdB", o.PostAmp)
+		ret += fmt.Sprintf(",volume=%sdB", fdown(o.PostAmp))
 	}
 	return ret
 }
