@@ -32,6 +32,7 @@ func newCompressParams(li *TLoudnessInfo) *TCompressParams {
 		cp.li = *li
 		cp.PreAmp = diffLU
 		// return &TCompressParams{li: *li, PreAmp: diffLU, PostAmp: 0.0, Ratio: -1.0, Correction: 1.0}
+		return cp
 	}
 	offs := -(li.MP /* - peakSafeZone */)
 
@@ -60,7 +61,7 @@ func (o *TCompressParams) String() string {
 
 // 0.3:1:-30/-30|-20/-5|0/-3:6:0:-90:0.3
 func (o *TCompressParams) filterPro() string {
-	r := o.Ratio * o.Correction
+	r := o.GetK() //o.Ratio * o.Correction
 	atk := 0.3
 	rls := 1.0
 	TH0 := o.li.TH - 10 // 10dB seems to be constant value
