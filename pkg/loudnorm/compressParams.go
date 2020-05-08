@@ -18,31 +18,32 @@ func newEmptyCompressParams() *TCompressParams {
 }
 
 func newCompressParams(li *TLoudnessInfo) *TCompressParams {
-	diffLU := targetI() - li.I
-	if diffLU <= 0.0 {
-		cp := newEmptyCompressParams()
-		cp.li = *li
-		cp.PreAmp = diffLU
-		return cp
-		// {li: *li, PreAmp: diffLU, PostAmp: 0.0, Ratio: -1.0, Correction: 1.0}
-	}
-	exceededVal := li.MP /*- peakSafeZone */ + diffLU
-	if exceededVal <= 0.0 {
-		cp := newEmptyCompressParams()
-		cp.li = *li
-		cp.PreAmp = diffLU
-		// return &TCompressParams{li: *li, PreAmp: diffLU, PostAmp: 0.0, Ratio: -1.0, Correction: 1.0}
-		return cp
-	}
-	offs := -(li.MP /* - peakSafeZone */)
-
-	k := targetI() / (li.I + offs)
 	cp := newEmptyCompressParams()
 	cp.li = *li
-	cp.PreAmp = offs
+	offs := li.I - targetI()
+	if offs >= li.MP {
+		cp.PreAmp = -offs
+		return cp
+	}
+	offs = li.MP
+	k := targetI() / (li.I - offs)
+	cp.PreAmp = -offs
 	cp.Ratio = k
 	return cp
-	// return &TCompressParams{li: *li, PreAmp: offs, PostAmp: 0.0, Ratio: k, Correction: 1.0}
+	// cp := newEmptyCompressParams()
+	// cp.li = *li
+	// diffLU := targetI() - li.I
+	// exceededVal := li.MP /*- peakSafeZone */ + diffLU
+	// if diffLU <= 0.0 || exceededVal <= 0.0 {
+	// 	cp.PreAmp = diffLU
+	// 	return cp
+	// }
+	// offs := -(li.MP /* - peakSafeZone */)
+
+	// k := targetI() / (li.I + offs)
+	// cp.PreAmp = offs
+	// cp.Ratio = k
+	// return cp
 }
 
 // String -
