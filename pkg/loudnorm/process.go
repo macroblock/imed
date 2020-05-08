@@ -173,8 +173,8 @@ func ProcessTo(fi *TFileInfo) error {
 
 			filters = appendPattern(filters, stream, combParser,
 				"[0:~idx~]~header~,~compressor~,asplit=3[s~u0~][s~u1~][o~idx~];"+
-					"[s~u0~]~header~,~astats~,anullsink;"+
-					"[s~u1~]~header~,~ebur~,anullsink")
+					"[s~u0~]~astats~,anullsink;"+
+					"[s~u1~]~ebur~,anullsink")
 			outputs = appendPattern(outputs, stream, nil,
 				"-map", "[o~idx~]")
 			outputs = append(outputs, stream.AudioParams...)

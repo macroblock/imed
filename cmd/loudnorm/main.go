@@ -23,6 +23,7 @@ var (
 	flagVerbosity bool
 
 	flagScanOnly bool
+	flagStereo   bool
 
 	flagLI,
 	flagLRA,
@@ -145,6 +146,7 @@ func mainFunc() error {
 	settings := loudnorm.GetSettings()
 
 	settings.Behavior.ScanOnly = flagScanOnly
+	settings.Behavior.ForceStereo = flagStereo
 
 	parse := &tErrorGroup{}
 	parse.adobeTime(flagSS, &settings.Edit.ClipPoint)
@@ -218,6 +220,7 @@ func main() {
 		cli.Flag("-step         : compress correction step (default = 0.1)", &flagStep),
 		cli.Flag("-t            : same meaning as in ffmpeg but has different format (hh:mm:ss:fr)", &flagT),
 		cli.Flag("-ss           : same meaning as in ffmpeg but has different format (hh:mm:ss:fr)", &flagSS),
+		cli.Flag("-stereo       : force stereo", &flagStereo),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.Command("scan       : scan loudnes parameters", doScan,
 			// cli.Flag("-l --light: light mode (whithout TP)", &flagLight),

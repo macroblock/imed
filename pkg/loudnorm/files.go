@@ -159,6 +159,7 @@ func generateOutputName(fi *TFileInfo) string {
 	path, name := filepath.Split(fi.Filename)
 	ext := filepath.Ext(name)
 	name = strings.TrimSuffix(name, ext)
+	suffix := "-ebur128"
 	ext = ".m4a"
 	if len(fi.Streams) == 1 {
 		ext = ".ac3"
@@ -166,7 +167,10 @@ func generateOutputName(fi *TFileInfo) string {
 	if fi.hasVideo {
 		ext = ".mp4"
 	}
-	return path + name + "-ebur128" + ext
+	if settings.Behavior.ForceStereo {
+		suffix += "-stereo"
+	}
+	return path + name + suffix + ext
 }
 
 // func generateExtFilename(fi *TFileInfo, si *TStreamInfo) string {
@@ -178,6 +182,10 @@ func generateOutputName(fi *TFileInfo) string {
 // }
 
 func inferAudioParams(si *TStreamInfo) []string {
+	if settings.Behavior.ForceStereo {
+		return ac3Params2
+	}
+
 	switch si.Channels {
 	default:
 		panic(fmt.Sprintf("unsupported number of channels: %v", si.Channels))

@@ -55,6 +55,10 @@ func appendPattern(branches []string, stream *TStreamInfo, comb *ffmpeg.TCombine
 		}
 
 		if strings.Contains(pattern, "~header~") {
+			if settings.Behavior.ForceStereo && stream.Channels > 2 {
+				filter := "pan=stereo|FL<1.0*FL+0.707*FC+0.5*BL|FR<1.0*FR+0.707*FC+0.5*BR"
+				pattern = strings.Replace(pattern, "~header~", filter+",~header~", -1)
+			}
 			pattern = strings.Replace(pattern, "~header~", "anull", -1)
 		}
 

@@ -14,7 +14,8 @@ import (
 
 var settings = TSettings{
 	Behavior: tBehavior{
-		ScanOnly: false,
+		ScanOnly:    false,
+		ForceStereo: false,
 	},
 	Loudness: tLoudnessSettings{
 		I:         -23,
@@ -45,7 +46,8 @@ type (
 	}
 
 	tBehavior struct {
-		ScanOnly bool
+		ScanOnly    bool
+		ForceStereo bool
 	}
 
 	tLoudnessSettings struct {
