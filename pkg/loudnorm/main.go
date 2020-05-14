@@ -116,7 +116,6 @@ func Scan(streams []*TStreamInfo) error {
 			MP: stream.astatsInfo.PeakLevel,
 			CR: -1.0,
 		}
-		fmt.Printf("        #%v: %v\n", stream.Index, stream.LoudnessInfo)
 
 		stream.TargetLI = &TLoudnessInfo{}
 		*stream.TargetLI = *stream.LoudnessInfo
@@ -137,6 +136,10 @@ func Scan(streams []*TStreamInfo) error {
 				"\n  li   >", stream.TargetLI,
 				"\n  comp >", stream.CompParams)
 		}
+	}
+
+	for _, stream := range streams {
+		printStreamParams(stream)
 	}
 	return nil
 }
@@ -190,12 +193,9 @@ func RenderParameters(streams []*TStreamInfo) error {
 					"[~u0~]~astats~,anullsink;"+
 					"[~u1~]~ebur~,anullsink") //[o~idx~]")
 			outputs = appendPattern(outputs, stream, nil /*"-map", "[o~idx~]",*/, "-f", "null", os.DevNull)
-
-			printStreamParams(stream)
 		}
 
 		if done || settings.Behavior.ScanOnly {
-			// fmt.Println("--- All ok. continue ---")
 			return nil
 		}
 		params = append(params, "-filter_complex")
@@ -231,6 +231,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 					"\n  comp >", stream.CompParams)
 			}
 
+			// fmt.Printf("--- i - mp: %v\n", stream.TargetLI.I-stream.TargetLI.MP)
 			stream.done = FixLoudness(stream.TargetLI, stream.CompParams)
 			if GlobalDebug && stream.done {
 				fmt.Println("##### fixed stream:", i,
@@ -239,6 +240,11 @@ func RenderParameters(streams []*TStreamInfo) error {
 			}
 			done = done && stream.done
 		}
+
+		for _, stream := range streams {
+			printStreamParams(stream)
+		}
+
 		if done {
 			return nil
 		}

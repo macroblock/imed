@@ -76,12 +76,23 @@ func (o *TCompressParams) filterPro() string {
 		fmt.Sprintf("%s/%s|%s/%s|20/%s:", fdown(TH), fdown(CLow), fdown(CHigh), fdown(CHigh), fdown(CHigh)) +
 		// fmt.Sprintf("6:%v:0:%v", -overhead, rls) +
 		fmt.Sprintf("6:%s:0:%s", fround(0.0), fround(atk)) +
-		// fmt.Sprintf(",alimiter=attack=%v:release=%v:level_in=%vdB:level_out=%vdB:level=true", atk, rls, -overhead/2, -overhead/2)+
-		// fmt.Sprintf(",alimiter=level_in=%vdB:level_out=%vdB:level=false", -1.0, -1.5) +
-		// fmt.Sprintf(",alimiter=level_in=%v:level_out=%v:level=false", 1.0, 1.0) +
-		// fmt.Sprintf(",alimiter=attack=%v:release=%v:level_in=%v:level_out=%v:level=true", 50, 100, 0.95, 1.0) + // try atk:7 rls:100
 		fmt.Sprintf(",compand=attacks=%s:points=-80/-80|%s/%s|20/%s", fround(0), fdown(limit), fdown(limit), fdown(limit)) +
 		""
+	if false {
+		return ret
+	}
+	CHigh = TH - TH*r
+	limit = CHigh
+	ret = fmt.Sprintf("%s:%s:", fround(atk), fround(rls)) +
+		fmt.Sprintf("%s/%s|", fdown(TH), fdown(TH)) +
+		fmt.Sprintf("%s/%s|20/%s:", fdown(0.0), fdown(CHigh), fdown(CHigh)) +
+		// fmt.Sprintf("6:%v:0:%v", -overhead, rls) +
+		fmt.Sprintf("6:%s:%s:%s", fround(0.0), fdown(-90.0), fround(atk)) +
+		fmt.Sprintf(",compand=attacks=%s:points=-80/-80|%s/%s|20/%s", fround(0), fdown(limit), fdown(limit), fdown(limit)) +
+		// fmt.Sprintf(",compand=attacks=0:decays=0:points=-80/-80|%s/%s|20/%s", fdown(limit), fdown(limit), fdown(limit)) +
+		""
+
+	// fmt.Printf("--- CHigh: %v\n", CHigh)
 
 	return ret
 }

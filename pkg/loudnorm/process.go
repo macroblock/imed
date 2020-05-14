@@ -183,7 +183,7 @@ func ProcessTo(fi *TFileInfo) error {
 				"-disposition:s:a:"+strconv.Itoa(audioIndex), def,
 			)
 		}
-		printStreamParams(stream)
+		// printStreamParams(stream)
 	}
 	params = append(params, "-filter_complex")
 	params = append(params, strings.Join(filters, ";"))

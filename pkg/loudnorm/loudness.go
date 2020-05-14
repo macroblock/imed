@@ -137,15 +137,27 @@ func LoudnessIsEqual(a, b *TLoudnessInfo) bool {
 	return false
 }
 
+func normLi(li *TLoudnessInfo) {
+	li.I -= li.MP
+	li.TP -= li.MP
+	li.TH -= li.MP
+	li.MP -= li.MP
+}
+
 // FixLoudness -
 func FixLoudness(li *TLoudnessInfo, compParams *TCompressParams) bool {
-	if !SuitableLoudness(li) {
+	l := *li
+	normLi(&l)
+	if !SuitableLoudness(&l) {
+		// fmt.Println("--- not suitable")
 		return false
 	}
+	// *li = l
 	postAmp := targetI() - li.I
-	if postAmp > 0.0 {
-		postAmp = 0.0
-	}
+	postAmp = math.Min(postAmp, -li.MP)
+	// if postAmp > 0.0 {
+	// 	postAmp = 0.0
+	// }
 	compParams.PostAmp = postAmp
 	li.I += postAmp
 	li.TP += postAmp
