@@ -3,16 +3,23 @@ package ffmpeg
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
+// TChannelInfo -
+type TChannelInfo struct {
+	BitDepth string
+	// NumberOfSamples int
+	RMSLevel   float64 // dB
+	FlatFactor float64
+	PeakLevel  float64 // dB
+}
+
 // TAStatsInfo -
 type TAStatsInfo struct {
-	BitDepth        string
-	NumberOfSamples int
-	RMSLevel        float64
-	FlatFactor      float64
-	PeakLevel       float64
+	Channels []TChannelInfo
+	TChannelInfo
 }
 
 // TAStatsParser -
@@ -63,7 +70,9 @@ func parseAStatsDetect(list []string) (*TAStatsInfo, error) {
 	// st := map[string]string{}
 	vals := NewArgMap()
 	prefix := ""
+	chnum := 0
 	for _, line := range list {
+
 		switch strings.TrimSpace(line) {
 		case "":
 			continue
@@ -75,37 +84,37 @@ func parseAStatsDetect(list []string) (*TAStatsInfo, error) {
 		if err != nil {
 			return nil, err
 		}
+		switch name {
+		case "":
+			continue
+		case "Channel":
+			v, err := strconv.Atoi(val)
+			if err != nil {
+				return nil, err
+			}
+			prefix = strconv.Itoa(v-1) + ":"
+			continue
+		}
+		// fmt.Printf("prefix: %q %q\n", prefix, name)
 		vals.Add(prefix+name, val)
 	}
 	ret := &TAStatsInfo{}
-	// err := error(nil)
-	// ret.BitDepth, err = getValS(st, ":Bit depth", "")
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// ret.NumberOfSamples, err = getValI(st, ":Number of samples", "")
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// ret.RMSLevel, err = getValF(st, ":RMS Level", "")
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// ret.FlatFactor, err = getValF(st, ":Flat factor", "")
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// ret.PeakLevel, err = getValF(st, ":Peak level dB", "")
-	// if err != nil {
-	// 	return nil, err
-	// }
-	vals.GetS(":Bit depth", "", &ret.BitDepth)
-	vals.GetI(":Number of samples", "", &ret.NumberOfSamples)
-	vals.GetF(":RMS level dB", "", &ret.RMSLevel)
-	vals.GetF(":Flat factor", "", &ret.FlatFactor)
-	vals.GetF(":Peak level dB", "", &ret.PeakLevel)
-	if vals.Error() != nil {
-		return nil, vals.Error()
+	ret.Channels = make([]TChannelInfo, chnum)
+	for i := -1; i < len(ret.Channels); i++ {
+		prefix := ":"
+		p := &ret.TChannelInfo
+		if i >= 0 {
+			p = &ret.Channels[i]
+			prefix = strconv.Itoa(i) + ":"
+		}
+		vals.GetS(prefix+"Bit depth", "", &p.BitDepth)
+		// vals.GetI(prefix+"Number of samples", "", &p.NumberOfSamples)
+		vals.GetF(prefix+"RMS level dB", "", &p.RMSLevel)
+		vals.GetF(prefix+"Flat factor", "", &p.FlatFactor)
+		vals.GetF(prefix+"Peak level dB", "", &p.PeakLevel)
+		if vals.Error() != nil {
+			return nil, vals.Error()
+		}
 	}
 	return ret, nil
 }
