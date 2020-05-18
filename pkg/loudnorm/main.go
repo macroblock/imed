@@ -144,11 +144,6 @@ func Scan(streams []*TStreamInfo) error {
 	return nil
 }
 
-func printStreamParams(stream *TStreamInfo) {
-	fmt.Printf("        #%v: %v\n", stream.Index, stream.TargetLI)
-	fmt.Printf("          : compression %v\n", stream.CompParams)
-}
-
 // RenderParameters -
 func RenderParameters(streams []*TStreamInfo) error {
 	if len(streams) == 0 {

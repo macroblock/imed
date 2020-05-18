@@ -56,7 +56,7 @@ func (o *TCompressParams) String() string {
 	// ret += " " + strconv.FormatFloat(1/o.GetK(), 'f', 2, 64) + ":1,"
 	// ret += " " + strconv.FormatFloat(o.PostAmp, 'f', 2, 64) + ""
 	// ret += "]"
-	ret := fmt.Sprintf("[%s, %s:1, %s]", fdown(o.PreAmp), fround(1.0/o.GetK()), fdown(o.PostAmp))
+	ret := fmt.Sprintf("[%s, %s, %s]", fdown(o.PreAmp), froundRatio(o.GetK()), fdown(o.PostAmp))
 	return ret
 }
 
@@ -121,9 +121,9 @@ func (o *TCompressParams) BuildFilter() string {
 
 // GetK -
 func (o *TCompressParams) GetK() float64 {
-	if o.Ratio < 0.0 {
-		return 1.0
-	}
+	// if o.Ratio < 0.0 {
+	// 	return 1.0
+	// }
 	ret := o.Ratio * o.Correction
 	return ret
 }

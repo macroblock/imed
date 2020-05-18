@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/macroblock/imed/pkg/misc"
 )
 
 // TChannelInfo -
@@ -93,6 +95,7 @@ func parseAStatsDetect(list []string) (*TAStatsInfo, error) {
 				return nil, err
 			}
 			prefix = strconv.Itoa(v-1) + ":"
+			chnum = misc.MaxInt(chnum, v)
 			continue
 		}
 		// fmt.Printf("prefix: %q %q\n", prefix, name)
@@ -107,6 +110,9 @@ func parseAStatsDetect(list []string) (*TAStatsInfo, error) {
 			p = &ret.Channels[i]
 			prefix = strconv.Itoa(i) + ":"
 		}
+
+		// x := vals.table[prefix+"RMS level dB"]
+		// fmt.Printf("get: %q %v\n", prefix, x)
 		vals.GetS(prefix+"Bit depth", "", &p.BitDepth)
 		// vals.GetI(prefix+"Number of samples", "", &p.NumberOfSamples)
 		vals.GetF(prefix+"RMS level dB", "", &p.RMSLevel)
