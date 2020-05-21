@@ -110,6 +110,7 @@ func Scan(streams []*TStreamInfo) error {
 		stream.LoudnessInfo = &TLoudnessInfo{
 			I:  stream.eburInfo.I,
 			RA: stream.eburInfo.LRA,
+			ST: stream.eburInfo.STHigh,
 			TP: stream.eburInfo.TP,
 			TH: stream.eburInfo.Thresh,
 			// MP: stream.volumeInfo.MaxVolume,
@@ -210,6 +211,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 			stream.TargetLI = &TLoudnessInfo{
 				I:  stream.eburInfo.I,
 				RA: stream.eburInfo.LRA,
+				ST: stream.eburInfo.STHigh,
 				TP: stream.eburInfo.TP,
 				TH: stream.eburInfo.Thresh,
 				// MP: stream.volumeInfo.MaxVolume,

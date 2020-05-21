@@ -18,12 +18,16 @@ type TEburInfo struct {
 	LRAHigh float64
 
 	TP float64
+
+	STHigh float64
+	STLow  float64
 }
 
 // TEburParser -
 type TEburParser struct {
 	name        string
 	re          *regexp.Regexp
+	reTime      *regexp.Regexp
 	active      bool
 	truePeaks   bool
 	accepted    bool
@@ -41,6 +45,7 @@ func NewEburParser(name string, truePeaks bool, ret *TEburInfo) *TEburParser {
 	}
 	o := &TEburParser{name: name, truePeaks: truePeaks, linesToRead: linesToRead, ret: ret}
 	o.re = regexp.MustCompile(fmt.Sprintf("\\[%v @ [^ ]+\\] Summary:.*", name))
+	o.reTime = regexp.MustCompile(fmt.Sprintf("\\[%v @ [^ ]+\\] (t:.*)", name))
 	return o
 }
 
@@ -67,12 +72,18 @@ func (o *TEburParser) Finish() error {
 // Parse -
 func (o *TEburParser) Parse(line string, eof bool) (bool, error) {
 
+	if val := o.reTime.FindAllStringSubmatch(line, 1); val != nil {
+		o.lines = append(o.lines, val[0][1])
+		return true, nil
+	}
+
 	if !o.accepted && !o.active {
 		if o.re.MatchString(line) {
 			o.accepted = true
 			o.active = true
+			return true, nil
 		}
-		return o.accepted, nil
+		return false, nil
 	}
 	if line != "" && line[0] != ' ' {
 		o.accepted = false
@@ -94,7 +105,26 @@ func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
 	vals := NewArgMap()
 	prefix := ""
 
+	maxLST := math.Inf(-1)
+	minLST := math.Inf(+1)
+
 	for _, line := range list {
+		// fmt.Printf("line: %q\n", line)
+		if strings.HasPrefix(line, "t: ") {
+			i := strings.Index(line, "S:")
+			s := strings.TrimSpace(line[i+2:])
+			i = strings.Index(s, " ")
+			s = s[:i]
+			val, err := valToF(s, "")
+			if err != nil {
+				return nil, err
+			}
+			maxLST = math.Max(val, maxLST)
+			minLST = math.Min(val, minLST)
+			continue
+		}
+
+		// fmt.Printf("line: %q\n", line)
 		name, val, err := parseNameVal(line, ":")
 		if err != nil {
 			return nil, err
@@ -129,5 +159,12 @@ func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
 		return nil, vals.Error()
 	}
 
+	// fmt.Printf("min/max LST: %v/%v\n", minLST, maxLST)
+	ret.STHigh = maxLST
+	ret.STLow = minLST
+
+	if ret == nil {
+		return nil, fmt.Errorf("eburInfo == nil")
+	}
 	return ret, nil
 }

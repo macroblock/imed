@@ -64,7 +64,7 @@ func printStreamParams(stream *TStreamInfo) {
 			math.Round((ch.RMSLevel-minP)/dP*100),
 		)) + " "
 	}
-	fmt.Printf("       #%2v: %v\n", stream.Index, stream.TargetLI)
-	fmt.Printf("          : compression %v\n", stream.CompParams)
-	fmt.Printf("          : %v\n", str)
+	fmt.Printf(" #%2v: %v\n", stream.Index, stream.TargetLI)
+	fmt.Printf("    : compression %v\n", stream.CompParams)
+	fmt.Printf("    : %v\n", str)
 }
