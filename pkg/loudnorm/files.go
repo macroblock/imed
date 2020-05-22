@@ -37,6 +37,7 @@ type (
 		LoudnessInfo  *TLoudnessInfo
 		TargetLI      *TLoudnessInfo
 		CompParams    *TCompressParams
+		MiscInfo      *TMiscInfo
 		W, H          int
 		validFormat   bool
 		validLoudness bool

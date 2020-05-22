@@ -9,7 +9,6 @@ import (
 // TLoudnessInfo -
 type TLoudnessInfo struct {
 	I  float64 // integrated
-	ST float64 // max short term
 	RA float64 // range
 	TP float64 // true peaks
 	MP float64 // max peaks
@@ -17,13 +16,30 @@ type TLoudnessInfo struct {
 	CR float64 // compress ratio
 }
 
+// TMiscInfo -
+type TMiscInfo struct {
+	I       float64
+	MaxST   float64 // max short term
+	MinST   float64 // max short term
+	STSum   float64
+	STCount int
+}
+
 func (o *TLoudnessInfo) String() string {
 	if o == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("I:%s, dST:%s, RA:%s, TP:%s, TH:%s, MP:%s, CR:%s",
-		fround(o.I), fround(o.ST-o.I), fround(o.RA), fround(o.TP), fround(o.TH), fround(o.MP),
+	return fmt.Sprintf("I: %s, RA: %s, TP: %s, TH: %s, MP: %s, CR: %s",
+		fround(o.I), fround(o.RA), fround(o.TP), fround(o.TH), fround(o.MP),
 		fround(o.CR))
+}
+
+func (o *TMiscInfo) String() string {
+	if o == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("relST: (%s, %s) k: %s",
+		fround(o.MaxST-o.I), fround(o.MinST-o.I), fround(o.STSum/float64(o.STCount)-o.I))
 }
 
 // var (
@@ -140,7 +156,6 @@ func LoudnessIsEqual(a, b *TLoudnessInfo) bool {
 
 func normLi(li *TLoudnessInfo) {
 	li.I -= li.MP
-	li.ST -= li.MP
 	li.TP -= li.MP
 	li.TH -= li.MP
 	li.MP -= li.MP
@@ -154,15 +169,10 @@ func FixLoudness(li *TLoudnessInfo, compParams *TCompressParams) bool {
 		// fmt.Println("--- not suitable")
 		return false
 	}
-	// *li = l
 	postAmp := targetI() - li.I
 	postAmp = math.Min(postAmp, -li.MP)
-	// if postAmp > 0.0 {
-	// 	postAmp = 0.0
-	// }
 	compParams.PostAmp = postAmp
 	li.I += postAmp
-	li.ST += postAmp
 	li.TP += postAmp
 	li.TH += postAmp
 	li.MP += postAmp

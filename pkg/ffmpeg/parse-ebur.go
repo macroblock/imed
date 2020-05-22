@@ -19,8 +19,10 @@ type TEburInfo struct {
 
 	TP float64
 
-	STHigh float64
-	STLow  float64
+	MaxST   float64
+	MinST   float64
+	SumST   float64
+	CountST int
 }
 
 // TEburParser -
@@ -107,7 +109,10 @@ func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
 
 	maxLST := math.Inf(-1)
 	minLST := math.Inf(+1)
+	countLST := 0
+	sumLST := 0.0
 
+	started := false
 	for _, line := range list {
 		// fmt.Printf("line: %q\n", line)
 		if strings.HasPrefix(line, "t: ") {
@@ -119,6 +124,12 @@ func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
 			if err != nil {
 				return nil, err
 			}
+			if !started && val < -120.0 {
+				continue
+			}
+			started = true
+			countLST++
+			sumLST += val
 			maxLST = math.Max(val, maxLST)
 			minLST = math.Min(val, minLST)
 			continue
@@ -160,8 +171,10 @@ func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
 	}
 
 	// fmt.Printf("min/max LST: %v/%v\n", minLST, maxLST)
-	ret.STHigh = maxLST
-	ret.STLow = minLST
+	ret.MaxST = maxLST
+	ret.MinST = minLST
+	ret.SumST = sumLST
+	ret.CountST = countLST
 
 	if ret == nil {
 		return nil, fmt.Errorf("eburInfo == nil")

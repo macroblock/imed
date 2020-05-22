@@ -107,16 +107,18 @@ func Scan(streams []*TStreamInfo) error {
 	}
 
 	for i, stream := range streams {
-		stream.LoudnessInfo = &TLoudnessInfo{
-			I:  stream.eburInfo.I,
-			RA: stream.eburInfo.LRA,
-			ST: stream.eburInfo.STHigh,
-			TP: stream.eburInfo.TP,
-			TH: stream.eburInfo.Thresh,
-			// MP: stream.volumeInfo.MaxVolume,
-			MP: stream.astatsInfo.PeakLevel,
-			CR: -1.0,
-		}
+		// stream.LoudnessInfo = &TLoudnessInfo{
+		// 	I:  stream.eburInfo.I,
+		// 	RA: stream.eburInfo.LRA,
+		// 	ST: stream.eburInfo.STHigh,
+		// 	TP: stream.eburInfo.TP,
+		// 	TH: stream.eburInfo.Thresh,
+		// 	// MP: stream.volumeInfo.MaxVolume,
+		// 	MP: stream.astatsInfo.PeakLevel,
+		// 	CR: -1.0,
+		// }
+
+		stream.LoudnessInfo, stream.MiscInfo = initInfo(stream.eburInfo, stream.astatsInfo)
 
 		stream.TargetLI = &TLoudnessInfo{}
 		*stream.TargetLI = *stream.LoudnessInfo
@@ -208,16 +210,20 @@ func RenderParameters(streams []*TStreamInfo) error {
 
 		done = true
 		for i, stream := range streams {
-			stream.TargetLI = &TLoudnessInfo{
-				I:  stream.eburInfo.I,
-				RA: stream.eburInfo.LRA,
-				ST: stream.eburInfo.STHigh,
-				TP: stream.eburInfo.TP,
-				TH: stream.eburInfo.Thresh,
-				// MP: stream.volumeInfo.MaxVolume,
-				MP: stream.astatsInfo.PeakLevel,
-				CR: stream.CompParams.GetK(),
-			}
+			// stream.TargetLI = &TLoudnessInfo{
+			// 	I:  stream.eburInfo.I,
+			// 	RA: stream.eburInfo.LRA,
+			// 	ST: stream.eburInfo.STHigh,
+			// 	TP: stream.eburInfo.TP,
+			// 	TH: stream.eburInfo.Thresh,
+			// 	// MP: stream.volumeInfo.MaxVolume,
+			// 	MP: stream.astatsInfo.PeakLevel,
+			// 	CR: stream.CompParams.GetK(),
+			// }
+
+			stream.TargetLI, stream.MiscInfo = initInfo(stream.eburInfo, stream.astatsInfo)
+			stream.TargetLI.CR = stream.CompParams.GetK()
+
 			if GlobalDebug {
 				fmt.Println("##### stream:", i,
 					"\n  ebur >", stream.eburInfo,
