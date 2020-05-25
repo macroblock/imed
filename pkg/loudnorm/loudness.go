@@ -38,7 +38,7 @@ func (o *TMiscInfo) String() string {
 		return "<nil>"
 	}
 	return fmt.Sprintf("relST: (%s, %s) k: %s",
-		fround(o.MaxST-o.I), fround(o.MinST-o.I), fround(o.STSum/float64(o.STCount)-o.I))
+		fround(o.MinST-o.I), fround(o.MaxST-o.I), fround(o.STSum/float64(o.STCount)-o.I))
 }
 
 // var (

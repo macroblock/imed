@@ -119,14 +119,15 @@ func Scan(streams []*TStreamInfo) error {
 				"\n  stat >", stream.astatsInfo)
 		}
 
+		// fake compress params. Just to print forecast info
 		comp := newCompressParams(stream.LoudnessInfo) //&TCompressParams{Ratio: -1.0}
 		stream.CompParams = comp
-
 		// print original values
-		for _, stream := range streams {
-			printStreamParams(stream)
-		}
+		printStreamParams(stream)
 		fmt.Println()
+
+		// compress params to use without compression
+		stream.CompParams = newEmptyCompressParams()
 
 		stream.done = FixLoudness(stream.TargetLI, stream.CompParams)
 		if GlobalDebug && stream.done {
@@ -149,8 +150,9 @@ func RenderParameters(streams []*TStreamInfo) error {
 		if stream.LoudnessInfo == nil {
 			return fmt.Errorf("stream %v:%v has no loudness info", stream.Parent.Filename, stream.Index)
 		}
-		// comp := newCompressParams(stream.LoudnessInfo)
-		// stream.CompParams = comp
+		// compress params to use with compression
+		comp := newCompressParams(stream.LoudnessInfo)
+		stream.CompParams = comp
 	}
 
 	for tries := settings.Compressor.NumTries; tries > 0; tries-- {

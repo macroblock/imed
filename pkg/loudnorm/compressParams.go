@@ -83,7 +83,7 @@ func (o *TCompressParams) BuildFilter() string {
 	if o == nil {
 		return "anull"
 	}
-	if o.Ratio < 0.0 {
+	if o.Ratio <= 0.000001 {
 		return fmt.Sprintf("volume=%sdB", fdown(o.PreAmp+o.PostAmp))
 	}
 	// r := o.Ratio * o.Correction

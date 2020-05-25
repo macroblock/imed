@@ -207,16 +207,6 @@ func ProcessTo(fi *TFileInfo) error {
 		if stream.Type != "audio" {
 			continue
 		}
-		// stream.LoudnessInfo = &TLoudnessInfo{
-		// 	I:  stream.eburInfo.I,
-		// 	RA: stream.eburInfo.LRA,
-		// 	ST: stream.eburInfo.STHigh,
-		// 	TP: stream.eburInfo.TP,
-		// 	TH: stream.eburInfo.Thresh,
-		// 	// MP: stream.volumeInfo.MaxVolume,
-		// 	MP: stream.astatsInfo.PeakLevel,
-		// 	CR: stream.TargetLI.CR, //-1.0,
-		// }
 		stream.LoudnessInfo, stream.MiscInfo = initInfo(stream.eburInfo, stream.astatsInfo)
 		// stream.LoudnessInfo.CR = stream.TargetLI.CR
 
