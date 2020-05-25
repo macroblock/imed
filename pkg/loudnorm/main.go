@@ -107,17 +107,6 @@ func Scan(streams []*TStreamInfo) error {
 	}
 
 	for i, stream := range streams {
-		// stream.LoudnessInfo = &TLoudnessInfo{
-		// 	I:  stream.eburInfo.I,
-		// 	RA: stream.eburInfo.LRA,
-		// 	ST: stream.eburInfo.STHigh,
-		// 	TP: stream.eburInfo.TP,
-		// 	TH: stream.eburInfo.Thresh,
-		// 	// MP: stream.volumeInfo.MaxVolume,
-		// 	MP: stream.astatsInfo.PeakLevel,
-		// 	CR: -1.0,
-		// }
-
 		stream.LoudnessInfo, stream.MiscInfo = initInfo(stream.eburInfo, stream.astatsInfo)
 
 		stream.TargetLI = &TLoudnessInfo{}
@@ -130,8 +119,14 @@ func Scan(streams []*TStreamInfo) error {
 				"\n  stat >", stream.astatsInfo)
 		}
 
-		comp := &TCompressParams{Ratio: -1.0}
+		comp := newCompressParams(stream.LoudnessInfo) //&TCompressParams{Ratio: -1.0}
 		stream.CompParams = comp
+
+		// print original values
+		for _, stream := range streams {
+			printStreamParams(stream)
+		}
+		fmt.Println()
 
 		stream.done = FixLoudness(stream.TargetLI, stream.CompParams)
 		if GlobalDebug && stream.done {
@@ -141,9 +136,6 @@ func Scan(streams []*TStreamInfo) error {
 		}
 	}
 
-	for _, stream := range streams {
-		printStreamParams(stream)
-	}
 	return nil
 }
 
@@ -157,12 +149,13 @@ func RenderParameters(streams []*TStreamInfo) error {
 		if stream.LoudnessInfo == nil {
 			return fmt.Errorf("stream %v:%v has no loudness info", stream.Parent.Filename, stream.Index)
 		}
-		comp := newCompressParams(stream.LoudnessInfo)
-		stream.CompParams = comp
+		// comp := newCompressParams(stream.LoudnessInfo)
+		// stream.CompParams = comp
 	}
 
-	first := true
-	for tries := 5; tries > 0; tries-- {
+	for tries := settings.Compressor.NumTries; tries > 0; tries-- {
+		numTries := settings.Compressor.NumTries
+		fmt.Printf("Attempt %v/%v:\n", numTries-tries+1, numTries)
 
 		params := []string{"-hide_banner"}
 		params = append(params, GetSettings().getGlobalFlags()...)
@@ -182,10 +175,6 @@ func RenderParameters(streams []*TStreamInfo) error {
 				continue
 			}
 			done = false
-			if !first {
-				stream.CompParams.Correction -= settings.Compressor.CorrectionStep
-			}
-			first = false
 			filters = appendPattern(filters, stream, combParser,
 				"[0:~idx~]~header~,~compressor~,asplit[~u0~][~u1~];"+
 					"[~u0~]~astats~,anullsink;"+
@@ -193,9 +182,10 @@ func RenderParameters(streams []*TStreamInfo) error {
 			outputs = appendPattern(outputs, stream, nil /*"-map", "[o~idx~]",*/, "-f", "null", os.DevNull)
 		}
 
-		if done || settings.Behavior.ScanOnly {
+		if done {
 			return nil
 		}
+
 		params = append(params, "-filter_complex")
 		params = append(params, strings.Join(filters, ";"))
 		params = append(params, outputs...)
@@ -210,19 +200,8 @@ func RenderParameters(streams []*TStreamInfo) error {
 
 		done = true
 		for i, stream := range streams {
-			// stream.TargetLI = &TLoudnessInfo{
-			// 	I:  stream.eburInfo.I,
-			// 	RA: stream.eburInfo.LRA,
-			// 	ST: stream.eburInfo.STHigh,
-			// 	TP: stream.eburInfo.TP,
-			// 	TH: stream.eburInfo.Thresh,
-			// 	// MP: stream.volumeInfo.MaxVolume,
-			// 	MP: stream.astatsInfo.PeakLevel,
-			// 	CR: stream.CompParams.GetK(),
-			// }
-
 			stream.TargetLI, stream.MiscInfo = initInfo(stream.eburInfo, stream.astatsInfo)
-			stream.TargetLI.CR = stream.CompParams.GetK()
+			// stream.TargetLI.CR = stream.CompParams.GetK()
 
 			if GlobalDebug {
 				fmt.Println("##### stream:", i,
@@ -234,6 +213,11 @@ func RenderParameters(streams []*TStreamInfo) error {
 					"\n  comp >", stream.CompParams)
 			}
 
+			if !CanFixLoudness(stream.TargetLI) {
+				stream.CompParams.Correction -= settings.Compressor.CorrectionStep
+			}
+			printStreamParams(stream)
+
 			// fmt.Printf("--- i - mp: %v\n", stream.TargetLI.I-stream.TargetLI.MP)
 			stream.done = FixLoudness(stream.TargetLI, stream.CompParams)
 			if GlobalDebug && stream.done {
@@ -243,10 +227,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 			}
 			done = done && stream.done
 		}
-
-		for _, stream := range streams {
-			printStreamParams(stream)
-		}
+		fmt.Println()
 
 		if done {
 			return nil

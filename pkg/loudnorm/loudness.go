@@ -13,7 +13,7 @@ type TLoudnessInfo struct {
 	TP float64 // true peaks
 	MP float64 // max peaks
 	TH float64 // threshold
-	CR float64 // compress ratio
+	// CR float64 // compress ratio
 }
 
 // TMiscInfo -
@@ -29,9 +29,8 @@ func (o *TLoudnessInfo) String() string {
 	if o == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("I: %s, RA: %s, TP: %s, TH: %s, MP: %s, CR: %s",
-		fround(o.I), fround(o.RA), fround(o.TP), fround(o.TH), fround(o.MP),
-		fround(o.CR))
+	return fmt.Sprintf("I: %s,  RA: %s,  TP: %s,  TH: %s,  MP: %s",
+		fround(o.I), fround(o.RA), fround(o.TP), fround(o.TH), fround(o.MP))
 }
 
 func (o *TMiscInfo) String() string {
@@ -147,7 +146,7 @@ func LoudnessIsEqual(a, b *TLoudnessInfo) bool {
 		feq(a.TP, b.TP, isNaN(a.TP, b.TP)) &&
 		feq(a.MP, b.MP, false) &&
 		feq(a.TH, b.TH, false) &&
-		feq(a.CR, b.CR, false) &&
+		// feq(a.CR, b.CR, false) &&
 		true {
 		return true
 	}
@@ -161,12 +160,26 @@ func normLi(li *TLoudnessInfo) {
 	li.MP -= li.MP
 }
 
-// FixLoudness -
-func FixLoudness(li *TLoudnessInfo, compParams *TCompressParams) bool {
+// CanFixLoudness -
+func CanFixLoudness(li *TLoudnessInfo) bool {
 	l := *li
 	normLi(&l)
-	if !SuitableLoudness(&l) {
+	if SuitableLoudness(&l) {
 		// fmt.Println("--- not suitable")
+		return true
+	}
+	return false
+}
+
+// FixLoudness -
+func FixLoudness(li *TLoudnessInfo, compParams *TCompressParams) bool {
+	// l := *li
+	// normLi(&l)
+	// if !SuitableLoudness(&l) {
+	// 	// fmt.Println("--- not suitable")
+	// 	return false
+	// }
+	if !CanFixLoudness(li) {
 		return false
 	}
 	postAmp := targetI() - li.I

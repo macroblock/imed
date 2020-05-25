@@ -188,9 +188,11 @@ func ProcessTo(fi *TFileInfo) error {
 	params = append(params, "-filter_complex")
 	params = append(params, strings.Join(filters, ";"))
 	params = append(params, outputs...)
-	params = append(params, "-metadata")
-	params = append(params, "comment="+PackTargetLoudnessInfo(fi)) //+strings.Join(metadata, "\n"))
-	// params = append(params, "description="+strings.Join(metadata, "\n"))
+
+	// TODO!!!: something with metadata
+	// params = append(params, "-metadata")
+	// params = append(params, "comment="+PackTargetLoudnessInfo(fi))
+
 	params = append(params, generateOutputName(fi))
 	if GlobalDebug {
 		fmt.Println("### params: ", params)
@@ -216,7 +218,7 @@ func ProcessTo(fi *TFileInfo) error {
 		// 	CR: stream.TargetLI.CR, //-1.0,
 		// }
 		stream.LoudnessInfo, stream.MiscInfo = initInfo(stream.eburInfo, stream.astatsInfo)
-		stream.LoudnessInfo.CR = stream.TargetLI.CR
+		// stream.LoudnessInfo.CR = stream.TargetLI.CR
 
 		if GlobalDebug {
 			fmt.Println("##### stream:", i,
@@ -262,7 +264,7 @@ func formatSettings() string {
 func Process(filename string) error {
 	debugPrintf("%+v\n\n", formatSettings())
 
-	fmt.Println("getting info...")
+	// fmt.Println("getting info...")
 	fi, err := LoadFile(filename, 0)
 	if err != nil {
 		return err
@@ -278,6 +280,11 @@ func Process(filename string) error {
 		return err
 	}
 	debugPrintf("local %v, global %v\n", time.Since(t), time.Since(gt))
+
+	if settings.Behavior.ScanOnly {
+		fmt.Printf("Ok. Elapsed time: %v\n", time.Since(gt))
+		return nil
+	}
 
 	t = time.Now()
 	fmt.Println("calculating parameters...")

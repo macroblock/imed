@@ -7,23 +7,23 @@ import (
 )
 
 // PackLoudnessInfoElement -
-func PackLoudnessInfoElement(streamNo int, li *TLoudnessInfo) string {
-	return fmt.Sprintf("[Stream #:%v]\nL_I : % 6.2f\nL_RA: % 6.2f\nL_TP: %v\nL_TH: % 6.2f\nL_MP: % 6.2f\nL_CR: % 6.2f",
-		strconv.Itoa(streamNo),
-		li.I, li.RA, li.TP, li.TH, li.MP, li.CR,
-	)
-}
+// func PackLoudnessInfoElement(streamNo int, li *TLoudnessInfo) string {
+// 	return fmt.Sprintf("[Stream #:%v]\nL_I : % 6.2f\nL_RA: % 6.2f\nL_TP: %v\nL_TH: % 6.2f\nL_MP: % 6.2f\nL_CR: % 6.2f",
+// 		strconv.Itoa(streamNo),
+// 		li.I, li.RA, li.TP, li.TH, li.MP, li.CR,
+// 	)
+// }
 
-// PackTargetLoudnessInfo -
-func PackTargetLoudnessInfo(fi *TFileInfo) string {
-	list := []string{}
-	for _, stream := range fi.Streams {
-		if stream.TargetLI != nil {
-			list = append(list, PackLoudnessInfoElement(stream.Index, stream.TargetLI))
-		}
-	}
-	return strings.Join(list, "\n")
-}
+// // PackTargetLoudnessInfo -
+// func PackTargetLoudnessInfo(fi *TFileInfo) string {
+// 	list := []string{}
+// 	for _, stream := range fi.Streams {
+// 		if stream.TargetLI != nil {
+// 			list = append(list, PackLoudnessInfoElement(stream.Index, stream.TargetLI))
+// 		}
+// 	}
+// 	return strings.Join(list, "\n")
+// }
 
 // AttachLoudnessInfo -
 func AttachLoudnessInfo(fi *TFileInfo, data string) error {

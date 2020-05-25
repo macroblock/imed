@@ -49,28 +49,20 @@ func froundRatio(f float64) string {
 }
 
 func printStreamParams(stream *TStreamInfo) {
+	li := stream.TargetLI
+	I2 := math.Min(li.I-li.MP, settings.Loudness.I)
 	maxP := math.Inf(-1)
-	// minP := math.Inf(+1)
 	for _, ch := range stream.astatsInfo.Channels {
 		maxP = math.Max(maxP, ch.RMSLevel)
-		// minP = math.Min(minP, ch.RMSLevel)
 	}
-	// dP := maxP - minP
 	str := "" //fmt.Sprintf("%v %v: ", stream.astatsInfo.PeakLevel, len(stream.astatsInfo.Channels))
 	for _, ch := range stream.astatsInfo.Channels {
-		// if maxP == 0.0 {
-		// 	str += "NaN "
-		// 	continue
-		// }
-		// str += strconv.Itoa(int(
-		// 	math.Round((ch.RMSLevel-minP)/dP*100),
-		// )) + " "
 		str += strconv.Itoa(int(math.Round(ch.RMSLevel-maxP))) + " "
 	}
-	fmt.Printf(" #%2v: %v\n", stream.Index, stream.TargetLI)
-	fmt.Printf("    : comp %v chan: %v\n", stream.CompParams, str)
-	// fmt.Printf("    : %v\n", str)
-	fmt.Printf("    : %v\n", stream.MiscInfo)
+	fmt.Printf(" #%2v: %v\n", stream.Index, li)
+	// fmt.Printf("    : comp %v chan: %v\n", stream.CompParams, str)
+	fmt.Printf("    :??? %v, [%v], channels: %v\n", fround(I2), froundRatio(stream.CompParams.GetK()), str)
+	fmt.Printf("    : %v\n", stream.MiscInfo.String())
 }
 
 func initInfo(ebur *ffmpeg.TEburInfo, astats *ffmpeg.TAStatsInfo) (*TLoudnessInfo, *TMiscInfo) {
@@ -80,7 +72,7 @@ func initInfo(ebur *ffmpeg.TEburInfo, astats *ffmpeg.TAStatsInfo) (*TLoudnessInf
 		TP: ebur.TP,
 		TH: ebur.Thresh,
 		MP: astats.PeakLevel,
-		CR: -1,
+		// CR: -1,
 	}
 	mi := &TMiscInfo{
 		I:       ebur.I,

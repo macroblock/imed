@@ -30,20 +30,6 @@ func newCompressParams(li *TLoudnessInfo) *TCompressParams {
 	cp.PreAmp = -offs
 	cp.Ratio = k
 	return cp
-	// cp := newEmptyCompressParams()
-	// cp.li = *li
-	// diffLU := targetI() - li.I
-	// exceededVal := li.MP /*- peakSafeZone */ + diffLU
-	// if diffLU <= 0.0 || exceededVal <= 0.0 {
-	// 	cp.PreAmp = diffLU
-	// 	return cp
-	// }
-	// offs := -(li.MP /* - peakSafeZone */)
-
-	// k := targetI() / (li.I + offs)
-	// cp.PreAmp = offs
-	// cp.Ratio = k
-	// return cp
 }
 
 // String -
@@ -51,11 +37,6 @@ func (o *TCompressParams) String() string {
 	if o == nil {
 		return "<nil>"
 	}
-	// ret := ""
-	// ret += "[" + strconv.FormatFloat(o.PreAmp, 'f', 2, 64) + ","
-	// ret += " " + strconv.FormatFloat(1/o.GetK(), 'f', 2, 64) + ":1,"
-	// ret += " " + strconv.FormatFloat(o.PostAmp, 'f', 2, 64) + ""
-	// ret += "]"
 	ret := fmt.Sprintf("[%s, %s, %s]", fdown(o.PreAmp), froundRatio(o.GetK()), fdown(o.PostAmp))
 	return ret
 }

@@ -5,7 +5,10 @@ import (
 	"math"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/macroblock/imed/pkg/misc"
 )
 
 type tAudioProgressParser struct {
@@ -17,7 +20,11 @@ var reAudioProgress = regexp.MustCompile("size=.+ time=(\\d{2}:\\d{2}:\\d{2}.\\d
 // Finish -
 func (o *tAudioProgressParser) Finish() error {
 	err := o.callback.Callback(-1)
-	fmt.Println()
+
+	// clearLine := strings.Repeat(" ", 78)
+	// fmt.Println(clearLine + "\r----+")
+	// fmt.Println()
+
 	return err
 }
 
@@ -38,13 +45,17 @@ func (o *tAudioProgressParser) Parse(line string, eof bool) (accepted bool, err 
 }
 
 type tDefaultAudioProgressCallback struct {
-	lastTime time.Time
-	total    Time
+	lastTime   time.Time
+	total      Time
+	maxInfoLen int
 }
 
 func (o *tDefaultAudioProgressCallback) Callback(t Time) error {
 	if t < 0 {
 		t = o.total
+		clearLine := strings.Repeat(" ", o.maxInfoLen)
+		// fmt.Printf(clearLine+"\relapsed: %v", time.Since(o.lastTime))
+		fmt.Printf(clearLine + "\r")
 		return nil
 	}
 	ct := time.Now()
@@ -56,8 +67,11 @@ func (o *tDefaultAudioProgressCallback) Callback(t Time) error {
 	if o.total > 0 {
 		percents = strconv.Itoa(int(math.Round(100*t.Float()/o.total.Float()))) + "%"
 	}
-	fmt.Printf(" %v %v / %v, elapsed: %v            \r",
+	info := fmt.Sprintf(" %v %v/%v, elapsed: %v            \r",
 		percents, t, o.total, time.Since(o.lastTime))
+	o.maxInfoLen = misc.MaxInt(len(info), o.maxInfoLen)
+	fmt.Print(info)
+
 	return nil
 }
 
