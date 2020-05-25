@@ -62,7 +62,7 @@ func printStreamParams(stream *TStreamInfo) {
 	fmt.Printf(" #%2v: %v\n", stream.Index, li)
 	// fmt.Printf("    : comp %v chan: %v\n", stream.CompParams, str)
 	fmt.Printf("    :??? %v, [%v], channels: %v\n", fround(I2), froundRatio(stream.CompParams.GetK()), str)
-	fmt.Printf("    : %v, %v\n", fround(stream.CompParams.PreAmp), fround(stream.CompParams.PostAmp))
+	// fmt.Printf("    : %v, %v\n", fround(stream.CompParams.PreAmp), fround(stream.CompParams.PostAmp))
 	fmt.Printf("    : %v\n", stream.MiscInfo.String())
 }
 
