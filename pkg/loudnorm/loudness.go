@@ -18,11 +18,12 @@ type TLoudnessInfo struct {
 
 // TMiscInfo -
 type TMiscInfo struct {
-	I       float64
-	MaxST   float64 // max short term
-	MinST   float64 // max short term
-	STSum   float64
-	STCount int
+	I          float64
+	MaxST      float64 // max short term
+	MinST      float64 // max short term
+	STSum      float64
+	TotalCount int
+	NaNCount   int
 }
 
 func (o *TLoudnessInfo) String() string {
@@ -33,12 +34,35 @@ func (o *TLoudnessInfo) String() string {
 		fround(o.I), fround(o.RA), fround(o.TP), fround(o.TH), fround(o.MP))
 }
 
-func (o *TMiscInfo) String() string {
+func (o *TMiscInfo) toString() string {
 	if o == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("relST: (%s, %s) k: %s",
-		fround(o.MinST-o.I), fround(o.MaxST-o.I), fround(o.STSum/float64(o.STCount)-o.I))
+	count := o.TotalCount - o.NaNCount
+	sum := o.STSum
+	min := o.MinST - o.I
+	max := o.MaxST - o.I
+	k := sum/float64(count) - o.I
+	return fmt.Sprintf("(%s, %s) k: %s",
+		fround(min), fround(max), fround(k))
+}
+
+func (o *TMiscInfo) toStringWithNaNs() string {
+	const NaNSilece = -120 //TODO!!!: something with the ugly constant
+	if o == nil {
+		return "<nil>"
+	}
+	count := o.TotalCount
+	sum := o.STSum + float64(o.NaNCount*NaNSilece)
+	NaNPercentage := 100 * float64(o.NaNCount) / float64(o.TotalCount)
+	min := o.MinST - o.I
+	if o.NaNCount > 0 {
+		min = math.Min(o.MinST, NaNSilece) - o.I
+	}
+	max := o.MaxST - o.I
+	k := sum/float64(count) - o.I
+	return fmt.Sprintf("(%s, %s) k: %s, NaNs: %v%%",
+		fround(min), fround(max), fround(k), fround(NaNPercentage))
 }
 
 // var (

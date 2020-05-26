@@ -63,7 +63,8 @@ func printStreamParams(stream *TStreamInfo) {
 	// fmt.Printf("    : comp %v chan: %v\n", stream.CompParams, str)
 	fmt.Printf("    :??? %v, [%v], channels: %v\n", fround(I2), froundRatio(stream.CompParams.GetK()), str)
 	// fmt.Printf("    : %v, %v\n", fround(stream.CompParams.PreAmp), fround(stream.CompParams.PostAmp))
-	fmt.Printf("    : %v\n", stream.MiscInfo.String())
+	fmt.Printf("    : ST stats clean: %v\n", stream.MiscInfo.toString())
+	fmt.Printf("    :      with NaNs: %v\n", stream.MiscInfo.toStringWithNaNs())
 }
 
 func initInfo(ebur *ffmpeg.TEburInfo, astats *ffmpeg.TAStatsInfo) (*TLoudnessInfo, *TMiscInfo) {
@@ -76,11 +77,12 @@ func initInfo(ebur *ffmpeg.TEburInfo, astats *ffmpeg.TAStatsInfo) (*TLoudnessInf
 		// CR: -1,
 	}
 	mi := &TMiscInfo{
-		I:       ebur.I,
-		MaxST:   ebur.MaxST,
-		MinST:   ebur.MinST,
-		STSum:   ebur.SumST,
-		STCount: ebur.CountST,
+		I:          ebur.I,
+		MaxST:      ebur.MaxST,
+		MinST:      ebur.MinST,
+		STSum:      ebur.SumST,
+		TotalCount: ebur.CountST,
+		NaNCount:   ebur.CountNaN,
 	}
 	return li, mi
 }

@@ -19,10 +19,11 @@ type TEburInfo struct {
 
 	TP float64
 
-	MaxST   float64
-	MinST   float64
-	SumST   float64
-	CountST int
+	MaxST    float64
+	MinST    float64
+	SumST    float64
+	CountST  int
+	CountNaN int
 }
 
 // TEburParser -
@@ -110,6 +111,7 @@ func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
 	maxLST := math.Inf(-1)
 	minLST := math.Inf(+1)
 	countLST := 0
+	countNaN := 0
 	sumLST := 0.0
 
 	started := false
@@ -124,14 +126,19 @@ func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
 			if err != nil {
 				return nil, err
 			}
-			if !started && val < -120.0 {
+			if !started && (val < -120.0 || math.IsNaN(val)) {
 				continue
 			}
 			started = true
 			countLST++
+			if math.IsNaN(val) {
+				countNaN++
+				continue
+			}
 			sumLST += val
 			maxLST = math.Max(val, maxLST)
 			minLST = math.Min(val, minLST)
+			// fmt.Println("min max", minLST, maxLST)
 			continue
 		}
 
@@ -170,11 +177,17 @@ func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
 		return nil, vals.Error()
 	}
 
-	// fmt.Printf("min/max LST: %v/%v\n", minLST, maxLST)
+	// if NaNs more than one percent
+	// if float64(countNaN)/float64(countLST) > 0.001 {
+	// 	fmt.Printf("\n#internal <ebur parser>: too much NaNs (%v/%v > 0.001)\n\n", countNaN, countLST)
+	// 	// minLST = math.NaN()
+	// 	// maxLST = math.NaN()
+	// }
 	ret.MaxST = maxLST
 	ret.MinST = minLST
 	ret.SumST = sumLST
 	ret.CountST = countLST
+	ret.CountNaN = countNaN
 
 	if ret == nil {
 		return nil, fmt.Errorf("eburInfo == nil")
