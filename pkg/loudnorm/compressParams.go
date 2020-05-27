@@ -102,9 +102,9 @@ func (o *TCompressParams) BuildFilter() string {
 
 // GetK -
 func (o *TCompressParams) GetK() float64 {
-	// if o.Ratio < 0.0 {
-	// 	return 1.0
-	// }
 	ret := o.Ratio * o.Correction
+	if ret < 0.0 {
+		return 1.0
+	}
 	return ret
 }

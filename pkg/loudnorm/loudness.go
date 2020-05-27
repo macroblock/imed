@@ -31,7 +31,7 @@ func (o *TLoudnessInfo) String() string {
 		return "<nil>"
 	}
 	return fmt.Sprintf("I: %s,  RA: %s,  TP: %s,  TH: %s,  MP: %s",
-		fround(o.I), fround(o.RA), fround(o.TP), fround(o.TH), fround(o.MP))
+		colorizeI(o.I, fround(o.I)), fround(o.RA), fround(o.TP), fround(o.TH), fround(o.MP))
 }
 
 func (o *TMiscInfo) toString() string {

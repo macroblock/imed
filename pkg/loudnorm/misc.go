@@ -5,7 +5,9 @@ import (
 	"math"
 	"strconv"
 
+	"github.com/k0kubun/go-ansi"
 	"github.com/macroblock/imed/pkg/ffmpeg"
+	"github.com/macroblock/imed/pkg/misc"
 )
 
 func debugPrintf(pattern string, args ...interface{}) {
@@ -48,7 +50,52 @@ func froundRatio(f float64) string {
 	return strconv.FormatFloat(1.0/f, 'f', precision, 64) + ":1"
 }
 
+func colorReset() string {
+	return misc.Color(misc.ColorReset)
+}
+func colorizeTo(c misc.TTerminalColor, s string) string {
+	if !misc.IsTerminal() {
+		return s
+	}
+	return misc.Color(c) + s + colorReset()
+}
+
+func colorizeI(v float64, s string) string {
+	if !misc.IsTerminal() {
+		return s
+	}
+	c := misc.Color(misc.ColorRed)
+	if targetIMin() <= v && v < targetIMax() {
+		c = misc.Color(misc.ColorYellow)
+	}
+	if v == targetI() {
+		c = misc.Color(misc.ColorGreen)
+	}
+	return c + s + colorReset()
+}
+
+func colorizeRatio(v float64, s string) string {
+	if !misc.IsTerminal() {
+		return s
+	}
+	c := misc.Color(misc.ColorRed)
+	v = 1.0 / v
+	switch {
+	case v == math.NaN():
+		c = misc.Color(misc.ColorBlack, misc.ColorBgRed)
+	case v <= 1.0:
+		c = ""
+	case v < 1.4:
+		c = misc.Color(misc.ColorGreen)
+	case v < 1.9:
+		c = misc.Color(misc.ColorYellow)
+	}
+	return c + s + colorReset()
+}
+
 func printStreamParams(stream *TStreamInfo) {
+	printf := ansi.Printf
+
 	li := stream.TargetLI
 	I2 := math.Min(li.I-li.MP, settings.Loudness.I)
 	maxP := math.Inf(-1)
@@ -59,12 +106,15 @@ func printStreamParams(stream *TStreamInfo) {
 	for _, ch := range stream.astatsInfo.Channels {
 		str += strconv.Itoa(int(math.Round(ch.RMSLevel-maxP))) + " "
 	}
-	fmt.Printf(" #%2v: %v\n", stream.Index, li)
+	printf(" #%2v: %v\n", stream.Index, li)
 	// fmt.Printf("    : comp %v chan: %v\n", stream.CompParams, str)
-	fmt.Printf("    :??? %v, [%v], channels: %v\n", fround(I2), froundRatio(stream.CompParams.GetK()), str)
+	printf("    :??? %v, [%v], channels: %v\n",
+		colorizeI(I2, fround(I2)), colorizeRatio(stream.CompParams.GetK(), froundRatio(stream.CompParams.GetK())), str)
 	// fmt.Printf("    : %v, %v\n", fround(stream.CompParams.PreAmp), fround(stream.CompParams.PostAmp))
-	fmt.Printf("    : ST stats clean: %v\n", stream.MiscInfo.toString())
-	fmt.Printf("    :      with NaNs: %v\n", stream.MiscInfo.toStringWithNaNs())
+	printf("    : ST stats clean: %v\n", stream.MiscInfo.toString())
+	if stream.MiscInfo.NaNCount > 0 {
+		printf("    :      with NaNs: %v\n", colorizeTo(misc.ColorCyan, stream.MiscInfo.toStringWithNaNs()))
+	}
 }
 
 func initInfo(ebur *ffmpeg.TEburInfo, astats *ffmpeg.TAStatsInfo) (*TLoudnessInfo, *TMiscInfo) {
