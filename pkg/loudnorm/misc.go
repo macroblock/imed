@@ -133,6 +133,9 @@ func initInfo(ebur *ffmpeg.TEburInfo, astats *ffmpeg.TAStatsInfo) (*TLoudnessInf
 		STSum:      ebur.SumST,
 		TotalCount: ebur.CountST,
 		NaNCount:   ebur.CountNaN,
+		AboveST:    ebur.AboveST,
+		BelowST:    ebur.BelowST,
+		EqualST:    ebur.EqualST,
 	}
 	return li, mi
 }

@@ -9,6 +9,8 @@ import (
 
 // TEburInfo -
 type TEburInfo struct {
+	// Timeline []TTimelineElement
+
 	I      float64
 	Thresh float64
 
@@ -24,6 +26,9 @@ type TEburInfo struct {
 	SumST    float64
 	CountST  int
 	CountNaN int
+	AboveST  int
+	BelowST  int
+	EqualST  int
 }
 
 // TEburParser -
@@ -113,6 +118,7 @@ func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
 	countLST := 0
 	countNaN := 0
 	sumLST := 0.0
+	arrayST := []float64{}
 
 	started := false
 	for _, line := range list {
@@ -131,6 +137,9 @@ func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
 			}
 			started = true
 			countLST++
+
+			arrayST = append(arrayST, val)
+
 			if math.IsNaN(val) {
 				countNaN++
 				continue
@@ -183,11 +192,29 @@ func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
 	// 	// minLST = math.NaN()
 	// 	// maxLST = math.NaN()
 	// }
+	stAbove, stEqual, stBelow := 0, 0, 0
+	stNaN := 0
+	for _, st := range arrayST {
+		switch {
+		case math.IsNaN(st):
+			stNaN++
+		case st < ret.I-1.0:
+			stBelow++
+		case st >= ret.I+1.0:
+			stAbove++
+		default:
+			stEqual++
+		}
+	}
 	ret.MaxST = maxLST
 	ret.MinST = minLST
 	ret.SumST = sumLST
 	ret.CountST = countLST
-	ret.CountNaN = countNaN
+	ret.CountNaN = countNaN // !!!
+	ret.AboveST = stAbove
+	ret.BelowST = stBelow
+	ret.EqualST = stEqual
+	ret.CountNaN = stNaN // !!!
 
 	if ret == nil {
 		return nil, fmt.Errorf("eburInfo == nil")

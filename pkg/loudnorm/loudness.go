@@ -24,6 +24,9 @@ type TMiscInfo struct {
 	STSum      float64
 	TotalCount int
 	NaNCount   int
+	AboveST    int
+	BelowST    int
+	EqualST    int
 }
 
 func (o *TLoudnessInfo) String() string {
@@ -43,8 +46,13 @@ func (o *TMiscInfo) toString() string {
 	min := o.MinST - o.I
 	max := o.MaxST - o.I
 	k := sum/float64(count) - o.I
-	return fmt.Sprintf("(%s, %s) k: %s",
-		fround(min), fround(max), fround(k))
+
+	totalTime := o.AboveST + o.EqualST + o.BelowST
+	below := int(math.Round(100 * float64(o.BelowST) / float64(totalTime)))
+	equal := int(math.Round(100 * float64(o.EqualST) / float64(totalTime)))
+	above := int(math.Round(100 * float64(o.AboveST) / float64(totalTime)))
+	return fmt.Sprintf("(%s, %s) k: %s, time%%%% %v<%v<%v %%%%",
+		fround(min), fround(max), fround(k), below, equal, above)
 }
 
 func (o *TMiscInfo) toStringWithNaNs() string {
@@ -61,8 +69,13 @@ func (o *TMiscInfo) toStringWithNaNs() string {
 	}
 	max := o.MaxST - o.I
 	k := sum/float64(count) - o.I
-	return fmt.Sprintf("(%s, %s) k: %s, NaNs: %v%%",
-		fround(min), fround(max), fround(k), fround(NaNPercentage))
+
+	totalTime := o.AboveST + o.EqualST + o.BelowST + o.NaNCount
+	below := int(math.Round(100 * float64(o.BelowST+o.NaNCount) / float64(totalTime)))
+	equal := int(math.Round(100 * float64(o.EqualST) / float64(totalTime)))
+	above := int(math.Round(100 * float64(o.AboveST) / float64(totalTime)))
+	return fmt.Sprintf("(%s, %s) k: %s, time%%%% %v<%v<%v %%%%, NaNs: %v%%",
+		fround(min), fround(max), fround(k), below, equal, above, fround(NaNPercentage))
 }
 
 // var (
