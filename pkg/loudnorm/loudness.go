@@ -30,11 +30,16 @@ type TMiscInfo struct {
 }
 
 func (o *TLoudnessInfo) String() string {
+	return o.FormatString(false)
+}
+
+// FormatString -
+func (o *TLoudnessInfo) FormatString(colorize bool) string {
 	if o == nil {
 		return "<nil>"
 	}
 	return fmt.Sprintf("I: %s,  RA: %s,  TP: %s,  TH: %s,  MP: %s",
-		colorizeI(o.I, fround(o.I)), fround(o.RA), fround(o.TP), fround(o.TH), fround(o.MP))
+		colorizeI(colorize, o.I, fround(o.I)), fround(o.RA), fround(o.TP), fround(o.TH), fround(o.MP))
 }
 
 func (o *TMiscInfo) toString() string {

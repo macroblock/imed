@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/macroblock/imed/pkg/ffmpeg"
+	"github.com/macroblock/imed/pkg/misc"
 )
 
 // GlobalDebug -
@@ -252,6 +253,8 @@ func formatSettings() string {
 
 // Process -
 func Process(filename string) error {
+	const statusColor = misc.ColorFaint
+
 	debugPrintf("%+v\n\n", formatSettings())
 
 	// fmt.Println("getting info...")
@@ -264,7 +267,7 @@ func Process(filename string) error {
 	gt := time.Now()
 	t := time.Now()
 
-	fmt.Println("scanning...")
+	colorizedPrintf(statusColor, "scanning...\n")
 	err = ScanAudio(fi)
 	if err != nil {
 		return err
@@ -277,7 +280,7 @@ func Process(filename string) error {
 	}
 
 	t = time.Now()
-	fmt.Println("calculating parameters...")
+	colorizedPrintf(statusColor, "calculating parameters...\n")
 	err = renderParameters(fi)
 	if err != nil || settings.Behavior.ScanOnly {
 		return err
@@ -289,14 +292,15 @@ func Process(filename string) error {
 	}
 
 	t = time.Now()
-	fmt.Println("processing...")
+	colorizedPrintf(statusColor, "processing...\n")
 	err = ProcessTo(fi)
 	if err != nil {
 		return err
 	}
 	debugPrintf("local %v, global %v\n", time.Since(t), time.Since(gt))
 
-	fmt.Printf("Ok. Elapsed time: %v\n", time.Since(gt))
+	colorizedPrintf(misc.ColorGreen, "Ok. ")
+	colorizedPrintf(statusColor, "Elapsed time: %v\n", time.Since(gt))
 
 	return nil
 }

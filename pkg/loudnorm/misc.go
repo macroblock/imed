@@ -50,6 +50,18 @@ func froundRatio(f float64) string {
 	return strconv.FormatFloat(1.0/f, 'f', precision, 64) + ":1"
 }
 
+func colorizedPrintf(color misc.TTerminalColor, format string, args ...interface{}) {
+	printf := ansi.Printf
+	c := misc.Color(color)
+	r := misc.Color(misc.ColorReset)
+	if !misc.IsTerminal() {
+		printf = fmt.Printf
+		c = ""
+		r = ""
+	}
+	printf(c+format+r, args...)
+}
+
 func colorReset() string {
 	return misc.Color(misc.ColorReset)
 }
@@ -60,8 +72,8 @@ func colorizeTo(c misc.TTerminalColor, s string) string {
 	return misc.Color(c) + s + colorReset()
 }
 
-func colorizeI(v float64, s string) string {
-	if !misc.IsTerminal() {
+func colorizeI(colorize bool, v float64, s string) string {
+	if !colorize || !misc.IsTerminal() {
 		return s
 	}
 	c := misc.Color(misc.ColorRed)
@@ -93,7 +105,8 @@ func colorizeRatio(v float64, s string) string {
 	return c + s + colorReset()
 }
 
-func printStreamParams(stream *TStreamInfo) {
+func printStreamParams(stream *TStreamInfo, colorize bool) {
+
 	printf := ansi.Printf
 
 	li := stream.TargetLI
@@ -106,10 +119,12 @@ func printStreamParams(stream *TStreamInfo) {
 	for _, ch := range stream.astatsInfo.Channels {
 		str += strconv.Itoa(int(math.Round(ch.RMSLevel-maxP))) + " "
 	}
-	printf(" #%2v: %v\n", stream.Index, li)
+	printf(" #%2v: %v\n", stream.Index, li.FormatString(colorize))
 	// fmt.Printf("    : comp %v chan: %v\n", stream.CompParams, str)
 	printf("    :??? %v, [%v], channels: %v\n",
-		colorizeI(I2, fround(I2)), colorizeRatio(stream.CompParams.GetK(), froundRatio(stream.CompParams.GetK())), str)
+		colorizeI(true, I2, fround(I2)),
+		colorizeRatio(stream.CompParams.GetK(), froundRatio(stream.CompParams.GetK())),
+		str)
 	// fmt.Printf("    : %v, %v\n", fround(stream.CompParams.PreAmp), fround(stream.CompParams.PostAmp))
 	printf("    : ST stats clean: %v\n", stream.MiscInfo.toString())
 	if stream.MiscInfo.NaNCount > 0 {

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/macroblock/imed/pkg/ffmpeg"
+	"github.com/macroblock/imed/pkg/misc"
 )
 
 func replaceStatic(pattern string, vals ...string) string {
@@ -123,7 +124,7 @@ func Scan(streams []*TStreamInfo) error {
 		comp := newCompressParams(stream.LoudnessInfo) //&TCompressParams{Ratio: -1.0}
 		stream.CompParams = comp
 		// print original values
-		printStreamParams(stream)
+		printStreamParams(stream, true) // colorized LI
 		fmt.Println()
 
 		// compress params to use without compression
@@ -157,7 +158,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 
 	for tries := settings.Compressor.NumTries; tries > 0; tries-- {
 		numTries := settings.Compressor.NumTries
-		fmt.Printf("Attempt %v/%v:\n", numTries-tries+1, numTries)
+		colorizedPrintf(misc.ColorFaint, "Attempt %v/%v:\n", numTries-tries+1, numTries)
 
 		params := []string{"-hide_banner"}
 		params = append(params, GetSettings().getGlobalFlags()...)
@@ -218,7 +219,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 			if !CanFixLoudness(stream.TargetLI) {
 				stream.CompParams.Correction -= settings.Compressor.CorrectionStep
 			}
-			printStreamParams(stream)
+			printStreamParams(stream, false) // LI stats without color
 
 			// fmt.Printf("--- i - mp: %v\n", stream.TargetLI.I-stream.TargetLI.MP)
 			stream.done = FixLoudness(stream.TargetLI, stream.CompParams)

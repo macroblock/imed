@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/k0kubun/go-ansi"
 	"github.com/macroblock/imed/pkg/cli"
 	"github.com/macroblock/imed/pkg/ffmpeg"
 	"github.com/macroblock/imed/pkg/loudnorm"
@@ -75,6 +76,18 @@ func doScan() error {
 	// 	log.Infof("DONE (%v) %q:", li, filepath.Base(path))
 	// }
 	return nil
+}
+
+func colorizedPrintf(color misc.TTerminalColor, format string, args ...interface{}) {
+	printf := ansi.Printf
+	c := misc.Color(color)
+	r := misc.Color(misc.ColorReset)
+	if !misc.IsTerminal() {
+		printf = fmt.Printf
+		c = ""
+		r = ""
+	}
+	printf(c+format+r, args...)
 }
 
 type tuples map[string]float64
@@ -171,7 +184,8 @@ func mainFunc() error {
 
 	errors := []string{}
 	for n, filename := range flagFiles {
-		fmt.Printf("== [%v/%v] == file: %q\n", n+1, len(flagFiles), filename)
+		colorizedPrintf(misc.ColorWhite,
+			"== [%v/%v] == file: %q\n", n+1, len(flagFiles), filename)
 		err := loudnorm.Process(filename)
 		if err != nil {
 			errors = append(errors, fmt.Sprintf("%q: %v", filename, err.Error()))
