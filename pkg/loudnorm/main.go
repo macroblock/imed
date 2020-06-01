@@ -127,7 +127,7 @@ func Scan(streams []*TStreamInfo) error {
 		stream.CompParams = comp
 		// print original values
 		printStreamParams(stream, true) // colorized LI
-		fmt.Println()
+		// fmt.Println()
 
 		// compress params to use without compression
 		stream.CompParams = newEmptyCompressParams()
