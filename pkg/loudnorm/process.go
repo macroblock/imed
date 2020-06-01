@@ -49,7 +49,11 @@ func ScanAudio(fi *TFileInfo) error {
 		if stream.Type != "audio" {
 			continue
 		}
-		stream.AudioParams = inferAudioParams(stream)
+		err := error(nil)
+		stream.AudioParams, err = inferAudioParams(stream)
+		if err != nil {
+			return err
+		}
 		if ValidLoudness(stream.LoudnessInfo) {
 			if GlobalDebug {
 				fmt.Printf("stream %v has valid loudness (%v)\n", stream.Index, stream.LoudnessInfo)
@@ -217,10 +221,17 @@ func ProcessTo(fi *TFileInfo) error {
 				"\n  vol  >", stream.volumeInfo,
 				"\n  stats>", stream.astatsInfo)
 		}
-		if !LoudnessIsEqual(stream.LoudnessInfo, stream.TargetLI) {
-			errStrs = append(errStrs, fmt.Sprintf("stream #%v: actual loudness info is not equal to the planned one"+
+		// if !LoudnessIsEqual(stream.LoudnessInfo, stream.TargetLI) {
+		// 	errStrs = append(errStrs, fmt.Sprintf("stream #%v: actual loudness info is not equal to the planned one"+
+		// 		"\n    planned: %v"+
+		// 		"\n    actual : %v", i, stream.TargetLI, stream.LoudnessInfo))
+		// }
+		if !ValidLoudness(stream.LoudnessInfo) {
+			errStrs = append(errStrs, fmt.Sprintf("stream #%v: invalid loudness"+
 				"\n    planned: %v"+
 				"\n    actual : %v", i, stream.TargetLI, stream.LoudnessInfo))
+		} else {
+			printStreamParams(stream, true)
 		}
 	}
 	if len(errStrs) != 0 {
@@ -251,6 +262,14 @@ func formatSettings() string {
 	return s
 }
 
+func printOnError() {
+	colorizedPrintf(misc.ColorRed, "error. \n")
+}
+
+func printOnOk() {
+	colorizedPrintf(misc.ColorGreen, "Ok. \n")
+}
+
 // Process -
 func Process(filename string) error {
 	const statusColor = misc.ColorFaint
@@ -260,6 +279,7 @@ func Process(filename string) error {
 	// fmt.Println("getting info...")
 	fi, err := LoadFile(filename, 0)
 	if err != nil {
+		printOnError()
 		return err
 	}
 	debugPrintf("loaded:\n%v", fi)
@@ -270,12 +290,14 @@ func Process(filename string) error {
 	colorizedPrintf(statusColor, "scanning...\n")
 	err = ScanAudio(fi)
 	if err != nil {
+		printOnError()
 		return err
 	}
 	debugPrintf("local %v, global %v\n", time.Since(t), time.Since(gt))
 
 	if settings.Behavior.ScanOnly {
-		fmt.Printf("Ok. Elapsed time: %v\n", time.Since(gt))
+		printOnOk()
+		debugPrintf("Elapsed time: %v\n", time.Since(gt))
 		return nil
 	}
 
@@ -283,11 +305,13 @@ func Process(filename string) error {
 	colorizedPrintf(statusColor, "calculating parameters...\n")
 	err = renderParameters(fi)
 	if err != nil || settings.Behavior.ScanOnly {
+		printOnError()
 		return err
 	}
 
 	err = CheckIfReadyToCompile(fi)
 	if err != nil {
+		printOnError()
 		return err
 	}
 
@@ -295,12 +319,13 @@ func Process(filename string) error {
 	colorizedPrintf(statusColor, "processing...\n")
 	err = ProcessTo(fi)
 	if err != nil {
+		printOnError()
 		return err
 	}
 	debugPrintf("local %v, global %v\n", time.Since(t), time.Since(gt))
 
-	colorizedPrintf(misc.ColorGreen, "Ok. ")
-	colorizedPrintf(statusColor, "Elapsed time: %v\n", time.Since(gt))
+	printOnOk()
+	debugPrintf("Elapsed time: %v\n", time.Since(gt))
 
 	return nil
 }

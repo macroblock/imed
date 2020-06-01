@@ -182,18 +182,18 @@ func generateOutputName(fi *TFileInfo) string {
 // 	return base + ".m4a"
 // }
 
-func inferAudioParams(si *TStreamInfo) []string {
+func inferAudioParams(si *TStreamInfo) ([]string, error) {
 	if settings.Behavior.ForceStereo {
-		return ac3Params2
+		return ac3Params2, nil
 	}
 
 	switch si.Channels {
 	default:
-		panic(fmt.Sprintf("unsupported number of channels: %v", si.Channels))
+		return nil, fmt.Errorf("unsupported number of channels: %v", si.Channels)
 	case 2:
-		return ac3Params2
+		return ac3Params2, nil
 	case 6:
-		return ac3Params6
+		return ac3Params6, nil
 	}
 }
 

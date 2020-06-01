@@ -185,7 +185,7 @@ func mainFunc() error {
 	errors := []string{}
 	for n, filename := range flagFiles {
 		colorizedPrintf(misc.ColorWhite,
-			"== [%v/%v] == file: %q\n", n+1, len(flagFiles), filename)
+			"==== [%v/%v] file: %q\n", n+1, len(flagFiles), filename)
 		err := loudnorm.Process(filename)
 		if err != nil {
 			errors = append(errors, fmt.Sprintf("%q: %v", filename, err.Error()))
