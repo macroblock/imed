@@ -32,6 +32,9 @@ var (
 	flagMP,
 	flagPrecision string
 
+	flagSTStatsTHBelow,
+	flagSTStatsTHAbove string
+
 	flagAttack,
 	flagRelease,
 	flagTries,
@@ -176,6 +179,9 @@ func mainFunc() error {
 	parse.float(flagMP, &settings.Loudness.MP, nil)
 	parse.float(flagPrecision, &settings.Loudness.Precision, nil)
 
+	parse.float(flagSTStatsTHBelow, &settings.Loudness.STStatTHBelow, nil)
+	parse.float(flagSTStatsTHAbove, &settings.Loudness.STStatTHAbove, nil)
+
 	if parse.err != nil {
 		return parse.err
 	}
@@ -184,14 +190,17 @@ func mainFunc() error {
 
 	errors := []string{}
 	for n, filename := range flagFiles {
-		colorizedPrintf(misc.ColorWhite,
-			"==== [%v/%v] file: %q\n", n+1, len(flagFiles), filename)
+		fmt.Println()
+		colorizedPrintf(misc.ColorBold, "==== ")
+		fmt.Printf("[%v/%v] %q\n", n+1, len(flagFiles), filename)
 		err := loudnorm.Process(filename)
 		if err != nil {
 			errors = append(errors, fmt.Sprintf("%q: %v", filename, err.Error()))
 		}
 	}
 	if len(errors) > 0 {
+		fmt.Println()
+		colorizedPrintf(misc.ColorBold, "==== ")
 		return fmt.Errorf("Error(s):\n    %v", strings.Join(errors, "\n    "))
 	}
 	return nil
@@ -235,6 +244,8 @@ func main() {
 		cli.Flag("-t            : same meaning as in ffmpeg but has different format (hh:mm:ss:fr)", &flagT),
 		cli.Flag("-ss           : same meaning as in ffmpeg but has different format (hh:mm:ss:fr)", &flagSS),
 		cli.Flag("-stereo       : force stereo", &flagStereo),
+		cli.Flag("-stthb        : ST stats below < I + this (default = -4.0)", &flagSTStatsTHBelow),
+		cli.Flag("-sttha        : ST stats above >= I + this(default = +4.0)", &flagSTStatsTHAbove),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.Command("scan       : scan loudnes parameters", doScan,
 			// cli.Flag("-l --light: light mode (whithout TP)", &flagLight),

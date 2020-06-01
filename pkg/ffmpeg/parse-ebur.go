@@ -43,6 +43,9 @@ type TEburParser struct {
 	linesToRead int
 	lines       []string
 	ret         *TEburInfo
+
+	stthAbove float64
+	stthBelow float64
 }
 
 // NewEburParser -
@@ -54,7 +57,16 @@ func NewEburParser(name string, truePeaks bool, ret *TEburInfo) *TEburParser {
 	o := &TEburParser{name: name, truePeaks: truePeaks, linesToRead: linesToRead, ret: ret}
 	o.re = regexp.MustCompile(fmt.Sprintf("\\[%v @ [^ ]+\\] Summary:.*", name))
 	o.reTime = regexp.MustCompile(fmt.Sprintf("\\[%v @ [^ ]+\\] (t:.*)", name))
+
+	o.stthAbove = 4.0
+	o.stthBelow = -4.0
 	return o
+}
+
+// SetOptions -
+func (o *TEburParser) SetOptions(stthBelow, stthAbove float64) {
+	o.stthAbove = stthAbove
+	o.stthBelow = stthBelow
 }
 
 // var reEbur128 = regexp.MustCompile("\\[Parsed_ebur128_\\d+ @ [^ ]+\\] Summary:.*")
@@ -68,7 +80,7 @@ func (o *TEburParser) Finish() error {
 	if o.ret == nil {
 		o.ret = &TEburInfo{}
 	}
-	data, err := parseEbur128Summary(o.lines, o.truePeaks)
+	data, err := parseEbur128Summary(o.lines, o.truePeaks, o.stthBelow, o.stthAbove)
 	if err != nil {
 		return fmt.Errorf("Ebur parser: %v\n %v", err, strings.Join(o.lines, "\n"))
 	}
@@ -109,7 +121,7 @@ func (o *TEburParser) GetData() *TEburInfo {
 	return o.ret
 }
 
-func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
+func parseEbur128Summary(list []string, truePeaks bool, stthBelow, stthAbove float64) (*TEburInfo, error) {
 	vals := NewArgMap()
 	prefix := ""
 
@@ -198,9 +210,9 @@ func parseEbur128Summary(list []string, truePeaks bool) (*TEburInfo, error) {
 		switch {
 		case math.IsNaN(st):
 			stNaN++
-		case st < ret.I-1.0:
+		case st < ret.I+stthBelow:
 			stBelow++
-		case st >= ret.I+1.0:
+		case st >= ret.I+stthAbove:
 			stAbove++
 		default:
 			stEqual++

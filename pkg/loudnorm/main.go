@@ -46,7 +46,9 @@ func appendPattern(branches []string, stream *TStreamInfo, comb *ffmpeg.TCombine
 			if useTP {
 				params = "=peak=true"
 			}
-			comb.Append(ffmpeg.NewEburParser(name, useTP, stream.eburInfo))
+			parser := ffmpeg.NewEburParser(name, useTP, stream.eburInfo)
+			parser.SetOptions(settings.Loudness.STStatTHBelow, settings.Loudness.STStatTHAbove)
+			comb.Append(parser)
 			name += params
 			pattern = strings.Replace(pattern, "~ebur~", name, -1)
 		}

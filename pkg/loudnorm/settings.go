@@ -18,11 +18,13 @@ var settings = TSettings{
 		ForceStereo: false,
 	},
 	Loudness: tLoudnessSettings{
-		I:         -23,
-		RA:        math.Inf(+1),
-		TP:        math.NaN(), // -1.0,
-		MP:        0.0,
-		Precision: 0.5,
+		I:             -23,
+		RA:            math.Inf(+1),
+		TP:            math.NaN(), // -1.0,
+		MP:            0.0,
+		Precision:     0.5,
+		STStatTHBelow: -4.0,
+		STStatTHAbove: +4.0,
 	},
 	Compressor: tCompressorSettings{
 		Attack:         0.000, // 0.000,
@@ -51,11 +53,13 @@ type (
 	}
 
 	tLoudnessSettings struct {
-		I         float64
-		RA        float64
-		TP        float64
-		MP        float64
-		Precision float64
+		I             float64
+		RA            float64
+		TP            float64
+		MP            float64
+		Precision     float64
+		STStatTHBelow float64
+		STStatTHAbove float64
 	}
 	tCompressorSettings struct {
 		Attack         float64
