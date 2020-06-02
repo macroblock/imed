@@ -87,6 +87,8 @@ func LoadFile(filename string, inputIndex int) (*TFileInfo, error) {
 		switch stream.CodecType {
 		default:
 			return nil, fmt.Errorf("unknown stream codec type (%v)", stream.CodecType)
+		case "data":
+			// skip
 		case "video":
 			fi.hasVideo = true
 			addVideoStreamInfo(fi, filename, inputIndex, index, vIndex, stream.Width, stream.Height)

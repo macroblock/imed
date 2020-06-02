@@ -17,12 +17,14 @@ var GlobalDebug = false
 var (
 	ac3Params2 = []string{
 		"-c:a", "ac3",
-		"-b:a", "256k",
+		// "-b:a", "256k", // dvd quality
+		"-b:a", "320k", // bluray quality
 		"-ac:a", "2",
 	}
 	ac3Params6 = []string{
 		"-c:a", "ac3",
-		"-b:a", "448k",
+		// "-b:a", "448k",// dvd quality
+		"-b:a", "640k", // bluray quality
 		"-ac:a", "6",
 	}
 	mp2Params2 = []string{
