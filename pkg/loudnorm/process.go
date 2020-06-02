@@ -24,7 +24,8 @@ var (
 	ac3Params6 = []string{
 		"-c:a", "ac3",
 		// "-b:a", "448k", // dvd quality
-		"-b:a", "640k", // bluray quality
+		"-b:a", "576k", // #HACK!!! less then 640 to prevent an AP duration detect bug
+		// "-b:a", "640k", // bluray quality
 		"-ac:a", "6",
 	}
 	mp2Params2 = []string{
