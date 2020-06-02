@@ -213,24 +213,47 @@ func CanFixLoudness(li *TLoudnessInfo) bool {
 	return false
 }
 
-// FixLoudness -
-func FixLoudness(li *TLoudnessInfo, compParams *TCompressParams) bool {
+// CalcPostAmp -
+func CalcPostAmp(li *TLoudnessInfo) (float64, bool) {
+	if !CanFixLoudness(li) {
+		return 0.0, false
+	}
+	postAmp := targetI() - li.I
+	postAmp = math.Min(postAmp, -li.MP)
+	return postAmp, true
+}
+
+// AmpLoudness -
+func AmpLoudness(li *TLoudnessInfo, postAmp float64) {
+	li.I += postAmp
+	li.TP += postAmp
+	li.TH += postAmp
+	li.MP += postAmp
+}
+
+// FixLoudnessPostAmp -
+func FixLoudnessPostAmp(li *TLoudnessInfo, compParams *TCompressParams) bool {
 	// l := *li
 	// normLi(&l)
 	// if !SuitableLoudness(&l) {
 	// 	// fmt.Println("--- not suitable")
 	// 	return false
 	// }
-	if !CanFixLoudness(li) {
+	postAmp, ok := CalcPostAmp(li)
+	if !ok {
 		return false
 	}
-	postAmp := targetI() - li.I
-	postAmp = math.Min(postAmp, -li.MP)
-	compParams.PostAmp = postAmp
-	li.I += postAmp
-	li.TP += postAmp
-	li.TH += postAmp
-	li.MP += postAmp
+	// if !CanFixLoudness(li) {
+	// 	return false
+	// }
+	// postAmp := targetI() - li.I
+	// postAmp = math.Min(postAmp, -li.MP)
+	compParams.PostAmp += postAmp
+	AmpLoudness(li, postAmp)
+	// li.I += postAmp
+	// li.TP += postAmp
+	// li.TH += postAmp
+	// li.MP += postAmp
 	// fmt.Printf("@@@@@ Post Amp: %v\n", postAmp)
 	// stream.done = true
 	// fmt.Println("##### stream:", i,

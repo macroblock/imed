@@ -23,7 +23,7 @@ var (
 	}
 	ac3Params6 = []string{
 		"-c:a", "ac3",
-		// "-b:a", "448k",// dvd quality
+		// "-b:a", "448k", // dvd quality
 		"-b:a", "640k", // bluray quality
 		"-ac:a", "6",
 	}
@@ -117,7 +117,7 @@ func CheckIfReadyToCompile(fi *TFileInfo) error {
 }
 
 // ProcessTo -
-func ProcessTo(fi *TFileInfo) error {
+func ProcessTo(fi *TFileInfo) (canBeFixed bool, err error) {
 
 	params := []string{"-y", "-hide_banner"}
 	params = append(params, GetSettings().getGlobalFlags()...)
@@ -204,11 +204,12 @@ func ProcessTo(fi *TFileInfo) error {
 	if GlobalDebug {
 		fmt.Println("### params: ", params)
 	}
-	err := ffmpeg.Run(combParser, params...)
+	err = ffmpeg.Run(combParser, params...)
 	if err != nil {
-		return err
+		return false, err
 	}
 
+	canBeFixed = true
 	errStrs := []string{}
 	for i, stream := range fi.Streams {
 		if stream.Type != "audio" {
@@ -229,9 +230,20 @@ func ProcessTo(fi *TFileInfo) error {
 		// 		"\n    actual : %v", i, stream.TargetLI, stream.LoudnessInfo))
 		// }
 		if !ValidLoudness(stream.LoudnessInfo) {
+
 			errStrs = append(errStrs, fmt.Sprintf("stream #%v: invalid loudness"+
 				"\n    planned: %v"+
 				"\n    actual : %v", i, stream.TargetLI, stream.LoudnessInfo))
+			stream.TargetLI = stream.LoudnessInfo
+			printStreamParams(stream, true)
+
+			stream.done = FixLoudnessPostAmp(stream.TargetLI, stream.CompParams)
+			if GlobalDebug && stream.done {
+				fmt.Println("##### fixed stream:", i,
+					"\n  li   >", stream.TargetLI,
+					"\n  comp >", stream.CompParams)
+			}
+			canBeFixed = canBeFixed && stream.done
 		} else {
 			printStreamParams(stream, true)
 		}
@@ -241,10 +253,10 @@ func ProcessTo(fi *TFileInfo) error {
 		if err != nil {
 			fmt.Printf("!!! error while removing file %v: %v", generateOutputName(fi), err)
 		}
-		return fmt.Errorf("%v", strings.Join(errStrs, "\n"))
+		return canBeFixed, fmt.Errorf("%v", strings.Join(errStrs, "\n"))
 	}
 
-	return nil
+	return true, nil
 }
 
 func formatSettings() string {
@@ -319,10 +331,18 @@ func Process(filename string) error {
 
 	t = time.Now()
 	colorizedPrintf(statusColor, "processing...\n")
-	err = ProcessTo(fi)
+	canBeFixed, err := ProcessTo(fi)
 	if err != nil {
-		printOnError()
-		return err
+		if !canBeFixed {
+			printOnError()
+			return err
+		}
+		colorizedPrintf(misc.ColorYellow, "fixing...\n")
+		canBeFixed, err = ProcessTo(fi)
+		if err != nil {
+			printOnError()
+			return err
+		}
 	}
 	debugPrintf("local %v, global %v\n", time.Since(t), time.Since(gt))
 

@@ -132,7 +132,7 @@ func Scan(streams []*TStreamInfo) error {
 		// compress params to use without compression
 		stream.CompParams = newEmptyCompressParams()
 
-		stream.done = FixLoudness(stream.TargetLI, stream.CompParams)
+		stream.done = FixLoudnessPostAmp(stream.TargetLI, stream.CompParams)
 		if GlobalDebug && stream.done {
 			fmt.Println("##### fixed stream:", i,
 				"\n  li   >", stream.TargetLI,
@@ -224,7 +224,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 			printStreamParams(stream, false) // LI stats without color
 
 			// fmt.Printf("--- i - mp: %v\n", stream.TargetLI.I-stream.TargetLI.MP)
-			stream.done = FixLoudness(stream.TargetLI, stream.CompParams)
+			stream.done = FixLoudnessPostAmp(stream.TargetLI, stream.CompParams)
 			if GlobalDebug && stream.done {
 				fmt.Println("##### fixed stream:", i,
 					"\n  li   >", stream.TargetLI,
