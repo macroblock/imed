@@ -218,7 +218,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 					"\n  comp >", stream.CompParams)
 			}
 
-			if !CanFixLoudness(stream.TargetLI) {
+			if !stream.TargetLI.CanFix() {
 				stream.CompParams.Correction -= settings.Compressor.CorrectionStep
 			}
 			printStreamParams(stream, false) // LI stats without color

@@ -57,7 +57,7 @@ func ScanAudio(fi *TFileInfo) error {
 		if err != nil {
 			return err
 		}
-		if ValidLoudness(stream.LoudnessInfo) {
+		if stream.LoudnessInfo.IsValid() {
 			if GlobalDebug {
 				fmt.Printf("stream %v has valid loudness (%v)\n", stream.Index, stream.LoudnessInfo)
 			}
@@ -230,7 +230,7 @@ func ProcessTo(fi *TFileInfo) (canBeFixed bool, err error) {
 		// 		"\n    planned: %v"+
 		// 		"\n    actual : %v", i, stream.TargetLI, stream.LoudnessInfo))
 		// }
-		if !ValidLoudness(stream.LoudnessInfo) {
+		if !stream.LoudnessInfo.IsValid() {
 
 			errStrs = append(errStrs, fmt.Sprintf("stream #%v: invalid loudness"+
 				"\n    planned: %v"+

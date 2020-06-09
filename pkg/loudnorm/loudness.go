@@ -117,38 +117,38 @@ func targetMP() float64 {
 
 const loudnessDeltaLI = 0.5
 
-// ValidLoudness -
-func ValidLoudness(li *TLoudnessInfo) bool {
-	if li == nil {
+// IsValid -
+func (o *TLoudnessInfo) IsValid() bool {
+	if o == nil {
 		return false
 	}
-	if targetIMax() <= li.I || li.I <= targetIMin() {
+	if targetIMax() <= o.I || o.I <= targetIMin() {
 		return false
 	}
-	if !math.IsNaN(targetTP()) && li.TP > targetTP() {
+	if !math.IsNaN(targetTP()) && o.TP > targetTP() {
 		return false
 	}
-	if !math.IsNaN(targetTP()) && li.RA > targetLRA() {
+	if !math.IsNaN(targetTP()) && o.RA > targetLRA() {
 		return false
 	}
 	return true
 }
 
-// SuitableLoudness -
-func SuitableLoudness(li *TLoudnessInfo) bool {
+// IsSuitable -
+func (o *TLoudnessInfo) IsSuitable() bool {
 	// defer fmt.Printf("@@@@@@@@@ !!!!! %+v", li)
-	if li == nil {
+	if o == nil {
 		return false
 	}
-	if li.I <= targetIMin() {
+	if o.I <= targetIMin() {
 		// fmt.Println("IMin")
 		return false
 	}
-	if !math.IsNaN(targetTP()) && li.TP > targetTP() {
+	if !math.IsNaN(targetTP()) && o.TP > targetTP() {
 		// fmt.Println("TP")
 		return false
 	}
-	if !math.IsNaN(targetTP()) && li.RA > targetLRA() {
+	if !math.IsNaN(targetTP()) && o.RA > targetLRA() {
 		// fmt.Println("LRA")
 		return false
 	}
@@ -177,36 +177,47 @@ func isNaN(a, b float64) bool {
 	return math.IsNaN(a) || math.IsNaN(b)
 }
 
-// LoudnessIsEqual -
-func LoudnessIsEqual(a, b *TLoudnessInfo) bool {
-	if GlobalDebug {
-		fmt.Printf("@@a: %v\n", a)
-		fmt.Printf("@@b: %v\n", b)
-	}
-	if feq(a.I, b.I, false) &&
-		feq(a.RA, b.RA, isNaN(a.RA, b.RA)) &&
-		feq(a.TP, b.TP, isNaN(a.TP, b.TP)) &&
-		feq(a.MP, b.MP, false) &&
-		feq(a.TH, b.TH, false) &&
-		// feq(a.CR, b.CR, false) &&
-		true {
-		return true
-	}
-	return false
+// // IsEqual -
+// func (o *TLoudnessInfo) IsEqual(v *TLoudnessInfo) bool {
+// 	if GlobalDebug {
+// 		fmt.Printf("@@a: %v\n", o)
+// 		fmt.Printf("@@b: %v\n", v)
+// 	}
+// 	if feq(o.I, v.I, false) &&
+// 		feq(o.RA, v.RA, isNaN(o.RA, v.RA)) &&
+// 		feq(o.TP, v.TP, isNaN(o.TP, v.TP)) &&
+// 		feq(o.MP, v.MP, false) &&
+// 		feq(o.TH, v.TH, false) &&
+// 		// feq(a.CR, b.CR, false) &&
+// 		true {
+// 		return true
+// 	}
+// 	return false
+// }
+
+// Normalize -
+func (o *TLoudnessInfo) Normalize() {
+	// o.I -= o.MP
+	// o.TP -= o.MP
+	// o.TH -= o.MP
+	// o.MP -= o.MP
+	o.Amp(-o.MP)
 }
 
-func normLi(li *TLoudnessInfo) {
-	li.I -= li.MP
-	li.TP -= li.MP
-	li.TH -= li.MP
-	li.MP -= li.MP
+// Amp -
+func (o *TLoudnessInfo) Amp(postAmp float64) {
+	o.I += postAmp
+	o.TP += postAmp
+	o.TH += postAmp
+	o.MP += postAmp
 }
 
-// CanFixLoudness -
-func CanFixLoudness(li *TLoudnessInfo) bool {
-	l := *li
-	normLi(&l)
-	if SuitableLoudness(&l) {
+// CanFix -
+func (o *TLoudnessInfo) CanFix() bool {
+	l := &TLoudnessInfo{}
+	*l = *o
+	l.Normalize()
+	if l.IsSuitable() {
 		// fmt.Println("--- not suitable")
 		return true
 	}
@@ -214,48 +225,23 @@ func CanFixLoudness(li *TLoudnessInfo) bool {
 }
 
 // CalcPostAmp -
-func CalcPostAmp(li *TLoudnessInfo) (float64, bool) {
-	if !CanFixLoudness(li) {
+func (o *TLoudnessInfo) CalcPostAmp() (float64, bool) {
+	if !o.CanFix() {
 		return 0.0, false
 	}
-	postAmp := targetI() - li.I
-	postAmp = math.Min(postAmp, -li.MP)
+	postAmp := targetI() - o.I
+	postAmp = math.Min(postAmp, -o.MP)
 	return postAmp, true
-}
-
-// AmpLoudness -
-func AmpLoudness(li *TLoudnessInfo, postAmp float64) {
-	li.I += postAmp
-	li.TP += postAmp
-	li.TH += postAmp
-	li.MP += postAmp
 }
 
 // FixLoudnessPostAmp -
 func FixLoudnessPostAmp(li *TLoudnessInfo, compParams *TCompressParams) bool {
-	// l := *li
-	// normLi(&l)
-	// if !SuitableLoudness(&l) {
-	// 	// fmt.Println("--- not suitable")
-	// 	return false
-	// }
-	postAmp, ok := CalcPostAmp(li)
+	postAmp, ok := li.CalcPostAmp()
 	if !ok {
 		return false
 	}
-	// if !CanFixLoudness(li) {
-	// 	return false
-	// }
-	// postAmp := targetI() - li.I
-	// postAmp = math.Min(postAmp, -li.MP)
 	compParams.PostAmp += postAmp
-	AmpLoudness(li, postAmp)
-	// li.I += postAmp
-	// li.TP += postAmp
-	// li.TH += postAmp
-	// li.MP += postAmp
-	// fmt.Printf("@@@@@ Post Amp: %v\n", postAmp)
-	// stream.done = true
+	li.Amp(postAmp)
 	// fmt.Println("##### stream:", i,
 	// 	"\n  li      >", li,
 	// 	"\n  postAmp >", stream.CompParams.PostAmp)
