@@ -224,8 +224,7 @@ func (o *TLoudnessInfo) CanFix() bool {
 	return false
 }
 
-// CalcPostAmp -
-func (o *TLoudnessInfo) CalcPostAmp() (float64, bool) {
+func (o *TLoudnessInfo) calcPostAmp() (float64, bool) {
 	if !o.CanFix() {
 		return 0.0, false
 	}
@@ -234,16 +233,26 @@ func (o *TLoudnessInfo) CalcPostAmp() (float64, bool) {
 	return postAmp, true
 }
 
-// FixLoudnessPostAmp -
-func FixLoudnessPostAmp(li *TLoudnessInfo, compParams *TCompressParams) bool {
-	postAmp, ok := li.CalcPostAmp()
+// FixAmp -
+func (o *TLoudnessInfo) FixAmp() (float64, bool) {
+	postAmp, ok := o.calcPostAmp()
 	if !ok {
-		return false
+		return 0.0, false
 	}
-	compParams.PostAmp += postAmp
-	li.Amp(postAmp)
-	// fmt.Println("##### stream:", i,
-	// 	"\n  li      >", li,
-	// 	"\n  postAmp >", stream.CompParams.PostAmp)
-	return true
+	o.Amp(postAmp)
+	return postAmp, true
 }
+
+// // FixLoudnessPostAmp -
+// func FixLoudnessPostAmp(li *TLoudnessInfo, compParams *TCompressParams) bool {
+// 	postAmp, ok := li.calcPostAmp()
+// 	if !ok {
+// 		return false
+// 	}
+// 	compParams.PostAmp += postAmp
+// 	li.Amp(postAmp)
+// 	// fmt.Println("##### stream:", i,
+// 	// 	"\n  li      >", li,
+// 	// 	"\n  postAmp >", stream.CompParams.PostAmp)
+// 	return true
+// }

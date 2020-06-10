@@ -238,7 +238,9 @@ func ProcessTo(fi *TFileInfo) (canBeFixed bool, err error) {
 			stream.TargetLI = stream.LoudnessInfo
 			printStreamParams(stream, true)
 
-			stream.done = FixLoudnessPostAmp(stream.TargetLI, stream.CompParams)
+			// stream.done = FixLoudnessPostAmp(stream.TargetLI, stream.CompParams)
+			stream.done = FixStreamPostAmp(stream)
+
 			if GlobalDebug && stream.done {
 				fmt.Println("##### fixed stream:", i,
 					"\n  li   >", stream.TargetLI,

@@ -77,6 +77,16 @@ func appendPattern(branches []string, stream *TStreamInfo, comb *ffmpeg.TCombine
 	return branches
 }
 
+// FixStreamPostAmp -
+func FixStreamPostAmp(stream *TStreamInfo) bool {
+	ret := false
+	if gain, ok := stream.TargetLI.FixAmp(); ok {
+		stream.CompParams.GainPostAmp(gain)
+		ret = true
+	}
+	return ret
+}
+
 // Scan -
 func Scan(streams []*TStreamInfo) error {
 	if len(streams) == 0 {
@@ -132,7 +142,9 @@ func Scan(streams []*TStreamInfo) error {
 		// compress params to use without compression
 		stream.CompParams = newEmptyCompressParams()
 
-		stream.done = FixLoudnessPostAmp(stream.TargetLI, stream.CompParams)
+		// stream.done = FixLoudnessPostAmp(stream.TargetLI, stream.CompParams)
+		stream.done = FixStreamPostAmp(stream)
+
 		if GlobalDebug && stream.done {
 			fmt.Println("##### fixed stream:", i,
 				"\n  li   >", stream.TargetLI,
@@ -224,7 +236,9 @@ func RenderParameters(streams []*TStreamInfo) error {
 			printStreamParams(stream, false) // LI stats without color
 
 			// fmt.Printf("--- i - mp: %v\n", stream.TargetLI.I-stream.TargetLI.MP)
-			stream.done = FixLoudnessPostAmp(stream.TargetLI, stream.CompParams)
+			// stream.done = FixLoudnessPostAmp(stream.TargetLI, stream.CompParams)
+			stream.done = FixStreamPostAmp(stream)
+
 			if GlobalDebug && stream.done {
 				fmt.Println("##### fixed stream:", i,
 					"\n  li   >", stream.TargetLI,

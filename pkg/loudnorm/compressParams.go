@@ -108,3 +108,8 @@ func (o *TCompressParams) GetK() float64 {
 	}
 	return ret
 }
+
+// GainPostAmp -
+func (o *TCompressParams) GainPostAmp(postAmp float64) {
+	o.PostAmp += postAmp
+}
