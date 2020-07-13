@@ -108,6 +108,9 @@ func renderParameters(fi *TFileInfo) error {
 // CheckIfReadyToCompile -
 func CheckIfReadyToCompile(fi *TFileInfo) error {
 	for _, stream := range fi.Streams {
+		if stream.Type != "audio" {
+			continue
+		}
 		if !(stream.done || stream.validLoudness) {
 			filename := fi.Filename
 			index := stream.Index
