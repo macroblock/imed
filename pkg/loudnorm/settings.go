@@ -16,6 +16,7 @@ var settings = TSettings{
 	Behavior: tBehavior{
 		ScanOnly:    false,
 		ForceStereo: false,
+		Extension:   "",
 	},
 	Loudness: tLoudnessSettings{
 		I:             -23,
@@ -50,6 +51,7 @@ type (
 	tBehavior struct {
 		ScanOnly    bool
 		ForceStereo bool
+		Extension   string
 	}
 
 	tLoudnessSettings struct {

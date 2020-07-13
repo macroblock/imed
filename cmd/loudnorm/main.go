@@ -42,6 +42,8 @@ var (
 
 	flagT,
 	flagSS string
+
+	flagExt string
 )
 
 func adobeTimeToFFMPEG(s string) (ffmpeg.Time, error) {
@@ -163,6 +165,7 @@ func mainFunc() error {
 
 	settings.Behavior.ScanOnly = flagScanOnly
 	settings.Behavior.ForceStereo = flagStereo
+	settings.Behavior.Extension = flagExt
 
 	parse := &tErrorGroup{}
 	parse.adobeTime(flagSS, &settings.Edit.ClipPoint)
@@ -246,6 +249,7 @@ func main() {
 		cli.Flag("-stereo       : force stereo", &flagStereo),
 		cli.Flag("-stthb        : ST stats below < I + this (default = -4.0)", &flagSTStatsTHBelow),
 		cli.Flag("-sttha        : ST stats above >= I + this(default = +4.0)", &flagSTStatsTHAbove),
+		cli.Flag("-ext          : overwrite target extension (not tested)", &flagExt),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.Command("scan       : scan loudnes parameters", doScan,
 			// cli.Flag("-l --light: light mode (whithout TP)", &flagLight),

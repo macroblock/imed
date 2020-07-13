@@ -173,6 +173,9 @@ func generateOutputName(fi *TFileInfo) string {
 	if settings.Behavior.ForceStereo {
 		suffix += "-stereo"
 	}
+	if settings.Behavior.Extension != "" {
+		ext = "." + settings.Behavior.Extension
+	}
 	return path + name + suffix + ext
 }
 
