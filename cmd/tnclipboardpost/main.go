@@ -28,7 +28,7 @@ var (
 )
 
 var langTable = map[string]string{
-	"und": "unknown",
+	"qqq": "unknown", // custom tag
 	"rus": "русская",
 	"eng": "английская",
 	"chn": "китайская",
