@@ -28,6 +28,7 @@ var (
 )
 
 var langTable = map[string]string{
+	"unk": "unknown",
 	"rus": "русская",
 	"eng": "английская",
 	"chn": "китайская",
