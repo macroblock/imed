@@ -75,12 +75,6 @@ func doProcess(filePath string, checkLevel int) string {
 
 	qtag, err := tn.GetTag("qtag")
 
-	tn.RemoveTags("agetag")
-	tn.RemoveTags("alreadyagedtag")
-
-	newPath, err := tn.ConvertTo(schema)
-	retif.Error(err, "cannot convert to '"+schema+"' schema")
-
 	hasSmokingTag := false
 	if _, err := tn.GetTag("smktag"); err == nil {
 		hasSmokingTag = true
@@ -89,6 +83,15 @@ func doProcess(filePath string, checkLevel int) string {
 	if _, err := tn.GetTag("sbstag"); err == nil {
 		hasSideBySideTag = true
 	}
+
+	retif.Error(!hasSmokingTag, "nothing to do")
+
+	// tn.RemoveTags("agetag")
+	// tn.RemoveTags("alreadyagedtag")
+	tn.RemoveTags("smktag")
+
+	newPath, err := tn.ConvertTo(schema)
+	retif.Error(err, "cannot convert to '"+schema+"' schema")
 
 	file, err := ffinfo.Probe(filePath)
 	retif.Error(err, "ffinfo.Probe() (ffprobe)")
@@ -165,8 +168,16 @@ func doProcess(filePath string, checkLevel int) string {
 	logo := filepath.Join(ageLogoPath, age+"_"+logoPostfix+sbsPostfix+".mov")
 	// workaround: replace windows backslashes to use it in ffmpeg filter
 	logo = strings.Replace(logo, "\\", "/", -1)
-	ret := "fflite -i \"" + filePath + "\" -filter_complex \"movie=" + logo + ",setsar=" + strSar +
-		"[age]; [0:0][age]overlay=0:0:eof_action=pass[v]; [0:1]aresample=48000[a]" + strSmoking + "\" " +
+	// ret := "fflite -i \"" + filePath + "\" -filter_complex \"movie=" + logo + ",setsar=" + strSar +
+	// "[age]; [0:0][age]overlay=0:0:eof_action=pass[v]; [0:1]aresample=48000[a]" + strSmoking + "\" " +
+	// " -map [v] " + strVCodec + " -map [a] " + strACodec + " " + newPath
+
+	// strAgeLogo := "; movie=" + logo + ",setsar=" + strSar +
+	// "[age]; [v][age]overlay=0:0:eof_action=pass[v]; [a]aresample=48000[a]"
+
+	strAgeLogo := ""
+	ret := "fflite -i \"" + filePath + "\" -filter_complex \"[0:0]null[v]; [0:1]anull[a]" +
+		strAgeLogo + strSmoking + "\" " +
 		" -map [v] " + strVCodec + " -map [a] " + strACodec + " " + newPath
 
 	return ret
