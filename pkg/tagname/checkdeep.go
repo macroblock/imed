@@ -19,7 +19,7 @@ func parseSize(str string) (int, int, error) {
 	if err != nil {
 		return -1, -1,  retErr
 	}
-	h, err := strconv.Atoi(list[0])
+	h, err := strconv.Atoi(list[1])
 	if err != nil {
 		return -1, -1,  retErr
 	}
