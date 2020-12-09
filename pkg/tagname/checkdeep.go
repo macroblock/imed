@@ -67,9 +67,12 @@ func checkDeep(tagname *TTagname) error {
 		if err != nil {
 			return err
 		}
-		w, h, err := parseSize(file.Format.Size)
-		if err != nil {
-			return err
+		w, h := 0, 0
+		if len(file.Streams)>0 && file.Streams[0].CodecType == "video" {
+			w = file.Streams[0].Width
+			h = file.Streams[0].Height
+		} else {
+			return fmt.Errorf("failed to read file canvas size")
 		}
 		err = checkSize(tagname, typ, w, h)
 		if err != nil {
