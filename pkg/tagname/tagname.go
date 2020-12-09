@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/macroblock/imed/pkg/hash"
 	"github.com/macroblock/imed/pkg/zlog/zlog"
 )
 
@@ -16,17 +15,18 @@ var (
 
 // TTagname -
 type TTagname struct {
-	dir    string
-	src    string
-	schema string
-	tags   *TTags
+	dir        string
+	src        string
+	schemaName string
+	srcTags    *TTags
+	tags       *TTags
 }
 
 // NewFromString -
 func NewFromString(dir string, str string, checkLevel int, schemaNames ...string) (*TTagname, error) {
 	var err error
-	var tags *TTags
-	var schema string
+	var srcTags *TTags
+	var schemaName string
 	var errors []string
 
 	schemas := schemaNames
@@ -34,12 +34,12 @@ func NewFromString(dir string, str string, checkLevel int, schemaNames ...string
 		schemas = []string{"rt", "old"}
 	}
 
-	for _, schema = range schemas {
-		tags, err = Parse(str, schema)
+	for _, schemaName = range schemas {
+		srcTags, err = Parse(str, schemaName)
 		if err == nil {
 			break
 		}
-		errors = append(errors, fmt.Sprintf("%-16q: %v", schema, err))
+		errors = append(errors, fmt.Sprintf("%-16q: %v", schemaName, err))
 	}
 
 	if err != nil {
@@ -47,7 +47,18 @@ func NewFromString(dir string, str string, checkLevel int, schemaNames ...string
 		return nil, fmt.Errorf("multiple ones:\n  %v", s)
 	}
 
-	tn := &TTagname{schema: schema, dir: dir, src: str, tags: tags}
+	tn := &TTagname{schemaName: schemaName, dir: dir, src: str, srcTags: srcTags}
+
+	schema, err := tn.findSchema("")
+	if err != nil {
+		return nil, err
+	}
+
+	tags, err := TranslateTags(tn.srcTags, schema.UnmarshallFilter)
+	if err != nil {
+		return nil, err
+	}
+	tn.tags = tags
 
 	err = tn.Check(checkLevel)
 	if err != nil {
@@ -59,13 +70,28 @@ func NewFromString(dir string, str string, checkLevel int, schemaNames ...string
 // NewFromFilename -
 func NewFromFilename(path string, checkLevel int, schemaNames ...string) (*TTagname, error) {
 	src := filepath.Base(path)
-	dir := filepath.Dir(path)
+	// dir := filepath.Dir(path)
+	dir := strings.TrimSuffix(path, src)
+	if path != dir+src {
+		return nil, fmt.Errorf("NewFromFilename: path != dir + base, %q != %q + %q", path, dir, src)
+	}
 	ret, err := NewFromString(dir, src, checkLevel, schemaNames...)
 	if err != nil {
 		return nil, err
 	}
 	// ret.dir = filepath.Dir(path)
 	return ret, nil
+}
+
+func (o *TTagname) findSchema(schemaName string) (*TSchema, error) {
+	if schemaName == "" {
+		schemaName = o.schemaName
+	}
+	schema, err := Schema(schemaName)
+	if err != nil {
+		return nil, err
+	}
+	return schema, nil
 }
 
 // State -
@@ -76,20 +102,25 @@ func (o *TTagname) State() error {
 	return o.tags.State()
 }
 
+// Schema -
+func (o *TTagname) Schema() string {
+	return o.schemaName
+}
+
 // ConvertTo -
 func (o *TTagname) ConvertTo(schemaName string) (string, error) {
 	if schemaName == "" {
-		schemaName = o.schema
+		schemaName = o.schemaName
 	}
 	_, err := Schema(schemaName)
 	if err != nil {
 		return "", err
 	}
-	ret, err := ToString(o.tags, o.schema, schemaName)
+	ret, err := ToString(o.tags, schemaName)
 	if err != nil {
 		return "", err
 	}
-	ret = filepath.Join(o.dir, ret)
+	ret = o.dir + ret
 	return ret, nil
 }
 
@@ -105,7 +136,14 @@ func (o *TTagname) Check(checkLevel int) error {
 
 	isStrictCheck := checkLevel&CheckStrict != 0
 	isDeepCheck := checkLevel&CheckDeep != 0
-	err := o.tags.Check(isStrictCheck)
+
+	// schema, err := o.findSchema(o.schemaName)
+	// if err != nil {
+	// return err
+	// }
+
+	err := CheckTags(o.tags, isStrictCheck) //, schema)
+
 	if err != nil || !isDeepCheck {
 		return err
 	}
@@ -122,39 +160,17 @@ func (o *TTagname) GetTag(typ string) (string, error) {
 	if len(list) > 1 {
 		return "", fmt.Errorf("GetTag() cannot return multiple tags of %q type in %q", typ, o.src)
 	}
-	schema, err := Schema(o.schema)
-	if err != nil {
-		return "", err
-	}
+
 	val := list[0]
-	typ, val, err = schema.ReadFilter(typ, val)
-	if err != nil {
-		return "", err
-	}
 	return val, nil
 }
 
 // GetTags -
 func (o *TTagname) GetTags(typ string) []string {
 	list := o.tags.GetTags(typ)
-	// if len(list) == 0 {
-	// 	return nil, fmt.Errorf("%q has no tags of %q type", o.src, typ)
-	// }
-	schema, err := Schema(o.schema)
-	if err != nil {
-		fmt.Println("Schema() error at tagname.GetTag")
-		panic(err)
-		// return "", err
-	}
 	ret := []string{}
-	for _, s := range list {
-		_, val, err := schema.ReadFilter(typ, s)
-		if err != nil {
-			fmt.Println("ReadFilter() error at tagname.GetTag")
-			panic(err)
-			// return "", err
-		}
-		ret = append(ret, val)
+	for _, tag := range list {
+		ret = append(ret, tag)
 	}
 	return ret
 }
@@ -170,30 +186,9 @@ func (o *TTagname) SetTag(typ string, val string) {
 	o.tags.AddTag(typ, val)
 }
 
-// AddHash -
-func (o *TTagname) AddHash() {
-	typ, _ := o.GetTag("type")
-	if typ != "film" {
-		return
-	}
-	name, _ := o.GetTag("name")
-	sxx, _ := o.GetTag("sxx")
-	year, _ := o.GetTag("year")
-	sdhd, _ := o.GetTag("sdhd")
-	comment, _ := o.GetTag("comment")
-	key := name + "_" + sxx + "_" + year + "_" + sdhd + "_" + comment
-	tag := hash.Get(key)
-	o.SetTag("hashtag", "x"+tag)
-}
-
 // RemoveHash -
 func (o *TTagname) RemoveHash() {
 	o.RemoveTags("hashtag")
-}
-
-// Schema -
-func (o *TTagname) Schema() string {
-	return o.schema
 }
 
 // GetFormat -

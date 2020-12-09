@@ -1,9 +1,10 @@
 package tagname
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/macroblock/imed/pkg/hash"
 )
 
 var rtForm = `
@@ -12,91 +13,136 @@ entry       =  (@_hackHD3D @sdhd, @year, @_hack3D,| !(,) @sdhd, @year,) @name [,
 sdhd        = ['sd'|'hd'];
 _hackHD3D   = 'hd' !('hd',|'3d',);
 _hack3D     = '3d';
-type        = 'trailer'|'film'| poster;
+type        = 'trailer'|'film'| 'logo' | poster;
 
-poster      = 'poster' digit{digit} 'x' digit{digit} [hex];
+poster      = ('poster' sizetag) | 'logo';
 
 taglist     = {!(type ('.'|$)) tags,};
 EONAME      = DIV|'.'|$;
 
-INVALID_TAG = 'sd'|'hd'|'3d';
+INVALID_TAG = 'sd'|'hd'|'3d'|'logo'|'poster';
 ` + body
 
 var rtNormalSchema = &TSchema{
 	parser:                  &rtParser,
-	MustHaveByType:          []string{"name", "year", "sdhd", "type", "ext"},
-	NonUniqueByType:         nil,
-	Invalid:                 nil,
-	ToStringHeadOrderByType: []string{"_hackHD3D", "sdhd", "year", "_hack3D", "name", "sxx", "sname", "exx", "ename", "comment", "_", "alreadyagedtag", "agetag", "qtag", "atag", "stag"},
+	// MustHaveByType:          []string{"name", "year", "sdhd", "type", "ext"},
+	// NonUniqueByType:         nil,
+	// Invalid:                 nil,
+	ToStringHeadOrderByType: []string{"sdhd", "year", "_hack3D", "name", "sxx", "sname", "exx", "ename", "comment", "_", "alreadyagedtag", "agetag", "qtag", "atag", "stag"},
 	ToStringTailOrderByType: []string{"m4otag", "datetag", "hashtag", "type", "ext"},
-	ReadFilter:              fnRtSchemaReadFilter,
-	WriteFilter:             fnRtSchemaWriteFilter,
-	HackFilter:              fnHackRtFilter,
+	UnmarshallFilter:        fnFromRTFilter,
+	MarshallFilter:          fnToRTFilter,
 }
 
 var localBuffer = ""
 
 var reRes = regexp.MustCompile(`\d+x\d+`)
 
-func fnRtSchemaReadFilter(typ, val string) (string, string, error) {
-	err := error(nil)
+// func getOneTag(tags *TTags, typ string) (string, error) {
+// list := tags.GetTags(typ)
+// switch {
+// case len(list) == 1:
+// return list[0], nil
+// case len(list) > 1:
+// return "", fmt.Errorf("too many '%v' tags", typ)
+// default:
+// return "", fmt.Errorf("tag '%v' not found", typ)
+// }
+// // unreachable
+// }
+
+func genHashTag(tags *TTags) string {
+	name, _ := tags.GetTag("name")
+	sxx, _ := tags.GetTag("sxx")
+	year, _ := tags.GetTag("year")
+	sdhd, _ := tags.GetTag("sdhd")
+	comment, _ := tags.GetTag("comment")
+	key := name + "_" + sxx + "_" + year + "_" + sdhd + "_" + comment
+	return "x" + hash.Get(key)
+}
+
+func fnFromRTFilter(in, out *TTags, typ, val string, firstRun bool) error {
+	if typ == "" && val == "" {
+		// for last run only
+		if !firstRun {
+			err := fixATag(out)
+			return err
+		}
+		return nil
+	}
+
 	switch typ {
+	case "hashtag", "m4otag", "_hackSDHD", "_hack3D":
+		return nil
 	case "sdhd":
 		if val == "" {
 			val = "3d"
 		}
-	case "_hackSDHD":
-		val = ""
-	case "snen":
-		val, err = fixSnen(val)
 	case "name":
 		val = strings.ToLower(val)
+	case "sizetag":
+		val = strings.ReplaceAll(val, "-", "x")
 	case "type":
-		if strings.Contains(val, "poster") {
-			val = strings.TrimPrefix(val, "poster")
-			if !strings.Contains(val, "#") {
-				val += "#"
-			}
+		switch {
+		case strings.HasPrefix(val, "poster"):
+			size := strings.TrimPrefix(val, "poster")
+			size = strings.ReplaceAll(size, "-", "x")
+			out.AddTag("sizetag", size)
+			val = "poster"
+		case val == "logo":
+			val = "poster"
+			out.AddTag("sizetag", "logo")
 		}
 	}
-	return typ, val, err
+
+	out.AddTag(typ, val)
+	return nil
 }
 
-func fnRtSchemaWriteFilter(typ, val string) (string, string, error) {
-	err := error(nil)
+func fnToRTFilter(in, out *TTags, typ, val string, firstRun bool) error {
+	// if typ == "" && val == "" {
+		// // for first run only
+		// if firstRun {
+			// err := unfixATag(in)
+			// return err
+		// }
+		// return nil
+	// }
+
 	switch typ {
 	case "sdhd":
 		if val == "3d" {
-			val = ""
+			val = "hd"
+			out.AddTag("_hack3D", "3d")
 		}
-	case "snen":
-		val, err = unfixSnen(val)
-	case "name":
-		val = strings.Title(val)
+	// case "name":
+		// val = strings.Title(val)
+	case "sizetag":
+		t, _ := in.GetTag("type")
+		if t == "poster" {
+			return nil
+		}
 	case "type":
-		if strings.Contains(val, "#") {
-			val = strings.TrimSuffix(val, "#")
-			if reRes.MatchString(val) {
-				val = "poster" + val
+		switch val {
+		case "poster":
+			size, err := in.GetTag("sizetag")
+			if err != nil {
+				return err
 			}
+			if size == "logo" {
+				val = "logo"
+			} else {
+				val = "poster" + size
+			}
+		// case "poster.logo":
+			// val = "logo.poster"
+		case "poster.gp":
+		case "film":
+			hash := genHashTag(in)
+			out.AddTag("hashtag", hash)
 		}
 	}
-	return typ, val, err
-}
 
-func fnHackRtFilter(tags *TTags) {
-	list := tags.GetTags("sdhd")
-	tags.RemoveTags("_hackHD3D")
-	tags.RemoveTags("_hack3D")
-	if len(list) == 0 {
-		return
-	}
-	_, val, err := fnRtSchemaReadFilter("sdhd", list[0])
-	if err != nil {
-		panic(fmt.Sprintf("fnHackRTFilter() error: %v", err))
-	}
-	if val == "3d" {
-		tags.AddTag("_hackHD3D", "hd")
-		tags.AddTag("_hack3D", "3d")
-	}
+	out.AddTag(typ, val)
+	return nil
 }

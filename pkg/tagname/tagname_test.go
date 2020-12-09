@@ -10,41 +10,53 @@ var (
 	}{
 		//23456789012345678901234567890
 		{settings: "rt",
-			input: "//test/path/Sobibor_2018__sd_12_q0w2.trailer.mpg",
-			check: "\\\\test\\path\\sd_2018_Sobibor__12_q0w2_trailer.mpg"},
+			input: "//test\\path/Sobibor_2018__sd_12_q0w2.trailer.mpg",
+			check: "//test\\path/sd_2018_sobibor__12_q0w2_ar2_trailer.mpg"},
 		{settings: "old",
-			input: "test\\sd_2018_Sobibor__12_q0w2_trailer.mpg",
-			check: "test\\Sobibor_2018__sd_12_q0w2.trailer.mpg"},
+			input: "test/sd_2018_Sobibor__12_q0w2_trailer.mpg",
+			check: "test/sobibor_2018__sd_12_q0w2_ar2.trailer.mpg"},
 		{settings: "",
-			input: "sd_2018_Sobibor__12_q0w2_trailer.mpg"},
+			input: "sd_2018_sobibor__12_q0w2_ar2_trailer.mpg"},
 		{settings: "",
-			input: "Sobibor_2018__sd_12_q0w2.trailer.mpg"},
+			input: "sobibor_2018__sd_12_q0w2_ar2.trailer.mpg"},
 		{settings: "rt",
 			input: "Sobibor_2018__3d_12_q0w2.trailer.mpg",
-			check: "hd_2018_3d_Sobibor__12_q0w2_trailer.mpg"},
+			check: "hd_2018_3d_sobibor__12_q0w2_ar2_trailer.mpg"},
 		{settings: "old",
 			input: "hd_2018_3d_Sobibor__12_q0w2_trailer.mpg",
-			check: "Sobibor_2018__3d_12_q0w2.trailer.mpg"},
+			check: "sobibor_2018__3d_12_q0w2_ar2.trailer.mpg"},
 		{settings: "",
-			input: "hd_2018_3d_Sobibor__12_q0w2_trailer.mpg"},
+			input: "hd_2018_3d_sobibor__12_q0w2_ar2_trailer.mpg"},
 		{settings: "",
-			input: "Sobibor_2018__3d_12_q0w2.trailer.mpg"},
+			input: "sobibor_2018__3d_12_q0w2_ar2.trailer.mpg"},
 		{settings: "",
-			input: "Zvezda_rodilas_2018__hd_190-230.poster.jpg"},
+			input: "zvezda_rodilas_2018__hd_190x230.poster.jpg"},
 		{settings: "",
-			input: "hd_2018_Bezumno_bogatye_aziaty__pr_poster525x300.jpg"},
+			input: "hd_2018_bezumno_bogatye_aziaty__mpr_poster525x300.jpg"},
 		{settings: "rt",
 			input: "//test/path/Babnik_2008__hd_1620-996.poster.jpg",
-			check: "\\\\test\\path\\hd_2008_Babnik__poster1620x996.jpg"},
+			check: "//test/path/hd_2008_babnik__poster1620x996.jpg"},
 		{settings: "old",
-			input: "//test/path/sd_2018_Proigrannoe_mesto__pryamoiz_poster525x300.jpg",
-			check: "\\\\test\\path\\Proigrannoe_mesto_2018__sd_pryamoiz_525-300.poster.jpg"},
+			input: "//test/path/sd_2018_Proigrannoe_mesto__mpryamoiz_mtest_poster525x300.jpg",
+			check: "//test/path/proigrannoe_mesto_2018__sd_mpryamoiz_mtest_525x300.poster.jpg"},
+		{settings: "old",
+			input: "//test/path/sd_2018_Proigrannoe_mesto__logo.jpg",
+			check: "//test/path/proigrannoe_mesto_2018__sd_logo.poster.jpg"},
 		{settings: "rt",
-			input: "Vse_elki_2018__sd_1140-726.poster#203b17b5.jpg",
-			check: "sd_2018_Vse_elki__poster1140x726#203b17b5.jpg"},
+			input: "//test/path/proigrannoe_mesto_2018__sd_logo.poster.jpg",
+			check: "//test/path/sd_2018_proigrannoe_mesto__logo.jpg"},
+		// {settings: "old",
+			// input: "Proigrannoe_mesto_2018__sd_mpryamoiz_mtest_525x300_poster.jpg",
+			// check: "proigrannoe_mesto_2018__sd_mpryamoiz_mtest_525x300.poster.jpg"},
+		// {settings: "rt",
+		// input: "Vse_elki_2018__sd_1140-726.poster#203b17b5.jpg",
+		// check: "sd_2018_Vse_elki__poster1140x726#203b17b5.jpg"},
+		// {settings: "old",
+		// input: "sd_2018_Vse_elki__poster1140x726#203b17b5.jpg",
+		// check: "Vse_elki_2018__sd_1140-726.poster#203b17b5.jpg"},
 		{settings: "old",
-			input: "sd_2018_Vse_elki__poster1140x726#203b17b5.jpg",
-			check: "Vse_elki_2018__sd_1140-726.poster#203b17b5.jpg"},
+			input: "//test/path/Proigrannoe_mesto_2018__525x300.jpg",
+			check: "//test/path/proigrannoe_mesto_2018__525x300.jpg"},
 	}
 	tableTagnameIncorrect = []string{
 		//23456789012345678901234567890
@@ -64,6 +76,7 @@ var (
 		"The_name_s01_a_subname_2018__q0w0",
 		"The_name_s01_a_subname_2018__hd_q0w0_",
 		"The_name_s01_zzz_2018__hd_q0w0",
+		// "sd_2018_Sobibor__12_q0w2_trailer.mpg",
 	}
 
 	tableTagnameGetCorrect = []struct {
@@ -121,7 +134,26 @@ var (
 				{typ: "name", val: "babnik"},
 				{typ: "year", val: "2008"},
 				{typ: "sdhd", val: "hd"},
-				{typ: "type", val: "1620x996#"},
+				{typ: "sizetag", val: "1620x996"},
+				{typ: "type", val: "poster"},
+				{typ: "ext", val: ".jpg"},
+			},
+		},
+		{input: "babnik_gp_2008__1620x996.jpg",
+			tags: []ttag{
+				{typ: "name", val: "babnik_gp"},
+				{typ: "year", val: "2008"},
+				{typ: "sizetag", val: "1620x996"},
+				{typ: "type", val: "poster.gp"},
+				{typ: "ext", val: ".jpg"},
+			},
+		},
+		{input: "babnik_gp_2008__sd_logo.poster.jpg",
+			tags: []ttag{
+				{typ: "name", val: "babnik_gp"},
+				{typ: "year", val: "2008"},
+				{typ: "sizetag", val: "logo"},
+				{typ: "type", val: "poster"},
 				{typ: "ext", val: ".jpg"},
 			},
 		},
@@ -142,7 +174,7 @@ func TestTagnameCorrect(t *testing.T) {
 		}
 		res, err := tagname.ConvertTo(v.settings)
 		if err != nil {
-			t.Errorf("\n%q\nConverTo() error: %v", v, err)
+			t.Errorf("\n%q\nConvertTo() error: %v", v, err)
 			continue
 		}
 
@@ -152,6 +184,8 @@ func TestTagnameCorrect(t *testing.T) {
 		}
 		if res != check {
 			t.Errorf("\nnot equivalent \nin : %q\nres: %q\nchk: %q", v.input, res, check)
+			t.Errorf("srcTags: %v", tagname.srcTags)
+			t.Errorf("tags: %v", tagname.tags)
 			continue
 		}
 	}

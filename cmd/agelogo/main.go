@@ -56,7 +56,7 @@ func doProcess(filePath string, checkLevel int) string {
 	tn, err := tagname.NewFromFilename(filePath, checkLevel)
 	retif.Error(err, "cannot parse filename")
 
-	schema := tn.Schema()
+	// schema := "" //tn.Schema()
 
 	_, err = tn.GetTag("alreadyagedtag")
 	doAge := true
@@ -90,8 +90,8 @@ func doProcess(filePath string, checkLevel int) string {
 	// tn.RemoveTags("alreadyagedtag")
 	tn.RemoveTags("smktag")
 
-	newPath, err := tn.ConvertTo(schema)
-	retif.Error(err, "cannot convert to '"+schema+"' schema")
+	newPath, err := tn.ConvertTo("")
+	retif.Error(err, "cannot convert to '"+tn.Schema()+"' schema")
 
 	file, err := ffinfo.Probe(filePath)
 	retif.Error(err, "ffinfo.Probe() (ffprobe)")

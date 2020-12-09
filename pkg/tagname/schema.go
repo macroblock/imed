@@ -10,19 +10,23 @@ import (
 
 // TSchema -
 type TSchema struct {
+	name                    string
 	parser                  **ptool.TParser
-	MustHaveByType          []string
-	NonUniqueByType         []string // can be placed multiple times
-	Valid                   []string
-	ValidByType             []string // if empty then any tag is valid
-	Invalid                 []string
-	InvalidByType           []string
+	// MustHaveByType          []string
+	// NonUniqueByType         []string // can be placed multiple times
+	// Valid                   []string
+	// ValidByType             []string // if empty then any tag is valid
+	// Invalid                 []string
+	// InvalidByType           []string
 	ToStringHeadOrderByType []string
 	ToStringTailOrderByType []string
-	ReadFilter              func(typ, val string) (string, string, error)
-	WriteFilter             func(typ, val string) (string, string, error)
-	HackFilter              func(tags *TTags)
-	checker                 *tChecker
+	// ReadFilter              func(typ, val string) (string, string, error)
+	// WriteFilter             func(typ, val string) (string, string, error)
+	UnmarshallFilter func(in, out *TTags, typ, val string, firstRun bool) error
+	MarshallFilter   func(in, out *TTags, typ, val string, firstRun bool) error
+
+	// HackFilter func(tags *TTags)
+	// checker *tChecker
 }
 
 // tags:
@@ -47,7 +51,8 @@ year     = digit digit digit digit;
 hex      = '#' symbol symbol symbol symbol symbol symbol symbol symbol;
 
 tags     = @INVALID_TAG | @EXCLUSIVE_TAGS
-         |@qtag|@atag|@stag|@alreadyagedtag|@agetag|@m4otag|@smktag|@hardsubtag|@sbstag|@datetag|@hashtag
+         |@qtag|@atag|@stag|@alreadyagedtag|@agetag|@m4otag|@smktag
+	 |@hardsubtag|@sbstag|@mtag|@sizetag|@datetag|@aligntag|@hashtag
          |@ERR_qtag|@ERR_agetag|@ERR_atag|@UNKNOWN_TAG;
 
 qtag      = 'q'digit('w'|'s')digit !symbol;
@@ -59,11 +64,15 @@ hardsubtag= ('mhardsub'|'hardsub') !symbol;
 m4otag    = 'm4o' !symbol;
 smktag    = ('msmoking'|'smoking') !symbol;
 sbstag    = ('msbs'|'sbs') !symbol;
+mtag      = 'm' letter {letter} !symbol;
+sizetag   = ('logo' | digit digit {digit} ('x'|'-') digit digit {digit}) !symbol;
+aligntag  = ('center'|'left') !symbol;
 datetag   = 'd' digit digit digit digit digit digit digit digit digit digit !symbol;
 hashtag   = 'x' symbol symbol symbol symbol symbol symbol symbol symbol symbol symbol !symbol;
+
 EXCLUSIVE_TAGS = ('amed'|'abc') !symbol;
 
-UNKNOWN_TAG = !poster symbol{symbol};
+UNKNOWN_TAG = !'poster' symbol{symbol};
 
 staglang = 'r'|'s'|ERR_unsupported_subtitle_language;
 
@@ -96,24 +105,15 @@ func unfixSnen(val string) (string, error) {
 
 var globSchemas map[string]*TSchema
 
-func dummyFilter(typ, val string) (string, string, error) { return typ, val, nil }
-func dummyHackFilter(_ *TTags)                            {}
+// func dummyFilter(typ, val string) (string, string, error) { return typ, val, nil }
+// func dummyHackFilter(_ *TTags)                            {}
 
 // RegisterSchema - parameter name is caseinsensitive
 func RegisterSchema(name string, schema *TSchema) {
+	schema.name = name
 	name = strings.ToLower(name)
 	globSchemas[name] = schema
-
-	if schema.ReadFilter == nil {
-		schema.ReadFilter = dummyFilter
-	}
-	if schema.WriteFilter == nil {
-		schema.WriteFilter = dummyFilter
-	}
-	if schema.HackFilter == nil {
-		schema.HackFilter = dummyHackFilter
-	}
-	initChecker(schema)
+	// initChecker(schema)
 }
 
 // Schema -
@@ -134,4 +134,60 @@ func Schemas() []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+// fixATag - add ar6 for hd movies or ar2 for sd movies or trailers. Do nothing for other types
+func fixATag(tags *TTags) error {
+	typ, err := tags.GetTag("type")
+	if err != nil {
+		return err
+	}
+	if typ != "trailer" && typ != "film" {
+		return nil
+	}
+
+	atag, _ := tags.GetTag("atag")
+	if atag != "" {
+		return nil
+	}
+	sdhd, err := tags.GetTag("sdhd")
+	if err != nil {
+		return err
+	}
+
+	if sdhd == "sd" || typ == "trailer" {
+		tags.AddTag("atag", "ar2")
+		return nil
+	}
+	tags.AddTag("atag", "ar6")
+	return nil
+}
+
+// unfixATag - remove ar6 for hd movies or ar2 for sd movies or trailers. Do nothing for other types
+func unfixATag(tags *TTags) error {
+	typ, err := tags.GetTag("type")
+	if err != nil {
+		return err
+	}
+	if typ != "trailer" && typ != "film" {
+		return nil
+	}
+
+	atag, err := tags.GetTag("atag")
+	if err != nil {
+		return err
+	}
+
+	sdhd, err := tags.GetTag("sdhd")
+	if err != nil {
+		return err
+	}
+
+	switch {
+	case atag == "ar2" && (sdhd == "sd" || typ == "trailer"):
+		tags.RemoveTags("atag")
+	case atag == "ar6" && (sdhd == "hd" || sdhd == "3d") && typ == "film":
+		tags.RemoveTags("atag")
+	}
+	return nil
 }

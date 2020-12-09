@@ -12,25 +12,29 @@ type tValueCheckSlice struct {
 var (
 	tableOldSchemaParseCorrect = []tValueCheckSlice{
 		//23456789012345678901234567890
-		{inputVal: "Sobibor_2018__sd_12_q0w2.trailer.mpg"},
+		{inputVal: "sobibor_2018__sd_12_q0w2_ar2.trailer.mpg"},
 		{inputVal: "451_gradus_po_farengeytu_2018__hd_q0w0_16.trailer",
-			check: "451_gradus_po_farengeytu_2018__hd_16_q0w0.trailer"},
-		{inputVal: "Test_name_2018__hd_16_q0w0"},
-		{inputVal: "Test_name_2018_sdok_2000__hd_16_q0w0.trailer"},
-		{inputVal: "A_2000__sd"},
-		{inputVal: "A_1999_2000__hd"},
+			check: "451_gradus_po_farengeytu_2018__hd_16_q0w0_ar2.trailer"},
+		{inputVal: "test_name_2018__hd_16_q0w0_ar6"},
+		{inputVal: "test_name_2018_sdok_2000__hd_16_q0w0_ar2.trailer"},
+		{inputVal: "a_2000__sd_ar2"},
+		{inputVal: "a_1999_2000__hd_ar6"},
 		{inputVal: "b_2000__3d",
-			check: "B_2000__3d"},
-		{inputVal: "A_2000__sd.trailer.ext"},
+			check: "b_2000__3d_ar6"},
+		{inputVal: "a_2000__sd_ar2.trailer.ext"},
 		{inputVal: "a_2000__q0w0_sd.trailer.ext",
-			check: "A_2000__sd_q0w0.trailer.ext"},
+			check: "a_2000__sd_q0w0_ar2.trailer.ext"},
 		{inputVal: "b_s01_01_2000__hd",
-			check: "B_s01_01_2000__hd"},
-		{inputVal: "The_name_s01_002_zzz_a_comment_2018__hd_q0w0"},
-		{inputVal: "The_name_s01_002_a_subname_zzz_a_comment_2018__hd_q0w0"},
-		{inputVal: "The_name_s01_002_a_subname_2018__hd_q0w0"},
-		{inputVal: "The_name_zzz_a_comment_2018__hd_q0w0"},
-		{inputVal: "Vostochnye_zheny_s01_2015__sd_16_q3w0.trailer.mpg"},
+			check: "b_s01_01_2000__hd_ar6"},
+		{inputVal: "the_name_s01_002_zzz_a_comment_2018__hd_q0w0_ar6"},
+		{inputVal: "the_name_s01_002_a_subname_zzz_a_comment_2018__hd_q0w0_achn6"},
+		{inputVal: "the_name_s01_002_a_subname_2018__hd_q0w0_aesp6"},
+		{inputVal: "the_name_zzz_a_comment_2018__hd_q0w0_aqqq6"},
+		{inputVal: "vostochnye_zheny_s01_2015__sd_16_q3w0_ar2.trailer.mpg"},
+		{inputVal: "xxx_s01_01_2000__300x400.jpg",
+			check: "xxx_s01_01_2000__300x400.jpg"},
+		{inputVal: "xxx_s01_01_2000__center_300x400_sbs_mxxx.jpg",
+			check: "xxx_s01_01_2000__sbs_mxxx_300x400_center.jpg"},
 	}
 	tableOldSchemaParseIncorrect = []string{
 		//23456789012345678901234567890
@@ -53,6 +57,7 @@ var (
 		"The_name_2018__sd_q0w0_hd",
 		"The_name_2018__sd_q0w0_mdisney_film.trailer",
 		"The_name_2018__sd_q0w0_mhardsub_q1s3.trailer",
+		// "Sobibor_2018__sd_12_q0w2.trailer.mpg",
 	}
 )
 
@@ -63,12 +68,26 @@ func parseCorrect(t *testing.T, schemaName string, isStrictLevel bool, table []t
 			t.Errorf("\n%q\nParse() error: %v", v.inputVal, err)
 			continue
 		}
-		err = tagname.Check(isStrictLevel)
+		// err = tagname.Check(isStrictLevel)
+		schema, err := Schema(schemaName)
+		if err != nil {
+			t.Errorf("\n%q\nSchema() error: %v", v.inputVal, err)
+			continue
+		}
+
+		tn, err := TranslateTags(tagname, schema.UnmarshallFilter)
+		if err != nil {
+			t.Errorf("\n%q\nTranslateTags() error: %v", v.inputVal, err)
+			continue
+		}
+		tagname = tn
+
+		err = CheckTags(tagname, isStrictLevel) //, schema)
 		if err != nil {
 			t.Errorf("\n%q\nCheck() error: %v", v.inputVal, err)
 			continue
 		}
-		res, err := ToString(tagname, schemaName, schemaName)
+		res, err := ToString(tagname, schemaName)
 		if err != nil {
 			t.Errorf("\n%q\nToString() error: %v", v, err)
 			continue
@@ -79,6 +98,7 @@ func parseCorrect(t *testing.T, schemaName string, isStrictLevel bool, table []t
 		}
 		if res != check {
 			t.Errorf("\nnot equivalent \nin : %q\nres: %q\nchk: %q", v.inputVal, res, check)
+			t.Errorf("tags: %v", tagname)
 			continue
 		}
 	}
@@ -90,7 +110,22 @@ func parseIncorrect(t *testing.T, schemaName string, isStrictLevel bool, table [
 		if err != nil {
 			continue
 		}
-		err = tn.Check(isStrictLevel)
+		// err = tn.Check(isStrictLevel)
+
+		schema, err := Schema(schemaName)
+		if err != nil {
+			t.Errorf("\n%q\nSchema() error: %v", v, err)
+			continue
+		}
+
+		tags, err := TranslateTags(tn, schema.UnmarshallFilter)
+		if err != nil {
+			// t.Errorf("\n%q\nTranslateTags() error: %v", v, err)
+			continue
+		}
+		tn = tags
+
+		err = CheckTags(tn, isStrictLevel) //, schema)
 		if err != nil {
 			continue
 		}

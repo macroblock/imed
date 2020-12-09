@@ -81,11 +81,7 @@ func doProcess(path string, schema string, checkLevel int) string {
 		tn, err = tagname.NewFromFilename(path, checkLevel)
 		retif.Error(err, "cannot parse filename")
 
-		tn.AddHash()
-
-		if schema == "" {
-			schema = tn.Schema()
-		}
+		// tn.AddHash()
 
 		newPath, err = tn.ConvertTo(schema)
 		retif.Error(err, "cannot convert to '"+schema+"'")

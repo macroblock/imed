@@ -9,6 +9,47 @@ import (
 	"github.com/malashin/ffinfo"
 )
 
+func parseSize(str string) (int, int, error) {
+	retErr := fmt.Errorf("Invalid size format (want: '\\d+x\\d+' have: %q", str)
+	list := strings.Split(str, "x")
+	if len(list) != 2 {
+		return -1, -1,  retErr
+	}
+	w, err := strconv.Atoi(list[0])
+	if err != nil {
+		return -1, -1,  retErr
+	}
+	h, err := strconv.Atoi(list[0])
+	if err != nil {
+		return -1, -1,  retErr
+	}
+	return w, h, nil
+}
+
+func checkSize(tn *TTagname, typ string, width, height int) error {
+	switch typ {
+	case "poster", "poster.gp":
+		size, err := tn.GetTag("sizetag")
+		if err != nil {
+			return err
+		}
+		if size == "logo" {
+			if width > 1500 {
+				return fmt.Errorf("Improper size (want width<=1500, have width=%v)", width)
+			}
+			return nil
+		}
+		w, h, err := parseSize(size)
+		if err != nil {
+			return err
+		}
+		if w != width || h != height {
+			return fmt.Errorf("Improper size (want %vx%v, have %vx%v)", width, height, w, h)
+		}
+	}
+	return nil
+}
+
 func checkDeep(tagname *TTagname) error {
 	typ, err := tagname.GetType()
 	if err != nil {
@@ -20,6 +61,21 @@ func checkDeep(tagname *TTagname) error {
 			err = fmt.Errorf(fmtCheckError("unsupported type", typ, "", tagname.src))
 		}
 		return nil
+	case "poster", "poster.logo", "poster.gp":
+		filePath := filepath.Join(tagname.dir, tagname.src)
+		file, err := ffinfo.Probe(filePath)
+		if err != nil {
+			return err
+		}
+		w, h, err := parseSize(file.Format.Size)
+		if err != nil {
+			return err
+		}
+		err = checkSize(tagname, typ, w, h)
+		if err != nil {
+			return err
+		}
+
 	case "film", "trailer":
 		format, err := tagname.Describe()
 		if err != nil {

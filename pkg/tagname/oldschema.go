@@ -3,79 +3,139 @@ package tagname
 import "strings"
 
 var oldForm = `
-entry    = @name [,snen] [,@comment] ,@year [DIV taglist] @type @ext$;
+entry    = @name [,snen] [,@comment] ,@year [DIV taglist] ['.' @type] @ext$;
 
 sdhd     = 'sd'|'hd'|'3d';
-type     = ['.trailer'| '_'poster];
+type     = 'trailer'| 'poster' | 'teaser';
+` +
+// 999x999.poster
+// logo.poster
 
-poster   = digit{digit} '-' digit{digit} '.poster' [hex];
-
+// poster   = (((digit{digit} ('-'|'x') digit{digit}) | 'logo') '.poster') | 'logo';
+`
 taglist  = [(@sdhd|tags){,(@sdhd|tags)}];
 EONAME   = year (DIV|'.'|$);
 
-INVALID_TAG = 'trailer'|'film';
+INVALID_TAG = 'asdfafdadf!!';
 ` + body
 
 var oldNormalSchema = &TSchema{
 	parser:                  &oldParser,
-	MustHaveByType:          []string{"name", "year", "sdhd", "type", "ext"},
-	NonUniqueByType:         nil,
-	Invalid:                 nil, // []string{"trailer", "film"},
+	// MustHaveByType:          []string{"name", "year", "sdhd", "type", "ext"},
+	// NonUniqueByType:         nil,
+	// Invalid:                 nil, //[]string{"trailer", "film", "logo", "poster"},
 	ToStringHeadOrderByType: []string{"name", "sxx", "sname", "exx", "ename", "comment", "year", "_", "sdhd", "alreadyagedtag", "agetag", "qtag", "atag", "stag"},
-	ToStringTailOrderByType: []string{"m4otag", "datetag", "hashtag", "type", "ext"},
-	ReadFilter:              fnOldSchemaReadFilter,
-	WriteFilter:             fnOldSchemaWriteFilter,
+	ToStringTailOrderByType: []string{"m4otag", "datetag", "hashtag", "type", "aligntag", "ext"},
+	UnmarshallFilter:        fnFromOldFilter,
+	MarshallFilter:          fnToOldFilter,
 }
 
-func fnOldSchemaReadFilter(typ, val string) (string, string, error) {
-	err := error(nil)
+func fixTypeTag(tags *TTags) error {
+	typ, _ := tags.GetTag("type")
 	switch typ {
-	case "type":
-		switch val {
-		case "":
-			val = "film"
-		case ".trailer":
-			val = "trailer"
-		default:
-			if strings.Contains(val, "poster") {
-				x := strings.Split(val+"#", "#")
-				val = x[0]
-				val = strings.TrimPrefix(val, "_")
-				val = strings.TrimSuffix(val, ".poster")
-				val = strings.Replace(val, "-", "x", -1) + "#" + x[1]
-			}
+	default:
+		return nil
+	case "":
+		sdhd, _ := tags.GetTag("sdhd")
+		typ = "film"
+		if sdhd == "" {
+			typ = "poster.gp"
 		}
-	case "snen":
-		val, err = fixSnen(val)
+		tags.AddTag("type", typ)
+	}
+	return nil
+}
+
+func fnFromOldFilter(in, out *TTags, typ, val string, firstRun bool) error {
+	if typ == "" && val == "" {
+		// for last run only
+		if !firstRun {
+			err := fixTypeTag(out)
+			if err != nil {
+				return err
+			}
+			err = fixATag(out)
+			return err
+		}
+		return nil
+	}
+
+	switch typ {
+	case "m4otag":
+		return nil
 	case "name":
 		val = strings.ToLower(val)
+	case "sizetag":
+		val = strings.ReplaceAll(val, "-", "x")
+
+	// case "type":
+		// val = strings.TrimPrefix(val, "poster")
+		// switch {
+		// case val == "":
+			// val = "film"
+			// _, err := in.GetTag("sdhd")
+			// if err != nil {
+				// val = "poster.gp"
+			// }
+		// case val == ".trailer":
+			// val = "trailer"
+		// case strings.HasPrefix(val, "logo"):
+			// val = "poster.logo"
+		// case strings.HasSuffix(val, ".poster"):
+			// val = strings.TrimSuffix(val, ".poster")
+			// val = strings.TrimPrefix(val, "_")
+			// size := strings.ReplaceAll(val, "-", "x")
+			// out.AddTag("sizetag", size)
+			// val = "poster"
+		// }
 	}
-	return typ, val, err
+
+	out.AddTag(typ, val)
+	return nil
 }
 
-func fnOldSchemaWriteFilter(typ, val string) (string, string, error) {
-	err := error(nil)
+func fnToOldFilter(in, out *TTags, typ, val string, firstRun bool) error {
+	// if typ == "" && val == "" {
+		// // for first run only
+		// if firstRun {
+			// err := unfixATag(in)
+			// return err
+		// }
+		// return nil
+	// }
+
 	switch typ {
+	// case "name":
+		// val = strings.Title(val)
+	case "sizetag":
+		t, _ := in.GetTag("type")
+		if t == "poster" || t == "poster.gp" {
+			return nil
+		}
 	case "type":
 		switch val {
+		case "poster":
+			size, err := in.GetTag("sizetag")
+			if err != nil && size != "logo" {
+				return err
+			}
+			// size = strings.ReplaceAll(size, "x", "-")
+			val = size + ".poster"
+		case "poster.logo":
+			val = "logo.poster"
+		case "poster.gp":
+			size, err := in.GetTag("sizetag")
+			if err != nil {
+				return err
+			}
+			val = size
 		case "film":
 			val = ""
 		case "trailer":
 			val = ".trailer"
-		default:
-			if strings.Contains(val, "#") {
-				x := strings.Split(val, "#")
-				val = x[0]
-				val = strings.Replace(val, "x", "-", -1) + ".poster"
-				if len(x[1]) != 0 {
-					val += "#" + x[1]
-				}
-			}
 		}
-	case "snen":
-		val, err = unfixSnen(val)
-	case "name":
-		val = strings.Title(val)
 	}
-	return typ, val, err
+
+	out.AddTag(typ, val)
+	return nil
 }

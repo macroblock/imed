@@ -3,6 +3,7 @@ package tagname
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/macroblock/imed/pkg/ptool"
 )
@@ -21,8 +22,6 @@ const (
 // TTags -
 type TTags struct {
 	byType map[string][]string
-	schema *TSchema
-	// settings *TSettings
 }
 
 var (
@@ -54,15 +53,11 @@ func NewTagname(tree *ptool.TNode, parser *ptool.TParser, schema *TSchema) (*TTa
 	if parser == nil {
 		return nil, fmt.Errorf("NewTagname() parser is null")
 	}
-	tagname := &TTags{schema: schema}
+	// tagname := &TTags{schema: schema}
+	tagname := &TTags{}
 	for _, node := range tree.Links {
 		val := node.Value
 		typ := parser.ByID(node.Type)
-
-		// err := settings.ReadFilter(&typ, &val)
-		// if err != nil {
-		// 	return nil, err
-		// }
 
 		tagname.AddTag(typ, val)
 	}
@@ -97,25 +92,46 @@ func (o *TTags) RemoveTags(typ string) {
 	delete(o.byType, typ)
 }
 
-// FilterTag -
-func (o *TTags) FilterTag(typ string) (string, error) {
+// GetTag -
+func (o *TTags) GetTag(typ string) (string, error) {
 	list := o.GetTags(typ)
 	if len(list) == 0 {
-		return "", fmt.Errorf("has no tags of %q type", typ)
+		return "", fmt.Errorf("must have tag of %q type", typ)
 	}
 	if len(list) > 1 {
-		return "", fmt.Errorf("FilterTag() cannot return multiple tags of %q type", typ)
+		return "", fmt.Errorf("must have only one tag of %q type", typ)
 	}
-	schema := o.schema
-	if schema == nil {
-		return "", fmt.Errorf("schema is nil")
+	return list[0], nil
+}
+
+// MustHave -
+func (o *TTags) MustHave(args ...string) error {
+	list := []string{}
+	for _, arg := range args {
+		if _, ok := o.byType[arg]; ok {
+			continue
+		}
+		list = append(list, arg)
 	}
-	val := list[0]
-	typ, val, err := schema.ReadFilter(typ, val)
-	if err != nil {
-		return "", err
+	if len(list) == 0 {
+		return nil
 	}
-	return val, nil
+	return fmt.Errorf("must have tags: %v", strings.Join(list, ", "))
+}
+
+// MustNotHave -
+func (o *TTags) MustNotHave(args ...string) error {
+	list := []string{}
+	for _, arg := range args {
+		if _, ok := o.byType[arg]; !ok {
+			continue
+		}
+		list = append(list, arg)
+	}
+	if len(list) == 0 {
+		return nil
+	}
+	return fmt.Errorf("must not have tags: %v", strings.Join(list, ", "))
 }
 
 // Parse -
@@ -136,11 +152,6 @@ func Parse(s string, schemaName string) (*TTags, error) {
 		return nil, err
 	}
 
-	// err = check(tagname, checkLevel, schema)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	// tagname.settings = checker.settings
 	for _, list := range tagname.byType {
 		sort.Strings(list)
@@ -153,35 +164,18 @@ func (o *TTags) State() error {
 	if o == nil {
 		return fmt.Errorf("TTags object is nil")
 	}
-	if o.schema == nil {
-		return fmt.Errorf("TTags object's schema is nil")
-	}
 	return nil
 }
 
-// Check -
-func (o *TTags) Check(isStrictCheck bool) error {
-	if err := o.State(); err != nil {
-		return err
-	}
-
-	err := checkTags(o, isStrictCheck)
-	return err
-}
-
 // ToString -
-func ToString(tags *TTags, fromSchemaName, toSchemaName string) (string, error) {
+func ToString(tags *TTags, schemaName string) (string, error) {
 	if tags == nil {
 		return "", fmt.Errorf("tagname is nil")
 	}
-	fromSchema, err := Schema(fromSchemaName)
+	schema, err := Schema(schemaName)
 	if err != nil {
 		return "", err
 	}
-	toSchema, err := Schema(toSchemaName)
-	if err != nil {
-		return "", err
-	}
-	s, err := toString(tags, fromSchema, toSchema)
+	s, err := toString(tags, schema)
 	return s, err
 }

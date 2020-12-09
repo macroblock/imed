@@ -30,15 +30,11 @@ func doProcess(path string, schema string, checkLevel int) {
 	tn, err := tagname.NewFromFilename(path, checkLevel)
 	retif.Error(err, "cannot parse filename")
 
-	if flagAddHash {
-		tn.AddHash()
-	} else {
-		tn.RemoveHash()
-	}
-
-	if schema == "" {
-		schema = tn.Schema()
-	}
+	// if flagAddHash {
+	// tn.AddHash()
+	// } else {
+	// tn.RemoveHash()
+	// }
 
 	newPath, err := tn.ConvertTo(schema)
 	retif.Error(err, "cannot convert to '"+schema+"'")
@@ -102,7 +98,7 @@ func main() {
 		cli.Flag("-s --strict : raise an error on an unknown tag.", &flagStrict),
 		cli.Flag("-d --deep   : raise an error on a tag that does not reflect to a real format.", &flagDeep),
 		cli.Flag("-f --force  : force to rename to a schema ('old' and 'rt' is supported)", &flagForce),
-		cli.Flag("--add-hash  : add hash to a filename", &flagAddHash),
+		// cli.Flag("--add-hash  : add hash to a filename", &flagAddHash),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
 	)

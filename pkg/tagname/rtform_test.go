@@ -5,24 +5,30 @@ import "testing"
 var (
 	tableRtSchemaParseCorrect = []tValueCheckSlice{
 		//          123456789012345678901234567890
-		{inputVal: "sd_2018_Sobibor__12_q0w2_trailer.mpg"},
+		{inputVal: "sd_2018_sobibor__12_q0w2_ar2_trailer.mpg"},
 		{inputVal: "hd_2018_451_gradus_po_farengeytu__q0w0_16_trailer",
-			check: "hd_2018_451_gradus_po_farengeytu__16_q0w0_trailer"},
-		{inputVal: "hd_2018_Test_name__16_q0w0_trailer"},
-		{inputVal: "hd_2000_Test_name__16_q0w0_trailerx_trailer"},
-		{inputVal: "sd_2000_A__film"},
-		{inputVal: "hd_2000_3d_A__film"},
-		{inputVal: "sd_2000_b__film",
-			check: "sd_2000_B__film"},
-		{inputVal: "sd_2000_A__trailer.ext"},
+			check: "hd_2018_451_gradus_po_farengeytu__16_q0w0_ar2_trailer"},
+		{inputVal: "hd_2018_test_name__16_q0w0_ar2_trailer"},
+		// {inputVal: "hd_2000_Test_name__16_q0w0_trailerx_trailer"},
+		{inputVal: "sd_2000_A__film",
+			check: "sd_2000_a__ar2_xy4cS2uPAq0_film"},
+		{inputVal: "hd_2000_3d_A__xEORZqiYOl7_film",
+			check: "hd_2000_3d_a__ar6_xEORZqiYOl7_film"},
+		{inputVal: "sd_2000_b__trailer",
+			check: "sd_2000_b__ar2_trailer"},
+		{inputVal: "sd_2000_a__ar2_trailer.ext"},
 		{inputVal: "sd_2000_a__trailer.ext",
-			check: "sd_2000_A__trailer.ext"},
-		{inputVal: "sd_2000_b_s01_01__film",
-			check: "sd_2000_B_s01_01__film"},
-		{inputVal: "sd_2018_The_name_s01_002_zzz_a_comment__q0w0_film"},
-		{inputVal: "sd_2018_The_name_s01_002_a_subname_zzz_a_comment__q0w0_film"},
-		{inputVal: "sd_2018_The_name_s01_002_a_subname__q0w0_film"},
-		{inputVal: "sd_2018_The_name_zzz_a_comment__q0w0_film"},
+			check: "sd_2000_a__ar2_trailer.ext"},
+		{inputVal: "sd_2000_b_s01_01__trailer",
+			check: "sd_2000_b_s01_01__ar2_trailer"},
+		{inputVal: "sd_2018_the_name_s01_002_zzz_a_comment__q0w0_ar2_trailer"},
+		{inputVal: "sd_2018_the_name_s01_002_a_subname_zzz_a_comment__q0w0_ar2_trailer"},
+		{inputVal: "sd_2018_the_name_s01_002_a_subname__q0w0_ar2_trailer"},
+		{inputVal: "sd_2018_the_name_zzz_a_comment__q0w0_ar2_trailer"},
+		{inputVal: "sd_2018_the_name_zzz_a_comment__q0w0_ar2_poster300x600"},
+		{inputVal: "sd_2018_the_name_zzz_a_comment__q0w0_ar2_logo"},
+		{inputVal: "sd_2018_the_name_zzz_a_comment__q0w0_ar2_poster300-600",
+			check: "sd_2018_the_name_zzz_a_comment__q0w0_ar2_poster300x600"},
 	}
 	tableRtSchemaParseIncorrect = []string{
 		//23456789012345678901234567890
@@ -46,6 +52,8 @@ var (
 		"hd_2018_The_name_2018__q0w0_sd_film",
 		"sd_2018_The_name_2018__hd_q0w0_mdisney_mhardsub_film",
 		"hd_2018_The_name_2018__q0w0_mhardsub_q1s3_trailer",
+
+		// "sd_2018_Sobibor__12_q0w2_trailer.mpg",
 	}
 )
 

@@ -35,9 +35,6 @@ func doProcess(path string, schema string, checkLevel int) {
 	tag = fmt.Sprintf("d%02v%02v%02v%02v%02v", y, int(t.Month()), t.Day(), t.Hour(), t.Minute())
 	tn.SetTag("datetag", tag)
 
-	if schema == "" {
-		schema = tn.Schema()
-	}
 	newPath, err := tn.ConvertTo(schema)
 	retif.Error(err, "cannot convert to '"+schema+"'")
 
