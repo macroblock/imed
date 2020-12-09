@@ -70,7 +70,7 @@ aligntag  = ('center'|'left') !symbol;
 datetag   = 'd' digit digit digit digit digit digit digit digit digit digit !symbol;
 hashtag   = 'x' symbol symbol symbol symbol symbol symbol symbol symbol symbol symbol !symbol;
 
-EXCLUSIVE_TAGS = ('amed'|'abc') !symbol;
+EXCLUSIVE_TAGS = ('amed'|'abc'|'pb'|'vp'|'disney'|('dop'{symbol})|'oscar') !symbol;
 
 UNKNOWN_TAG = !'poster' symbol{symbol};
 

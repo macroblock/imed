@@ -72,6 +72,9 @@ func fnFromRTFilter(in, out *TTags, typ, val string, firstRun bool) error {
 	}
 
 	switch typ {
+	case "EXCLUSIVE_TAGS":
+		typ = "mtag"
+		val = "m"+val
 	case "hashtag", "m4otag", "_hackSDHD", "_hack3D":
 		return nil
 	case "sdhd":

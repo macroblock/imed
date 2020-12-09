@@ -98,7 +98,7 @@ var (
 				{typ: "ext", val: ""},
 			},
 		},
-		{input: "hd_2018_3d_The_name_sXX_a_sname_01_a_ename_zzz_comment__q0w0_film",
+		{input: "hd_2018_3d_The_name_sXX_a_sname_01_a_ename_zzz_comment__q0w0_amed_film",
 			tags: []ttag{
 				{typ: "name", val: "the_name"},
 				// {typ: "snen", val: "s01e01_a_subname"},
@@ -108,6 +108,7 @@ var (
 				{typ: "ename", val: "a_ename"},
 				{typ: "comment", val: "zzz_comment"},
 				{typ: "sdhd", val: "3d"},
+				{typ: "mtag", val: "mamed"},
 				{typ: "qtag", val: "q0w0"},
 				{typ: "type", val: "film"},
 				{typ: "ext", val: ""},
