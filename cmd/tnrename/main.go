@@ -23,6 +23,7 @@ var (
 	flagCheckOnly bool
 	flagAddHash   bool
 	flagReport    bool
+	flagDontPause bool
 	flagFiles     []string
 )
 
@@ -97,7 +98,7 @@ func main() {
 	)
 
 	defer func() {
-		if log.State().Intersect(loglevel.Warning.OrLower()) != 0 {
+		if log.State().Intersect(loglevel.Warning.OrLower()) != 0 && !flagDontPause {
 			misc.PauseTerminal()
 		}
 	}()
@@ -113,6 +114,7 @@ func main() {
 		cli.Flag("-f --force  : force to rename to a schema ('old' and 'rt' is supported)", &flagForce),
 		cli.Flag("-c --check-only: check only (do not rename files)", &flagCheckOnly),
 		cli.Flag("-r --report : print report", &flagReport),
+		cli.Flag("-k          : do not wait key press on errors", &flagDontPause),
 		// cli.Flag("--add-hash  : add hash to a filename", &flagAddHash),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
