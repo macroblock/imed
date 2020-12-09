@@ -151,6 +151,15 @@ func (o *TTagname) Check(checkLevel int) error {
 	return err
 }
 
+// ListTags -
+func (o *TTagname) ListTags() []string {
+	var ret []string
+	for key := range o.tags.byType {
+		ret = append(ret, key)
+	}
+	return ret
+}
+
 // GetTag -
 func (o *TTagname) GetTag(typ string) (string, error) {
 	list := o.tags.GetTags(typ)

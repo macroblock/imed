@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sort"
 
 	"github.com/macroblock/imed/pkg/cli"
 	"github.com/macroblock/imed/pkg/misc"
@@ -16,11 +17,13 @@ var (
 	retif     = log.Catcher()
 	logFilter = loglevel.Warning.OrLower()
 
-	flagStrict  bool
-	flagDeep    bool
-	flagForce   string
-	flagAddHash bool
-	flagFiles   []string
+	flagStrict    bool
+	flagDeep      bool
+	flagForce     string
+	flagCheckOnly bool
+	flagAddHash   bool
+	flagReport    bool
+	flagFiles     []string
 )
 
 func doProcess(path string, schema string, checkLevel int) {
@@ -35,12 +38,22 @@ func doProcess(path string, schema string, checkLevel int) {
 	// } else {
 	// tn.RemoveHash()
 	// }
+	if flagReport {
+		tags := tn.ListTags()
+		sort.Strings(tags)
+		for _, v := range tags {
+			list := tn.GetTags(v)
+			fmt.Printf("%16v : %v\n", v, list)
+		}
+	}
 
 	newPath, err := tn.ConvertTo(schema)
 	retif.Error(err, "cannot convert to '"+schema+"'")
 
-	err = os.Rename(path, newPath)
-	retif.Error(err, "cannot rename file")
+	if !flagCheckOnly {
+		err = os.Rename(path, newPath)
+		retif.Error(err, "cannot rename file")
+	}
 
 	log.Notice(schema, " > ", newPath)
 }
@@ -98,6 +111,8 @@ func main() {
 		cli.Flag("-s --strict : raise an error on an unknown tag.", &flagStrict),
 		cli.Flag("-d --deep   : raise an error on a tag that does not reflect to a real format.", &flagDeep),
 		cli.Flag("-f --force  : force to rename to a schema ('old' and 'rt' is supported)", &flagForce),
+		cli.Flag("-c --check-only: check only (do not rename files)", &flagCheckOnly),
+		cli.Flag("-r --report : print report", &flagReport),
 		// cli.Flag("--add-hash  : add hash to a filename", &flagAddHash),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
