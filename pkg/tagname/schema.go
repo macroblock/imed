@@ -60,6 +60,7 @@ atag      = 'a' ( letter letter letter | 'r' | 'e' ) digit {( letter letter lett
 stag      = 's' staglang {staglang} !symbol;
 agetag    = ('00'|'06'|'12'|'16'|'18'|'99') !symbol;
 alreadyagedtag = digit digit 'aged' !symbol;
+vtag      = 'v' symbol{symbol} !symbol;
 hardsubtag= ('mhardsub'|'hardsub') !symbol;
 m4otag    = 'm4o' !symbol;
 smktag    = ('msmoking'|'smoking') !symbol;
@@ -70,7 +71,9 @@ aligntag  = ('center'|'left') !symbol;
 datetag   = 'd' digit digit digit digit digit digit digit digit digit digit !symbol;
 hashtag   = 'x' symbol symbol symbol symbol symbol symbol symbol symbol symbol symbol !symbol;
 
-EXCLUSIVE_TAGS = ('amed'|'abc'|'pb'|'vp'|'disney'|('dop'{symbol})|'oscar') !symbol;
+EXCLUSIVE_TAGS = ('amed'|'abc'|'pb'|'vp'|'disney'|('dop'{symbol})|'oscar'|'dk'|'ru'|'pryamoiz'
+		 |'newstudio'|'pozitiv'|'lostfilm'
+                 ) !symbol;
 
 UNKNOWN_TAG = !'poster' symbol{symbol};
 
@@ -134,6 +137,39 @@ func Schemas() []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+func filterFixCommonTags(typ, val string) (string, string) {
+	switch typ {
+	case "EXCLUSIVE_TAGS":
+		switch val {
+		default:
+			typ = "mtag"
+			val = "m"+val
+		case "newstudio", "pozitiv", "lostfilm":
+			typ = "vtag"
+			val = "v"+val
+		}
+	case "UNKNOWN_TAG":
+		switch val {
+		case "SD":
+			typ = "sdhd"
+			val = "sd"
+		case "HD":
+			typ = "sdhd"
+			val = "hd"
+		}
+	case "mtag":
+		switch val {
+		case "mgoblin":
+			typ = "vtag"
+			val = "vgoblin"
+		case "mkurazhbambey":
+			typ = "vtag"
+			val = "vkurazhbambey"
+		}
+	}
+	return typ, val
 }
 
 // fixATag - add ar6 for hd movies or ar2 for sd movies or trailers. Do nothing for other types

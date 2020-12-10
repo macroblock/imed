@@ -60,10 +60,9 @@ func fnFromOldFilter(in, out *TTags, typ, val string, firstRun bool) error {
 		return nil
 	}
 
+	typ, val = filterFixCommonTags(typ, val)
+
 	switch typ {
-	case "EXCLUSIVE_TAGS":
-		typ = "mtag"
-		val = "m"+val
 	case "m4otag":
 		return nil
 	case "name":
