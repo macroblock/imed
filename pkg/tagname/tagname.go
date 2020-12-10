@@ -62,7 +62,7 @@ func NewFromString(dir string, str string, checkLevel int, schemaNames ...string
 
 	err = tn.Check(checkLevel)
 	if err != nil {
-		return nil, err
+		return tn, err
 	}
 	return tn, nil
 }
@@ -76,11 +76,11 @@ func NewFromFilename(path string, checkLevel int, schemaNames ...string) (*TTagn
 		return nil, fmt.Errorf("NewFromFilename: path != dir + base, %q != %q + %q", path, dir, src)
 	}
 	ret, err := NewFromString(dir, src, checkLevel, schemaNames...)
-	if err != nil {
-		return nil, err
-	}
+	// if err != nil {
+		// return ret, err
+	// }
 	// ret.dir = filepath.Dir(path)
-	return ret, nil
+	return ret, err
 }
 
 func (o *TTagname) findSchema(schemaName string) (*TSchema, error) {

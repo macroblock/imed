@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/macroblock/imed/pkg/cli"
 	"github.com/macroblock/imed/pkg/misc"
@@ -20,18 +22,20 @@ var (
 	flagStrict    bool
 	flagDeep      bool
 	flagForce     string
-	flagCheckOnly bool
+	flagFileList  string
+	flagDoRename  bool
 	flagAddHash   bool
 	flagReport    bool
 	flagDontPause bool
 	flagSilent    bool
 	flagFiles     []string
+
+	globalTags map[string]map[string]bool
 )
 
 func doProcess(path string, schema string, checkLevel int) {
 	defer retif.Catch()
 	errPrefix := ""
-	fmt.Printf("xxx %v\n", flagSilent)
 	if flagSilent {
 		errPrefix = "\n"+path+"\n"
 	}
@@ -40,26 +44,30 @@ func doProcess(path string, schema string, checkLevel int) {
 		log.Info("rename: " + path)
 	}
 	tn, err := tagname.NewFromFilename(path, checkLevel)
-	retif.Error(err, errPrefix + "cannot parse filename")
-
-	// if flagAddHash {
-	// tn.AddHash()
-	// } else {
-	// tn.RemoveHash()
-	// }
-	if flagReport {
+	if flagReport && tn != nil {
+		if globalTags == nil {
+			globalTags = map[string]map[string]bool{}
+		}
 		tags := tn.ListTags()
-		sort.Strings(tags)
-		for _, v := range tags {
-			list := tn.GetTags(v)
-			fmt.Printf("%16v : %v\n", v, list)
+		for _, t := range tags {
+			if _, ok := globalTags[t]; !ok {
+				globalTags[t] = map[string]bool{}
+			}
+			dst := globalTags[t]
+			list := tn.GetTags(t)
+			for  _, v := range list {
+				dst[v] = true
+			}
+			// fmt.Printf("%16v : %v\n", v, list)
 		}
 	}
+	retif.Error(err, errPrefix + "cannot parse filename")
+
 
 	newPath, err := tn.ConvertTo(schema)
 	retif.Error(err, errPrefix + "cannot convert to '"+schema+"'")
 
-	if !flagCheckOnly {
+	if flagDoRename {
 		err = os.Rename(path, newPath)
 		retif.Error(err, errPrefix + "cannot rename file")
 	}
@@ -69,9 +77,32 @@ func doProcess(path string, schema string, checkLevel int) {
 	}
 }
 
+func printTags() {
+	if globalTags == nil {
+		return
+	}
+	taglist := []string{}
+	for tag, _ := range globalTags {
+		taglist = append(taglist, tag)
+	}
+	sort.Strings(taglist)
+	for _, tag := range taglist {
+		valmap, ok := globalTags[tag]
+		if !ok {
+			panic("unreachable")
+		}
+		vallist := []string{}
+		for key, _ := range valmap {
+			vallist = append(vallist, key)
+		}
+		sort.Strings(vallist)
+		fmt.Printf("%16v : %q\n", tag, vallist)
+	}
+}
+
 func mainFunc() error {
 
-	if len(flagFiles) == 0 {
+	if len(flagFiles) == 0 && flagFileList == "" {
 		return cli.ErrorNotEnoughArguments()
 	}
 
@@ -92,6 +123,25 @@ func mainFunc() error {
 	// wasError := false
 	for _, path := range flagFiles {
 		doProcess(path, flagForce, checkLevel) //tagname.CheckDeepNormal) //tagname.CheckDeepStrict)
+	}
+
+	if flagFileList != "" {
+		file, err := os.Open(flagFileList)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			line := scanner.Text()
+			line = strings.TrimSpace(line)
+			doProcess(line, flagForce, checkLevel)
+		}
+	}
+
+	if flagReport {
+		printTags()
 	}
 	return nil
 }
@@ -122,10 +172,11 @@ func main() {
 		cli.Flag("-s --strict : raise an error on an unknown tag.", &flagStrict),
 		cli.Flag("-d --deep   : raise an error on a tag that does not reflect to a real format.", &flagDeep),
 		cli.Flag("-f --force  : force to rename to a schema ('old' and 'rt' is supported)", &flagForce),
-		cli.Flag("-c --check-only: check only (do not rename files)", &flagCheckOnly),
-		cli.Flag("-r --report : print report", &flagReport),
+		cli.Flag("-d --do-rename: do rename files)", &flagDoRename),
+		cli.Flag("-r --report : print cumulative report", &flagReport),
 		cli.Flag("-k          : do not wait key press on errors", &flagDontPause),
 		cli.Flag("-q --quiet  : quiet mode (display errors only)", &flagSilent),
+		cli.Flag("-l --filelist   : specifies the file that contains list of files to process", &flagFileList),
 		// cli.Flag("--add-hash  : add hash to a filename", &flagAddHash),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
