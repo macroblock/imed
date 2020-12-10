@@ -24,15 +24,23 @@ var (
 	flagAddHash   bool
 	flagReport    bool
 	flagDontPause bool
+	flagSilent    bool
 	flagFiles     []string
 )
 
 func doProcess(path string, schema string, checkLevel int) {
 	defer retif.Catch()
-	log.Info("")
-	log.Info("rename: " + path)
+	errPrefix := ""
+	fmt.Printf("xxx %v\n", flagSilent)
+	if flagSilent {
+		errPrefix = "\n"+path+"\n"
+	}
+	if !flagSilent {
+		log.Info("")
+		log.Info("rename: " + path)
+	}
 	tn, err := tagname.NewFromFilename(path, checkLevel)
-	retif.Error(err, "cannot parse filename")
+	retif.Error(err, errPrefix + "cannot parse filename")
 
 	// if flagAddHash {
 	// tn.AddHash()
@@ -49,14 +57,16 @@ func doProcess(path string, schema string, checkLevel int) {
 	}
 
 	newPath, err := tn.ConvertTo(schema)
-	retif.Error(err, "cannot convert to '"+schema+"'")
+	retif.Error(err, errPrefix + "cannot convert to '"+schema+"'")
 
 	if !flagCheckOnly {
 		err = os.Rename(path, newPath)
-		retif.Error(err, "cannot rename file")
+		retif.Error(err, errPrefix + "cannot rename file")
 	}
 
-	log.Notice(schema, " > ", newPath)
+	if !flagSilent {
+		log.Notice(schema, " > ", newPath)
+	}
 }
 
 func mainFunc() error {
@@ -115,6 +125,7 @@ func main() {
 		cli.Flag("-c --check-only: check only (do not rename files)", &flagCheckOnly),
 		cli.Flag("-r --report : print report", &flagReport),
 		cli.Flag("-k          : do not wait key press on errors", &flagDontPause),
+		cli.Flag("-q --quiet  : quiet mode (display errors only)", &flagSilent),
 		// cli.Flag("--add-hash  : add hash to a filename", &flagAddHash),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
