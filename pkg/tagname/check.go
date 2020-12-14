@@ -16,7 +16,7 @@ type tCheckContext struct{
 var (
 	defaultCheckContext = &tCheckContext{
 		ListMustHaveTypes: []string{"type", "name", "year"},
-		TabNonUniqueTypes: map[string]uint8{"mtag": 0},
+		TabNonUniqueTypes: map[string]uint8{"UNKNOWN_TAG": 0, "mtag": 0},
 		TabInvalidTypes:   map[string]uint8{"UNKNOWN_TAG": 0},
 		TabInvalidValues:  map[string]uint8{},
 		TabValidTypes:     map[string]uint8{},
@@ -142,7 +142,7 @@ func CheckTags(tags *TTags, isStrictCheck bool) error {
 
 	cc := defaultCheckContext
 	switch typ {
-	case "film", "trailer":
+	case "film", "trailer", "teaser":
 		cc = getFilmsCC()
 	case "poster", "poster.logo":
 		cc = getPostersCC()
@@ -200,7 +200,7 @@ func CheckTags(tags *TTags, isStrictCheck bool) error {
 	}
 
 	switch typ {
-	case "film", "trailer":
+	case "film", "trailer", "teaser":
 		return checkFilmsOrTrailers(tags, typ)
 	case "poster", "poster.logo":
 		return checkPostersOrLogo(tags, typ)

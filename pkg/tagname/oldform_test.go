@@ -16,7 +16,7 @@ var (
 		{inputVal: "451_gradus_po_farengeytu_2018__hd_q0w0_16.trailer",
 			check: "451_gradus_po_farengeytu_2018__hd_16_q0w0_ar2.trailer"},
 		{inputVal: "test_name_2018__hd_16_q0w0_ar6"},
-		{inputVal: "test_name_2018_sdok_2000__hd_16_q0w0_ar2.trailer"},
+		{inputVal: "test_name_2018_hdok_2000__hd_16_q0w0_ar2.trailer"},
 		{inputVal: "a_2000__sd_ar2"},
 		{inputVal: "a_1999_2000__hd_ar6"},
 		{inputVal: "b_2000__3d",

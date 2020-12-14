@@ -5,7 +5,7 @@ import "strings"
 var oldForm = `
 entry    = @name [,snen] [,@comment] ,@year [DIV taglist] ['.' @type] @ext$;
 
-sdhd     = 'sd'|'hd'|'3d';
+sdhd     = ('sd'|'hd'|'3d') !symbol;
 type     = 'trailer'| 'poster' | 'teaser';
 ` +
 // 999x999.poster
@@ -14,7 +14,11 @@ type     = 'trailer'| 'poster' | 'teaser';
 // poster   = (((digit{digit} ('-'|'x') digit{digit}) | 'logo') '.poster') | 'logo';
 `
 taglist  = [(@sdhd|tags){,(@sdhd|tags)}];
-EONAME   = year (DIV|'.'|$);
+` +
+// "EONAME   = year (DIV|'.'|$);" +
+"EONAME   = year !({ '_' !(year) ident } '_' year) (DIV|'.'|$);" +
+`
+DIV = '__'|'_';
 
 INVALID_TAG = 'asdfafdadf!!';
 ` + body
@@ -25,7 +29,7 @@ var oldNormalSchema = &TSchema{
 	// NonUniqueByType:         nil,
 	// Invalid:                 nil, //[]string{"trailer", "film", "logo", "poster"},
 	ToStringHeadOrderByType: []string{"name", "sxx", "sname", "exx", "ename", "comment", "year", "_", "sdhd", "alreadyagedtag", "agetag", "qtag", "atag", "stag"},
-	ToStringTailOrderByType: []string{"m4otag", "datetag", "hashtag", "type", "aligntag", "ext"},
+	ToStringTailOrderByType: []string{"datetag", "hashtag", "type", "aligntag", "ext"},
 	UnmarshallFilter:        fnFromOldFilter,
 	MarshallFilter:          fnToOldFilter,
 }
@@ -61,10 +65,11 @@ func fnFromOldFilter(in, out *TTags, typ, val string, firstRun bool) error {
 	}
 
 	typ, val = filterFixCommonTags(typ, val)
+	if typ == "" {
+		return nil
+	}
 
 	switch typ {
-	case "m4otag":
-		return nil
 	case "name":
 		val = strings.ToLower(val)
 	case "sizetag":

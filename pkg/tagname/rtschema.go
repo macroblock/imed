@@ -13,11 +13,12 @@ entry       =  (@_hackHD3D @sdhd, @year, @_hack3D,| !(,) @sdhd, @year,) @name [,
 sdhd        = ['sd'|'hd'];
 _hackHD3D   = 'hd' !('hd',|'3d',);
 _hack3D     = '3d';
-type        = 'trailer'|'film'| 'logo' | poster;
+type        = 'trailer'|'film'|'teaser'| 'logo' | poster;
 
 poster      = ('poster' sizetag) | 'logo';
 
 taglist     = {!(type ('.'|$)) tags,};
+DIV         = '__';
 EONAME      = DIV|'.'|$;
 
 INVALID_TAG = 'sd'|'hd'|'3d'|'logo'|'poster';
@@ -29,7 +30,7 @@ var rtNormalSchema = &TSchema{
 	// NonUniqueByType:         nil,
 	// Invalid:                 nil,
 	ToStringHeadOrderByType: []string{"sdhd", "year", "_hack3D", "name", "sxx", "sname", "exx", "ename", "comment", "_", "alreadyagedtag", "agetag", "qtag", "atag", "stag"},
-	ToStringTailOrderByType: []string{"m4otag", "datetag", "hashtag", "type", "ext"},
+	ToStringTailOrderByType: []string{"datetag", "hashtag", "type", "ext"},
 	UnmarshallFilter:        fnFromRTFilter,
 	MarshallFilter:          fnToRTFilter,
 }
@@ -72,9 +73,12 @@ func fnFromRTFilter(in, out *TTags, typ, val string, firstRun bool) error {
 	}
 
 	typ, val = filterFixCommonTags(typ, val)
+	if typ == "" {
+		return nil
+	}
 
 	switch typ {
-	case "hashtag", "m4otag", "_hackSDHD", "_hack3D":
+	case "hashtag", "_hackHD3D", "_hack3D":
 		return nil
 	case "sdhd":
 		if val == "" {

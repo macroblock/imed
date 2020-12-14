@@ -36,22 +36,21 @@ type TSchema struct {
 //# snen     = 's' digit digit ['_' digit digit [digit] {, !(      COMPREFIX,|EONAME) ident}];
 var body = `
 ,        = '_';
-DIV      = '__';
 ZZZ      = 'zzz';
 
 snen	 = @sxx [,@sname] [,@exx [,@ename]];
 sxx      = 's' (digit digit | 'xx' | 'XX' | 'xX' | 'Xx');
-exx      = !(EONAME) digit digit [digit];
+exx      = !(EONAME) digit digit [digit] ['a'|'b'];
 name     =                     ident {, !(sxx,|ZZZ,|EONAME) ident};
 sname    = !(exx,|ZZZ,|EONAME) ident {, !(exx,|ZZZ,|EONAME) ident};
 ename    = !(     ZZZ,|EONAME) ident {, !(     ZZZ,|EONAME) ident};
 comment  = ZZZ,      !(EONAME) ident {, !(          EONAME) ident};
 
-year     = digit digit digit digit;
+year     = digit digit digit digit !symbol;
 hex      = '#' symbol symbol symbol symbol symbol symbol symbol symbol;
 
 tags     = @INVALID_TAG | @EXCLUSIVE_TAGS
-         |@qtag|@atag|@stag|@alreadyagedtag|@agetag|@m4otag|@smktag
+         |@qtag|@atag|@stag|@alreadyagedtag|@agetag|@smktag
 	 |@hardsubtag|@sbstag|@mtag|@sizetag|@datetag|@aligntag|@hashtag
          |@ERR_qtag|@ERR_agetag|@ERR_atag|@UNKNOWN_TAG;
 
@@ -60,12 +59,11 @@ atag      = 'a' ( letter letter letter | 'r' | 'e' ) digit {( letter letter lett
 stag      = 's' staglang {staglang} !symbol;
 agetag    = ('00'|'06'|'12'|'16'|'18'|'99') !symbol;
 alreadyagedtag = digit digit 'aged' !symbol;
-vtag      = 'v' symbol{symbol} !symbol;
-hardsubtag= ('mhardsub'|'hardsub') !symbol;
-m4otag    = 'm4o' !symbol;
-smktag    = ('msmoking'|'smoking') !symbol;
-sbstag    = ('msbs'|'sbs') !symbol;
-mtag      = 'm' letter {letter} !symbol;
+vtag      = 'v' ('goblin'|'kurazhbambey'|'lostfilm'|'newstudio'|'pozitiv'|ERR_invalid_vtag) !symbol;
+hardsubtag= ('mhardsub'|'hardsub'|'xhardsub') !symbol;
+smktag    = ('msmoking'|'smoking'|'xsmk'|'xsmoking') !symbol;
+sbstag    = ('msbs'|'sbs'|'xsbs') !symbol;
+mtag      = 'm' symbol {symbol} !symbol;
 sizetag   = ('logo' | digit digit {digit} ('x'|'-') digit digit {digit}) !symbol;
 aligntag  = ('center'|'left') !symbol;
 datetag   = 'd' digit digit digit digit digit digit digit digit digit digit !symbol;
@@ -82,6 +80,7 @@ staglang = 'r'|'s'|ERR_unsupported_subtitle_language;
 ERR_atag                          = 'a' {symbol};
 ERR_agetag                        = digit digit !symbol;
 ERR_qtag                          = 'q' {symbol};
+ERR_invalid_vtag                  = {symbol};
 ERR_unsupported_subtitle_language = letter;
 
 ext      = ['.'ident];
@@ -152,22 +151,45 @@ func filterFixCommonTags(typ, val string) (string, string) {
 		}
 	case "UNKNOWN_TAG":
 		switch val {
+		case "fix":
+			typ = ""
+			val = ""
+		case "hSub":
+			typ = "hardsubtag"
+			val = "xhardsub"
 		case "SD":
 			typ = "sdhd"
 			val = "sd"
 		case "HD":
 			typ = "sdhd"
 			val = "hd"
+		case "goblin":
+			typ = "vtag"
+			val = "vgoblin"
 		}
 	case "mtag":
 		switch val {
-		case "mgoblin":
+		case "m4o", "mnew":
+			typ = ""
+			val = ""
+		case "mgoblin", "mgolbin":
 			typ = "vtag"
 			val = "vgoblin"
 		case "mkurazhbambey":
 			typ = "vtag"
 			val = "vkurazhbambey"
+		case "mKurazhbombey":
+			typ = "vtag"
+			val = "vkurazhbambey"
+		case "mhurdsub", "mahardsub":
+			typ = "hardsubtag"
+			val = "xhardsub"
 		}
+	case "smktag", "sbstag", "hardsubtag":
+		val = strings.TrimPrefix(val, "m")
+		val = strings.TrimPrefix(val, "x")
+		val = "x" + val
+
 	}
 	return typ, val
 }
