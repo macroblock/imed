@@ -44,7 +44,10 @@ exx      = !(EONAME) digit digit [digit] ['a'|'b'];
 name     =                     ident {, !(sxx,|ZZZ,|EONAME) ident};
 sname    = !(exx,|ZZZ,|EONAME) ident {, !(exx,|ZZZ,|EONAME) ident};
 ename    = !(     ZZZ,|EONAME) ident {, !(     ZZZ,|EONAME) ident};
-comment  = ZZZ,      !(EONAME) ident {, !(          EONAME) ident};
+` +
+// "comment  = ZZZ,      !(EONAME) ident {, !(          EONAME) ident};" +
+"comment  = ZZZ      {, !(          EONAME) ident};" +
+`
 
 year     = digit digit digit digit !symbol;
 hex      = '#' symbol symbol symbol symbol symbol symbol symbol symbol;

@@ -51,7 +51,7 @@ var (
 		"a_2000__.ext.zzz",
 		"a_2000__tag__tag2",
 		"a__2000",
-		"The_name_s01_zzz_2018__hd_q0w0",
+		// "The_name_s01_zzz_2018__hd_q0w0",
 		// double tags
 		"The_name_2018__hd_q0w0_hd",
 		"The_name_2018__sd_q0w0_hd",

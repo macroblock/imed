@@ -46,7 +46,7 @@ var (
 		"a_2000__tag__tag2",
 		"a__2000",
 		"hd_2018_The_name_s01_a_subname__q0w0",
-		"hd_2018_The_name_s01_zzz__q0w0_film",
+		// "hd_2018_The_name_s01_zzz__q0w0_film",
 		// double tags
 		"hd_2018_The_name_2018__q0w0_hd_film",
 		"hd_2018_The_name_2018__q0w0_sd_film",
