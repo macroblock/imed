@@ -172,7 +172,7 @@ func main() {
 		cli.Flag("-s --strict : raise an error on an unknown tag.", &flagStrict),
 		cli.Flag("-d --deep   : raise an error on a tag that does not reflect to a real format.", &flagDeep),
 		cli.Flag("-f --force  : force to rename to a schema ('old' and 'rt' is supported)", &flagForce),
-		cli.Flag("-d --do-rename: do rename files)", &flagDoRename),
+		cli.Flag("-n --do-rename: do rename files)", &flagDoRename),
 		cli.Flag("-r --report : print cumulative report", &flagReport),
 		cli.Flag("-k          : do not wait key press on errors", &flagDontPause),
 		cli.Flag("-q --quiet  : quiet mode (display errors only)", &flagSilent),
