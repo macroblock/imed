@@ -26,7 +26,7 @@ INVALID_TAG = 'sd'|'hd'|'3d'|'logo'|'poster';
 
 var rtNormalSchema = &TSchema{
 	parser:                  &rtParser,
-	// MustHaveByType:          []string{"name", "year", "sdhd", "type", "ext"},
+	// MustHaveByType:          []string{"name", "year", "sdhd", "type"},
 	// NonUniqueByType:         nil,
 	// Invalid:                 nil,
 	ToStringHeadOrderByType: []string{"sdhd", "year", "_hack3D", "name", "sxx", "sname", "exx", "ename", "comment", "_", "alreadyagedtag", "agetag", "qtag", "atag", "stag"},
@@ -106,14 +106,14 @@ func fnFromRTFilter(in, out *TTags, typ, val string, firstRun bool) error {
 }
 
 func fnToRTFilter(in, out *TTags, typ, val string, firstRun bool) error {
-	// if typ == "" && val == "" {
-		// // for first run only
-		// if firstRun {
-			// err := unfixATag(in)
-			// return err
-		// }
-		// return nil
-	// }
+	if typ == "" && val == "" {
+		// for first run only
+		if firstRun {
+			_, err := in.GetTag("sdhd")
+			return err
+		}
+		return nil
+	}
 
 	switch typ {
 	case "sdhd":

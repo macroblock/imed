@@ -59,7 +59,8 @@ func toString(tagname *TTags, toSchema *TSchema) (string, error) {
 			if typ == "_" {
 				ret = append(ret, "")
 			} else {
-				ret, err = appendNonEmptyStrings(ret, tagname.byType[typ], typ)
+				tags, _ := tagname.byType[typ]
+				ret, err = appendNonEmptyStrings(ret, tags, typ)
 				if err != nil {
 					return nil, err
 				}

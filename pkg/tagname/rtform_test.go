@@ -52,7 +52,6 @@ var (
 		"hd_2018_The_name_2018__q0w0_sd_film",
 		"sd_2018_The_name_2018__hd_q0w0_mdisney_mhardsub_film",
 		"hd_2018_The_name_2018__q0w0_mhardsub_q1s3_trailer",
-
 		// "sd_2018_Sobibor__12_q0w2_trailer.mpg",
 	}
 )

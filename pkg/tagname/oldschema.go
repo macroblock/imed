@@ -25,7 +25,7 @@ INVALID_TAG = 'asdfafdadf!!';
 
 var oldNormalSchema = &TSchema{
 	parser:                  &oldParser,
-	// MustHaveByType:          []string{"name", "year", "sdhd", "type", "ext"},
+	// MustHaveByType:          []string{"name", "year", "type"},
 	// NonUniqueByType:         nil,
 	// Invalid:                 nil, //[]string{"trailer", "film", "logo", "poster"},
 	ToStringHeadOrderByType: []string{"name", "sxx", "sname", "exx", "ename", "comment", "year", "_", "sdhd", "alreadyagedtag", "agetag", "qtag", "atag", "stag"},
