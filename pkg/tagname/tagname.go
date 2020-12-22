@@ -23,7 +23,7 @@ type TTagname struct {
 }
 
 // NewFromString -
-func NewFromString(dir string, str string, checkLevel int, schemaNames ...string) (*TTagname, error) {
+func NewFromString(dir string, str string, isDeepCheck bool, schemaNames ...string) (*TTagname, error) {
 	var err error
 	var srcTags *TTags
 	var schemaName string
@@ -60,7 +60,7 @@ func NewFromString(dir string, str string, checkLevel int, schemaNames ...string
 	}
 	tn.tags = tags
 
-	err = tn.Check(checkLevel)
+	err = tn.Check(isDeepCheck)
 	if err != nil {
 		return tn, err
 	}
@@ -68,14 +68,14 @@ func NewFromString(dir string, str string, checkLevel int, schemaNames ...string
 }
 
 // NewFromFilename -
-func NewFromFilename(path string, checkLevel int, schemaNames ...string) (*TTagname, error) {
+func NewFromFilename(path string, isDeepCheck bool, schemaNames ...string) (*TTagname, error) {
 	src := filepath.Base(path)
 	// dir := filepath.Dir(path)
 	dir := strings.TrimSuffix(path, src)
 	if path != dir+src {
 		return nil, fmt.Errorf("NewFromFilename: path != dir + base, %q != %q + %q", path, dir, src)
 	}
-	ret, err := NewFromString(dir, src, checkLevel, schemaNames...)
+	ret, err := NewFromString(dir, src, isDeepCheck, schemaNames...)
 	// if err != nil {
 		// return ret, err
 	// }
@@ -125,24 +125,24 @@ func (o *TTagname) ConvertTo(schemaName string) (string, error) {
 }
 
 // Check -
-func (o *TTagname) Check(checkLevel int) error {
+func (o *TTagname) Check(isDeepCheck bool) error {
 	if err := o.State(); err != nil {
 		return err
 	}
 
-	if checkLevel < 0 {
-		return nil
-	}
+	// if checkLevel < 0 {
+		// return nil
+	// }
 
-	isStrictCheck := checkLevel&CheckStrict != 0
-	isDeepCheck := checkLevel&CheckDeep != 0
+	// isStrictCheck := checkLevel&CheckStrict != 0
+	// isDeepCheck := checkLevel&CheckDeep != 0
 
 	// schema, err := o.findSchema(o.schemaName)
 	// if err != nil {
 	// return err
 	// }
 
-	err := CheckTags(o.tags, isStrictCheck) //, schema)
+	err := CheckTags(o.tags) //, schema)
 
 	if err != nil || !isDeepCheck {
 		return err

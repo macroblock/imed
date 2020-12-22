@@ -128,7 +128,7 @@ func isNotExist(table map[string]uint8, typ string) bool {
 	return !ok
 }
 
-func CheckTags(tags *TTags, isStrictCheck bool) error {
+func CheckTags(tags *TTags) error {
 
 	err := tags.State()
 	if err != nil {

@@ -192,7 +192,7 @@ type ttag struct {
 // TestTagnameParseCorrect -
 func TestTagnameCorrect(t *testing.T) {
 	for _, v := range tableTagnameCorrect {
-		tagname, err := NewFromFilename(v.input, CheckNormal)
+		tagname, err := NewFromFilename(v.input, false)
 		if err != nil {
 			t.Errorf("\n%q\nNewFormFromFile() error:\n%v", v.input, err)
 			continue
@@ -219,7 +219,7 @@ func TestTagnameCorrect(t *testing.T) {
 // TestTagnameIncorrect -
 func TestTagnameIncorrect(t *testing.T) {
 	for _, v := range tableTagnameIncorrect {
-		_, err := NewFromFilename(v, CheckNormal)
+		_, err := NewFromFilename(v, false)
 		if err == nil {
 			t.Errorf("\n%q\nhas no error", v)
 			// fmt.Println("#### unk:", x.GetTags("unktag"))
@@ -232,7 +232,7 @@ func TestTagnameIncorrect(t *testing.T) {
 // TestTagnameGetCorrect -
 func TestTagnameGetCorrect(t *testing.T) {
 	for _, v := range tableTagnameGetCorrect {
-		tagname, err := NewFromFilename(v.input, CheckNormal)
+		tagname, err := NewFromFilename(v.input, false)
 		if err != nil {
 			t.Errorf("\n%q\nNewFromFilename() error:\n%v", v.input, err)
 			continue

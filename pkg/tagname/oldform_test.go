@@ -82,7 +82,7 @@ func parseCorrect(t *testing.T, schemaName string, isStrictLevel bool, table []t
 		}
 		tagname = tn
 
-		err = CheckTags(tagname, isStrictLevel) //, schema)
+		err = CheckTags(tagname) //, schema)
 		if err != nil {
 			t.Errorf("\n%q\nCheck() error: %v", v.inputVal, err)
 			continue
@@ -125,7 +125,7 @@ func parseIncorrect(t *testing.T, schemaName string, isStrictLevel bool, table [
 		}
 		tn = tags
 
-		err = CheckTags(tn, isStrictLevel) //, schema)
+		err = CheckTags(tn) //, schema)
 		if err != nil {
 			continue
 		}
