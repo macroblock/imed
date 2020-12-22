@@ -17,11 +17,11 @@ var (
 	logFilter = loglevel.Warning.OrLower()
 )
 
-func doProcess(path string, schema string, checkLevel int) {
+func doProcess(path string, schema string, isDeepCheck bool) {
 	defer retif.Catch()
 	log.Info("")
 	log.Info("rename: " + path)
-	tn, err := tagname.NewFromFilename(path, checkLevel)
+	tn, err := tagname.NewFromFilename(path, isDeepCheck)
 	retif.Error(err, "cannot parse filename")
 
 	tag, err := tn.GetTag("type")
@@ -82,6 +82,6 @@ func main() {
 
 	// wasError := false
 	for _, path := range args {
-		doProcess(path, schema, tagname.CheckNormal) //tagname.CheckDeepStrict)
+		doProcess(path, schema, false) //tagname.CheckDeepStrict)
 	}
 }

@@ -56,7 +56,7 @@ func numToText(n int) string {
 	return s
 }
 
-func doProcess(path string, schema string, checkLevel int) string {
+func doProcess(path string, schema string, isDeepCheck bool) string {
 	defer retif.Catch()
 	log.Info("")
 	log.Info("rename: " + path)
@@ -78,7 +78,7 @@ func doProcess(path string, schema string, checkLevel int) string {
 	tn := &tagname.TTagname{} // ### ugly hack
 	if !flagNoCheck {
 		err := error(nil)
-		tn, err = tagname.NewFromFilename(path, checkLevel)
+		tn, err = tagname.NewFromFilename(path, isDeepCheck)
 		retif.Error(err, "cannot parse filename")
 
 		// tn.AddHash()
@@ -158,7 +158,7 @@ func mainFunc() error {
 	// 	return cli.ErrorNotEnoughArguments()
 	// }
 
-	checkLevel := tagname.CheckNormal
+	// checkLevel := tagname.CheckNormal
 	schemaName := "rt"
 
 	if clipboard.Unsupported {
@@ -178,7 +178,7 @@ func mainFunc() error {
 		if len(s) == 0 {
 			continue
 		}
-		s = doProcess(s, schemaName, checkLevel)
+		s = doProcess(s, schemaName, false)
 		outLines = append(outLines, s)
 	}
 	// if flagD == "" {

@@ -49,11 +49,11 @@ func in(what string, where ...string) bool {
 	return false
 }
 
-func doProcess(filePath string, checkLevel int) string {
+func doProcess(filePath string, isDeepCheck bool) string {
 	defer retif.Catch()
 	log.Info(" ")
 	log.Info("processing: " + filePath)
-	tn, err := tagname.NewFromFilename(filePath, checkLevel)
+	tn, err := tagname.NewFromFilename(filePath, isDeepCheck)
 	retif.Error(err, "cannot parse filename")
 
 	// schema := "" //tn.Schema()
@@ -188,17 +188,17 @@ func mainFunc() error {
 		return cli.ErrorNotEnoughArguments()
 	}
 
-	checkLevel := tagname.CheckNormal
-	if flagStrict {
-		checkLevel |= tagname.CheckStrict
-	}
-	if flagDeep {
-		checkLevel |= tagname.CheckDeep
-	}
+	// checkLevel := tagname.CheckNormal
+	// if flagStrict {
+		// checkLevel |= tagname.CheckStrict
+	// }
+	// if flagDeep {
+		// checkLevel |= tagname.CheckDeep
+	// }
 
 	list := []string{}
 	for _, path := range flagFiles {
-		cmd := doProcess(path, checkLevel)
+		cmd := doProcess(path, flagDeep)
 		list = append(list, cmd)
 	}
 	list = append(list, pauseCmd)

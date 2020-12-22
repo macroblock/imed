@@ -33,7 +33,7 @@ var (
 	globalTags map[string]map[string]bool
 )
 
-func doProcess(path string, schema string, checkLevel int) {
+func doProcess(path string, schema string, isDeepCheck bool) {
 	defer retif.Catch()
 	errPrefix := ""
 	if flagSilent {
@@ -43,7 +43,7 @@ func doProcess(path string, schema string, checkLevel int) {
 		log.Info("")
 		log.Info("rename: " + path)
 	}
-	tn, err := tagname.NewFromFilename(path, checkLevel)
+	tn, err := tagname.NewFromFilename(path, isDeepCheck)
 	if flagReport && tn != nil {
 		if globalTags == nil {
 			globalTags = map[string]map[string]bool{}
@@ -112,17 +112,17 @@ func mainFunc() error {
 	case "old", "rt", "":
 	}
 
-	checkLevel := tagname.CheckNormal
-	if flagStrict {
-		checkLevel |= tagname.CheckStrict
-	}
-	if flagDeep {
-		checkLevel |= tagname.CheckDeep
-	}
+	// checkLevel := tagname.CheckNormal
+	// if flagStrict {
+		// checkLevel |= tagname.CheckStrict
+	// }
+	// if flagDeep {
+		// checkLevel |= tagname.CheckDeep
+	// }
 
 	// wasError := false
 	for _, path := range flagFiles {
-		doProcess(path, flagForce, checkLevel) //tagname.CheckDeepNormal) //tagname.CheckDeepStrict)
+		doProcess(path, flagForce, flagDeep) //tagname.CheckDeepNormal) //tagname.CheckDeepStrict)
 	}
 
 	if flagFileList != "" {
@@ -136,7 +136,7 @@ func mainFunc() error {
 		for scanner.Scan() {
 			line := scanner.Text()
 			line = strings.TrimSpace(line)
-			doProcess(line, flagForce, checkLevel)
+			doProcess(line, flagForce, flagDeep)
 		}
 	}
 
