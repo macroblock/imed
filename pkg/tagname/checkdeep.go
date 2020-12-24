@@ -34,7 +34,7 @@ func checkSize(tn *TTagname, typ string, width, height int) error {
 			return err
 		}
 		if size == "logo" {
-			if width > 1500 {
+			if 900 > width || width > 1500 {
 				return fmt.Errorf("Improper size (want width<=1500, have width=%v)", width)
 			}
 			return nil
