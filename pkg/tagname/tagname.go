@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/malashin/ffinfo"
+
 	"github.com/macroblock/imed/pkg/zlog/zlog"
 )
 
@@ -20,6 +22,8 @@ type TTagname struct {
 	schemaName string
 	srcTags    *TTags
 	tags       *TTags
+
+	internalInfo *ffinfo.File
 }
 
 // NewFromString -
@@ -124,26 +128,31 @@ func (o *TTagname) ConvertTo(schemaName string) (string, error) {
 	return ret, nil
 }
 
+// FFInfo -
+func (o *TTagname) FFInfo() (*ffinfo.File, error) {
+	if err := o.State(); err != nil {
+		return nil, err
+	}
+	if o.internalInfo != nil {
+		return o.internalInfo, nil
+	}
+
+	filePath := filepath.Join(o.dir, o.src)
+	info, err := ffinfo.Probe(filePath)
+	if err != nil {
+		return nil, err
+	}
+	o.internalInfo = info
+	return info, nil
+}
+
 // Check -
 func (o *TTagname) Check(isDeepCheck bool) error {
 	if err := o.State(); err != nil {
 		return err
 	}
 
-	// if checkLevel < 0 {
-		// return nil
-	// }
-
-	// isStrictCheck := checkLevel&CheckStrict != 0
-	// isDeepCheck := checkLevel&CheckDeep != 0
-
-	// schema, err := o.findSchema(o.schemaName)
-	// if err != nil {
-	// return err
-	// }
-
-	err := CheckTags(o.tags) //, schema)
-
+	err := CheckTags(o.tags)
 	if err != nil || !isDeepCheck {
 		return err
 	}
@@ -268,7 +277,6 @@ func (o *TTagname) GetAudio() ([]TAudio, error) {
 			val = "ar6"
 		}
 	}
-	// fill a ret struct
 	ret := []TAudio{}
 	lang := ""
 	for _, r := range val[1:] {

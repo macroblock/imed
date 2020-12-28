@@ -48,20 +48,19 @@ func init() {
 	RegisterSchema("rt", rtNormalSchema)
 }
 
-// NewTagname -
-func NewTagname(tree *ptool.TNode, parser *ptool.TParser, schema *TSchema) (*TTags, error) {
+// NewTags -
+func NewTags(tree *ptool.TNode, parser *ptool.TParser, schema *TSchema) (*TTags, error) {
 	if parser == nil {
 		return nil, fmt.Errorf("NewTagname() parser is null")
 	}
-	// tagname := &TTags{schema: schema}
-	tagname := &TTags{}
+	tags := &TTags{}
 	for _, node := range tree.Links {
 		val := node.Value
 		typ := parser.ByID(node.Type)
 
-		tagname.AddTag(typ, val)
+		tags.AddTag(typ, val)
 	}
-	return tagname, nil
+	return tags, nil
 }
 
 // AddTag -
@@ -147,16 +146,16 @@ func Parse(s string, schemaName string) (*TTags, error) {
 		return nil, err
 	}
 
-	tagname, err := NewTagname(tree, parser, schema)
+	tags, err := NewTags(tree, parser, schema)
 	if err != nil {
 		return nil, err
 	}
 
 	// tagname.settings = checker.settings
-	for _, list := range tagname.byType {
+	for _, list := range tags.byType {
 		sort.Strings(list)
 	}
-	return tagname, nil
+	return tags, nil
 }
 
 // State -

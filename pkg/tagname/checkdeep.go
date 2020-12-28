@@ -2,11 +2,8 @@ package tagname
 
 import (
 	"fmt"
-	"path/filepath"
 	"strconv"
 	"strings"
-
-	"github.com/malashin/ffinfo"
 )
 
 func parseSize(str string) (int, int, error) {
@@ -35,7 +32,7 @@ func checkSize(tn *TTagname, typ string, width, height int) error {
 		}
 		if size == "logo" {
 			if 900 > width || width > 1500 {
-				return fmt.Errorf("Improper size (want width<=1500, have width=%v)", width)
+				return fmt.Errorf("improper size (want width<=1500, have width=%v)", width)
 			}
 			return nil
 		}
@@ -44,7 +41,7 @@ func checkSize(tn *TTagname, typ string, width, height int) error {
 			return err
 		}
 		if w != width || h != height {
-			return fmt.Errorf("Improper size (want %vx%v, have %vx%v)", width, height, w, h)
+			return fmt.Errorf("improper size (want %vx%v, have %vx%v)", width, height, w, h)
 		}
 	}
 	return nil
@@ -62,15 +59,16 @@ func checkDeep(tagname *TTagname) error {
 		}
 		return nil
 	case "poster", "poster.logo", "poster.gp":
-		filePath := filepath.Join(tagname.dir, tagname.src)
-		file, err := ffinfo.Probe(filePath)
+		// filePath := filepath.Join(tagname.dir, tagname.src)
+		// file, err := ffinfo.Probe(filePath)
+		info, err := tagname.FFInfo()
 		if err != nil {
 			return err
 		}
 		w, h := 0, 0
-		if len(file.Streams)>0 && file.Streams[0].CodecType == "video" {
-			w = file.Streams[0].Width
-			h = file.Streams[0].Height
+		if len(info.Streams)>0 && info.Streams[0].CodecType == "video" {
+			w = info.Streams[0].Width
+			h = info.Streams[0].Height
 		} else {
 			return fmt.Errorf("failed to read file canvas size")
 		}
@@ -84,8 +82,9 @@ func checkDeep(tagname *TTagname) error {
 		if err != nil {
 			return err
 		}
-		filePath := filepath.Join(tagname.dir, tagname.src)
-		file, err := ffinfo.Probe(filePath)
+		// filePath := filepath.Join(tagname.dir, tagname.src)
+		// file, err := ffinfo.Probe(filePath)
+		info, err := tagname.FFInfo()
 		if err != nil {
 			return err
 		}
@@ -98,14 +97,14 @@ func checkDeep(tagname *TTagname) error {
 		videoDur := tduration{}
 		realA := []TAudio{}
 		realS := []string{}
-		for index, s := range file.Streams {
-			// dur, _ := file.StreamDuration(index)
+		for index, s := range info.Streams {
+			// dur, _ := info.StreamDuration(index)
 			// fmt.Printf("#%v: %v\n", index, dur)
 			switch s.CodecType {
 			default:
 				return fmt.Errorf(fmtCheckError("unsupported codec type", s.CodecType, "", tagname.src))
 			case "video":
-				dur, err := file.StreamDuration(index)
+				dur, err := info.StreamDuration(index)
 				if dur < 0 {
 					return fmt.Errorf("stream #%v of file %q: %v", index, tagname.src, err)
 				}
@@ -129,7 +128,7 @@ func checkDeep(tagname *TTagname) error {
 					return fmt.Errorf(fmtCheckError("SAR", format.Sar, sar, tagname.src))
 				}
 			case "audio":
-				dur, err := file.StreamDuration(index)
+				dur, err := info.StreamDuration(index)
 				if dur < 0 {
 					return fmt.Errorf("get stream duration of stream #%v of file %q: %v", index, tagname.src, err)
 				}
