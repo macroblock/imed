@@ -101,7 +101,7 @@ func (o *TTagname) findSchema(schemaName string) (*TSchema, error) {
 // State -
 func (o *TTagname) State() error {
 	if o == nil {
-		return fmt.Errorf("tagname object is nil")
+		return ErrTagnameIsNil
 	}
 	return o.tags.State()
 }
@@ -169,6 +169,15 @@ func (o *TTagname) ListTags() []string {
 	return ret
 }
 
+// // String -
+// func (o *TTagname) String() string {
+// }
+
+// Len -
+func (o *TTagname) Len() int {
+	return len(o.tags.byType)
+}
+
 // GetTag -
 func (o *TTagname) GetTag(typ string) (string, error) {
 	list := o.tags.GetTags(typ)
@@ -201,6 +210,11 @@ func (o *TTagname) RemoveTags(typ string) {
 // SetTag -
 func (o *TTagname) SetTag(typ string, val string) {
 	o.tags.RemoveTags(typ)
+	o.tags.AddTag(typ, val)
+}
+
+// AddTag -
+func (o *TTagname) AddTag(typ string, val string) {
 	o.tags.AddTag(typ, val)
 }
 
