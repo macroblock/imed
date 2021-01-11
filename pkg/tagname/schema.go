@@ -53,7 +53,7 @@ year     = digit digit digit digit !symbol;
 hex      = '#' symbol symbol symbol symbol symbol symbol symbol symbol;
 
 tags     = @INVALID_TAG | @EXCLUSIVE_TAGS
-         |@qtag|@atag|@stag|@alreadyagedtag|@agetag|@smktag
+         |@qtag|@atag|@stag|@alreadyagedtag|@agetag|@smktag|@vtag
 	 |@hardsubtag|@sbstag|@mtag|@sizetag|@datetag|@aligntag|@hashtag
          |@ERR_qtag|@ERR_agetag|@ERR_atag|@UNKNOWN_TAG;
 
