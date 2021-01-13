@@ -38,6 +38,7 @@ var (
 		"github.com/macroblock/imed",
 		"github.com/macroblock/imed/cmd/agelogo",
 		// "github.com/macroblock/imed/cmd/tagname",
+		"github.com/macroblock/imed/cmd/gpreport",
 		"github.com/macroblock/imed/cmd/tnclipboardpost",
 		"github.com/macroblock/imed/cmd/tndate",
 		"github.com/macroblock/imed/cmd/tnrename",
