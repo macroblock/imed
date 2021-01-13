@@ -191,6 +191,8 @@ func (o *tnType) IndexGet(index tengo.Object) (tengo.Object, error) {
 		return &tengo.UserFunction{Value: o.fnLen}, nil
 	case "schema":
 		return &tengo.UserFunction{Value: funcRS(o.tn.Schema)}, nil
+	case "source":
+		return &tengo.UserFunction{Value: funcRS(o.tn.Source)}, nil
 	case "convertto", "convert_to":
 		return &tengo.UserFunction{Value: funcASRSE(o, o.tn.ConvertTo)}, nil
 	case "listtags", "list_tags":

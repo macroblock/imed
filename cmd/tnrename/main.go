@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"io/ioutil"
 	"fmt"
 	"os"
 	"sort"
@@ -19,21 +20,22 @@ var (
 	retif     = log.Catcher()
 	logFilter = loglevel.Warning.OrLower()
 
-	flagStrict    bool
-	flagDeep      bool
-	flagForce     string
-	flagFileList  string
-	flagDoRename  bool
-	flagAddHash   bool
-	flagReport    bool
-	flagDontPause bool
-	flagSilent    bool
-	flagFiles     []string
+	flagStrict     bool
+	flagDeep       bool
+	flagForce      string
+	flagScriptFile string
+	flagFileList   string
+	flagDoRename   bool
+	flagAddHash    bool
+	flagReport     bool
+	flagDontPause  bool
+	flagSilent     bool
+	flagFiles      []string
 
 	globalTags map[string]map[string]bool
 )
 
-func doProcess(path string, schema string, isDeepCheck bool) {
+func doProcess(path string, schema string, isDeepCheck bool, script *tagname.TScript) {
 	defer retif.Catch()
 	errPrefix := ""
 	if flagSilent {
@@ -43,37 +45,56 @@ func doProcess(path string, schema string, isDeepCheck bool) {
 		log.Info("")
 		log.Info("rename: " + path)
 	}
-	tn, err := tagname.NewFromFilename(path, isDeepCheck)
-	if flagReport && tn != nil {
-		if globalTags == nil {
-			globalTags = map[string]map[string]bool{}
-		}
-		tags := tn.ListTags()
-		for _, t := range tags {
-			if _, ok := globalTags[t]; !ok {
-				globalTags[t] = map[string]bool{}
-			}
-			dst := globalTags[t]
-			list := tn.GetTags(t)
-			for  _, v := range list {
-				dst[v] = true
-			}
-			// fmt.Printf("%16v : %v\n", v, list)
-		}
-	}
-	retif.Error(err, errPrefix + "cannot parse filename")
 
+	var list []*tagname.TTagname
+	var err error
 
-	newPath, err := tn.ConvertTo(schema)
-	retif.Error(err, errPrefix + "cannot convert to '"+schema+"'")
-
-	if flagDoRename {
-		err = os.Rename(path, newPath)
-		retif.Error(err, errPrefix + "cannot rename file")
+	if script != nil {
+		list, err = script.Run(path)
+	} else {
+		var tn *tagname.TTagname
+		tn, err = tagname.NewFromFilename(path, isDeepCheck)
+		list = append(list, tn)
 	}
 
-	if !flagSilent {
-		log.Notice(schema, " > ", newPath)
+	if flagReport {
+		for _, tn := range list {
+			if tn == nil {
+				continue
+			}
+			if globalTags == nil {
+				globalTags = map[string]map[string]bool{}
+			}
+			tags := tn.ListTags()
+			for _, t := range tags {
+				if _, ok := globalTags[t]; !ok {
+					globalTags[t] = map[string]bool{}
+				}
+				dst := globalTags[t]
+				list := tn.GetTags(t)
+				for  _, v := range list {
+					dst[v] = true
+				}
+				// fmt.Printf("%16v : %v\n", v, list)
+			}
+		}
+	}
+
+	retif.Error(err, errPrefix + "whilest preprocess")
+
+	for _, tn := range list {
+		srcPath := tn.Source()
+		newPath, err := tn.ConvertTo(schema)
+		retif.Error(err, errPrefix + "cannot convert to '"+schema+"'")
+
+		if flagDoRename {
+			err = os.Rename(srcPath, newPath)
+			retif.Error(err, fmt.Sprintf(errPrefix+"cannot rename %v -> %v", srcPath, newPath))
+		}
+
+		if !flagSilent {
+			log.Notice(schema, " > ", newPath)
+		}
 	}
 }
 
@@ -100,6 +121,19 @@ func printTags() {
 	}
 }
 
+func readFile(filename string) (string, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	ret, err := ioutil.ReadAll(f)
+	if err != nil {
+		return "", err
+	}
+	return string(ret), nil
+}
+
 func mainFunc() error {
 
 	if len(flagFiles) == 0 && flagFileList == "" {
@@ -112,17 +146,22 @@ func mainFunc() error {
 	case "old", "rt", "":
 	}
 
-	// checkLevel := tagname.CheckNormal
-	// if flagStrict {
-		// checkLevel |= tagname.CheckStrict
-	// }
-	// if flagDeep {
-		// checkLevel |= tagname.CheckDeep
-	// }
+	var script *tagname.TScript
 
-	// wasError := false
+	if flagScriptFile != "" {
+		text, err := readFile(flagScriptFile)
+		if err != nil {
+			return err
+		}
+		s, err := tagname.NewScript(text)
+		if err != nil {
+			return fmt.Errorf("NewScript: %v", err)
+		}
+		script = s
+	}
+
 	for _, path := range flagFiles {
-		doProcess(path, flagForce, flagDeep) //tagname.CheckDeepNormal) //tagname.CheckDeepStrict)
+		doProcess(path, flagForce, flagDeep, script)
 	}
 
 	if flagFileList != "" {
@@ -136,7 +175,7 @@ func mainFunc() error {
 		for scanner.Scan() {
 			line := scanner.Text()
 			line = strings.TrimSpace(line)
-			doProcess(line, flagForce, flagDeep)
+			doProcess(line, flagForce, flagDeep, script)
 		}
 	}
 
@@ -176,8 +215,8 @@ func main() {
 		cli.Flag("-r --report : print cumulative report", &flagReport),
 		cli.Flag("-k          : do not wait key press on errors", &flagDontPause),
 		cli.Flag("-q --quiet  : quiet mode (display errors only)", &flagSilent),
-		cli.Flag("-l --filelist   : specifies the file that contains list of files to process", &flagFileList),
-		// cli.Flag("--add-hash  : add hash to a filename", &flagAddHash),
+		cli.Flag("-t --script : a script file path to run", &flagScriptFile),
+		cli.Flag("-l --filelist   : specifies a file that contains list of files to process", &flagFileList),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
 	)

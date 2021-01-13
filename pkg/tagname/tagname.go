@@ -128,6 +128,11 @@ func (o *TTagname) ConvertTo(schemaName string) (string, error) {
 	return ret, nil
 }
 
+// Source -
+func (o *TTagname) Source() string {
+	return filepath.Join(o.dir, o.src)
+}
+
 // FFInfo -
 func (o *TTagname) FFInfo() (*ffinfo.File, error) {
 	if err := o.State(); err != nil {
