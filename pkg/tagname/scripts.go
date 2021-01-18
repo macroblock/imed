@@ -193,6 +193,8 @@ func (o *tnType) IndexGet(index tengo.Object) (tengo.Object, error) {
 		return &tengo.UserFunction{Value: funcRS(o.tn.Schema)}, nil
 	case "source":
 		return &tengo.UserFunction{Value: funcRS(o.tn.Source)}, nil
+	case "check":
+		return &tengo.UserFunction{Value: funcABRE(o, o.tn.Check)}, nil
 	case "convertto", "convert_to":
 		return &tengo.UserFunction{Value: funcASRSE(o, o.tn.ConvertTo)}, nil
 	case "listtags", "list_tags":
@@ -207,7 +209,7 @@ func (o *tnType) IndexGet(index tengo.Object) (tengo.Object, error) {
 		return &tengo.UserFunction{Value: funcASS(o.tn.SetTag)}, nil
 	case "addtag", "add_tag":
 		return &tengo.UserFunction{Value: funcASS(o.tn.AddTag)}, nil
-	case "gatherextension", "gatherext":
+	case "gatherextension", "gatherext", "gather_extension", "gather_ext":
 		return &tengo.UserFunction{Value: funcRSE(o, o.tn.GatherExtension)}, nil
 	case "gathersizetag", "gather_sizetag":
 		return &tengo.UserFunction{Value: funcRSE(o, o.tn.GatherSizeTag)}, nil
@@ -380,6 +382,30 @@ func funcASRSE(o *tnType, fn func(string) (string, error)) tengo.CallableFunc {
 		ret, err := fn(s1)
 		o.setError(err)
 		return &tengo.String{Value: ret}, nil
+	}
+}
+
+func funcABRE(o *tnType, fn func(bool) error) tengo.CallableFunc {
+	return func(args ...tengo.Object) (tengo.Object, error) {
+		if o == nil || o.tn == nil {
+			return nil, ErrTagnameIsNil
+		}
+
+		if len(args) != 1 {
+			return nil, tengo.ErrWrongNumArguments
+		}
+		val := args[0]
+		a1, ok := tengo.ToBool(val)
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name: "first",
+				Expected: "bool",
+				Found: val.TypeName(),
+			}
+		}
+		err := fn(a1)
+		o.setError(err)
+		return tengo.UndefinedValue, nil
 	}
 }
 

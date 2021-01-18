@@ -1,0 +1,50 @@
+fmt := import("fmt")
+imed := import("imed")
+text := import("text")
+
+/* ebur_suffix := "-ebur128" */
+
+main := func() {
+	ext := imed.fileext(filename)
+	ext = text.to_lower(ext)
+	if ext != ".mp4" && ext != ".mpg" {
+		return error("invalid extension '" + ext + "'")
+	}
+
+	tn := imed.tagname(filename, false)
+	err := tn.err()
+	if is_error(err) {
+		return err
+	}
+	sdhd := tn.gather_sdhd()
+	atag := tn.gather_atag()
+	stag := tn.gather_stag()
+	err = tn.err()
+	if is_error(err) {
+		return err
+	}
+
+	tn.set_tag("type", "trailer")
+	if sdhd != "" {
+		tn.set_tag("sdhd", sdhd)
+	}
+	if atag != "" {
+		tn.set_tag("atag", atag)
+	}
+	if stag != "" {
+		tn.set_tag("stag", stag)
+	}
+	err = tn.err()
+	if is_error(err) {
+		return err
+	}
+
+	tn.check(true)
+	err = tn.err()
+	if is_error(err) {
+		return err
+	}
+	return [tn]
+}
+
+filename = main()

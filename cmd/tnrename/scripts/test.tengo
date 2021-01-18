@@ -1,0 +1,15 @@
+fmt := import("fmt")
+imed := import("imed")
+
+main := func() {
+	fmt.println("!!!", filename)
+
+	tn := imed.tagname(filename, false)
+	err := tn.err()
+	if is_error(err) {
+		return err
+	}
+	return [tn]
+}
+
+filename = main() 

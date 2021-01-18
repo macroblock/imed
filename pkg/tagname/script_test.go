@@ -48,7 +48,7 @@ filename = process(filename)
 		return
 	}
 
-	if v, _ := ret[0].ConvertTo("old"); v != "xxx_999__sd_ar2_m6" {
+	if v, _ := ret[0].ConvertTo("old"); v != "xxx_9999__sd_ar2_m6" {
 		t.Errorf("error: invalid return value %v", v)
 		return
 	}
