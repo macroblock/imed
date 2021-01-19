@@ -168,7 +168,7 @@ var (
 				{typ: "ext", val: ".jpg"},
 			},
 		},
-		{input: "babnik_gp_4000_sxx_x_5000_01_y_6000_zzz_7000_2008_1620x1996.jpg",
+		{input: "babnik_gp_4000_sxx_x_5000_01_y_6000_zzz_7000_2008_1620x1996_left.jpg",
 			tags: []ttag{
 				{typ: "name", val: "babnik_gp_4000"},
 				{typ: "sxx", val: "sxx"},
@@ -178,6 +178,7 @@ var (
 				{typ: "comment", val: "zzz_7000"},
 				{typ: "year", val: "2008"},
 				{typ: "sizetag", val: "1620x1996"},
+				{typ: "aligntag", val: "left"},
 				{typ: "type", val: "poster.gp"},
 				{typ: "ext", val: ".jpg"},
 			},
