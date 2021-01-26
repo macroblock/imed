@@ -47,6 +47,8 @@ var (
 		"github.com/macroblock/cpbftpchk",
 		"github.com/macroblock/rtimg",
 		// "github.com/malashin/rtimg",
+		"github.com/MarkRaid/ffmpeg-screenshots",
+
 		"github.com/malashin/shuher",
 		"github.com/malashin/fflite",
 	}

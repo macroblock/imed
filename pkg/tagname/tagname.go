@@ -8,6 +8,7 @@ import (
 
 	"github.com/malashin/ffinfo"
 
+	// "github.com/macroblock/rtimg/pkg"
 	"github.com/macroblock/imed/pkg/zlog/zlog"
 )
 
@@ -222,6 +223,20 @@ func (o *TTagname) SetTag(typ string, val string) {
 func (o *TTagname) AddTag(typ string, val string) {
 	o.tags.AddTag(typ, val)
 }
+
+// // RtimgCheck -
+// func (o *TTagname) RtimgCheck(isDeep bool) (int64, error) {
+	// return rtimg.CheckImage(o, isDeep)
+// }
+
+// // RtimgStrip -
+// func (o *TTagname) RtimgStrip(isDeep bool) (int64, error) {
+	// sizeLimit, err := rtimg.CheckImage(o, isDeep)
+	// if err != nil {
+		// return sizeLimit, err
+	// }
+	// return rtimg.ReduceImage(o.Source(), sizeLimit)
+// }
 
 // RemoveHash -
 func (o *TTagname) RemoveHash() {

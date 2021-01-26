@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	// "github.com/macroblock/rtimg/pkg"
+
 	// "github.com/d5/tengo/v2"
 	"github.com/d5/tengo"
 	"github.com/d5/tengo/stdlib"
@@ -219,6 +221,12 @@ func (o *tnType) IndexGet(index tengo.Object) (tengo.Object, error) {
 		return &tengo.UserFunction{Value: funcRSE(o, o.tn.GatherSTag)}, nil
 	case "gathersdhd", "gather_sdhd":
 		return &tengo.UserFunction{Value: funcRSE(o, o.tn.GatherSDHD)}, nil
+
+	// case "rtimgcheck", "rtimg_check":
+		// return &tengo.UserFunction{Value: funcABRIE(o, o.tn.RtimgCheck())}, nil
+
+	// case "rtimgstrip", "rtimg_strip":
+		// return &tengo.UserFunction{Value: funcAIRE(o, o.tn.RtimgStrip())}, nil
 	}
 }
 
