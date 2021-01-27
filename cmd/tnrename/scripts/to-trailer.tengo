@@ -16,6 +16,10 @@ main := func() {
 	if is_error(err) {
 		return err
 	}
+	tn.remove_tags("exx")
+	tn.remove_tags("ename")
+	tn.remove_tags("stag")
+
 	sdhd := tn.gather_sdhd()
 	atag := tn.gather_atag()
 	stag := tn.gather_stag()
