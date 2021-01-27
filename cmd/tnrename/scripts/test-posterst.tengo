@@ -1,0 +1,28 @@
+fmt := import("fmt")
+imed := import("imed")
+text := import("text")
+
+valid_exts := ".jpg;.tga"
+
+main := func() {
+	ext := text.to_lower(imed.fileext(filename))
+	if !text.contains(valid_exts, ext) {
+		return error("invalid extension '" + ext + "'")
+	}
+
+	tn := imed.tagname(filename, true)
+	tn.clear_err()
+	if tn.has_err() { 
+		return tn.err() 
+	}
+
+	tn.rtimg_check(true)
+	if tn.has_err() { return tn.err() }
+
+	tn.rtimg_strip()
+	if tn.has_err() { return tn.err() }
+
+	return [tn]
+}
+
+filename = main()
