@@ -70,6 +70,8 @@ func fnFromOldFilter(in, out *TTags, typ, val string, firstRun bool) error {
 	}
 
 	switch typ {
+	case "hashtag":
+		return nil
 	case "name":
 		val = strings.ToLower(val)
 	case "sizetag":

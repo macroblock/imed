@@ -24,7 +24,7 @@ var (
 		{inputVal: "a_2000__sd_ar2.trailer.ext"},
 		{inputVal: "a_2000__q0w0_sd.trailer.ext",
 			check: "a_2000__sd_q0w0_ar2.trailer.ext"},
-		{inputVal: "b_s01_01_2000__hd",
+		{inputVal: "b_s01_01_2000__hd_x1234567890",
 			check: "b_s01_01_2000__hd_ar6"},
 		{inputVal: "the_name_s01_002_zzz_a_comment_2018__hd_q0w0_ar6"},
 		{inputVal: "the_name_s01_002_a_subname_zzz_a_comment_2018__hd_q0w0_achn6"},
