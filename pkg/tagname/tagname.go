@@ -134,6 +134,15 @@ func (o *TTagname) Source() string {
 	return filepath.Join(o.dir, o.src)
 }
 
+func (o *TTagname) SetSource(path string) {
+	src := filepath.Base(path)
+	dir := strings.TrimSuffix(path, src)
+	o.src = src
+	o.dir = dir
+	o.internalInfo = nil
+}
+
+
 // FFInfo -
 func (o *TTagname) FFInfo() (*ffinfo.File, error) {
 	if err := o.State(); err != nil {

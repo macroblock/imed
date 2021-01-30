@@ -3,14 +3,49 @@ package tagname
 import (
 	"fmt"
 	"strings"
+
+	"github.com/malashin/ffinfo"
 )
 
+var errorFFInfoIsNil = fmt.Errorf("ffinfo is nil")
 
 // GatherExtension -
 func (o *TTagname) GatherExtension() (string, error) {
+	return gatherWrapper(o, GatherExtension)
+}
+
+// GatherSizeTag -
+func (o *TTagname) GatherSizeTag() (string, error) {
+	return gatherWrapper(o, GatherSizeTag)
+}
+
+// GatherATag -
+func (o *TTagname) GatherATag() (string, error) {
+	return gatherWrapper(o, GatherATag)
+}
+
+// GatherSTag -
+func (o *TTagname) GatherSTag() (string, error) {
+	return gatherWrapper(o, GatherSTag)
+}
+
+// GatherSDHD -
+func (o *TTagname) GatherSDHD() (string, error) {
+	return gatherWrapper(o, GatherSDHD)
+}
+
+func gatherWrapper(o *TTagname, fn func(*ffinfo.File)(string, error)) (string, error) {
 	info, err := o.FFInfo()
 	if err != nil {
 		return "", err
+	}
+	return fn(info)
+}
+
+// GatherExtension -
+func GatherExtension(info *ffinfo.File) (string, error) {
+	if info == nil {
+		return "", errorFFInfoIsNil
 	}
 	if len(info.Streams)<1 {
 		return "", fmt.Errorf("len(info.Streams)<1")
@@ -26,10 +61,9 @@ func (o *TTagname) GatherExtension() (string, error) {
 }
 
 // GatherSizeTag -
-func (o *TTagname) GatherSizeTag() (string, error) {
-	info, err := o.FFInfo()
-	if err != nil {
-		return "", err
+func GatherSizeTag(info *ffinfo.File) (string, error) {
+	if info == nil {
+		return "", errorFFInfoIsNil
 	}
 	if len(info.Streams)<1 {
 		return "", fmt.Errorf("len(info.Streams)<1")
@@ -40,10 +74,9 @@ func (o *TTagname) GatherSizeTag() (string, error) {
 }
 
 // GatherATag -
-func (o *TTagname) GatherATag() (string, error) {
-	info, err := o.FFInfo()
-	if err != nil {
-		return "", err
+func GatherATag(info *ffinfo.File) (string, error) {
+	if info == nil {
+		return "", errorFFInfoIsNil
 	}
 	if len(info.Streams)<1 {
 		return "", fmt.Errorf("len(info.Streams)<1")
@@ -82,10 +115,9 @@ func (o *TTagname) GatherATag() (string, error) {
 }
 
 // GatherSTag -
-func (o *TTagname) GatherSTag() (string, error) {
-	info, err := o.FFInfo()
-	if err != nil {
-		return "", err
+func GatherSTag(info *ffinfo.File) (string, error) {
+	if info == nil {
+		return "", errorFFInfoIsNil
 	}
 	if len(info.Streams)<1 {
 		return "", fmt.Errorf("len(info.Streams)<1")
@@ -118,10 +150,9 @@ func (o *TTagname) GatherSTag() (string, error) {
 }
 
 // GatherSDHD -
-func (o *TTagname) GatherSDHD() (string, error) {
-	info, err := o.FFInfo()
-	if err != nil {
-		return "", err
+func GatherSDHD(info *ffinfo.File) (string, error) {
+	if info == nil {
+		return "", errorFFInfoIsNil
 	}
 	if len(info.Streams)<1 {
 		return "", fmt.Errorf("len(info.Streams)<1")
