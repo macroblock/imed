@@ -108,14 +108,14 @@ func makeGlobFilter(patterns string) (func(string) (bool, error), error) {
 	patList := strings.Split(patterns, ";")
 	// fake run through all patterns to check on errors before real job
 	for _, pat := range patList {
-		_, err := filepath.Match("anything", pat)
+		_, err := filepath.Match(pat, "anything")
 		if err != nil {
 			return nil, err
 		}
 	}
 	return func(s string) (bool, error) {
 		for _, pat := range patList {
-			ok, err := filepath.Match(s, pat)
+			ok, err := filepath.Match(pat, s)
 			if err != nil {
 				return false, err
 			}
@@ -138,7 +138,7 @@ func mainFunc() error {
 	}
 
 	for _, path := range flagFiles {
-		ok, err := filter(path)
+		ok, err := filter(filepath.Base(path))
 		log.Error(err, path)
 		if err != nil {
 			panic("unreachable")
@@ -152,7 +152,7 @@ func mainFunc() error {
 			continue
 		}
 		err = os.Rename(path, outPath)
-		log.Error(err, path)
+		log.Error(err)
 		if err != nil {
 			continue
 		}
