@@ -104,7 +104,7 @@ func doProcess(path string, schema string, isDeepCheck bool) string {
 		case 0:
 			retif.Error(true, "0 audio: that shouldn't be happened")
 		case 1:
-			if a[0].Language == "rus" {
+			if a[0].Language == "rus" || a[0].Language == "qqq" {
 				break
 			}
 			text, ok := langTable[a[0].Language]
