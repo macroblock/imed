@@ -53,7 +53,7 @@ year     = digit digit digit digit !symbol;
 hex      = '#' symbol symbol symbol symbol symbol symbol symbol symbol;
 
 tags     = @INVALID_TAG | @EXCLUSIVE_TAGS
-         |@qtag|@atag|@stag|@alreadyagedtag|@agetag|@smktag|@vtag
+         |@qtag|@atag|@smktag|@alreadyagedtag|@agetag|@stag|@vtag
 	 |@hardsubtag|@sbstag|@mtag|@sizetag|@datetag|@aligntag|@hashtag
          |@ERR_qtag|@ERR_agetag|@ERR_atag|@UNKNOWN_TAG;
 
@@ -64,7 +64,7 @@ agetag    = ('00'|'06'|'12'|'16'|'18'|'99') !symbol;
 alreadyagedtag = digit digit 'aged' !symbol;
 vtag      = 'v' ('goblin'|'kurazhbambey'|'lostfilm'|'newstudio'|'pozitiv'|ERR_invalid_vtag) !symbol;
 hardsubtag= ('mhardsub'|'hardsub'|'xhardsub') !symbol;
-smktag    = ('msmoking'|'smoking'|'xsmk'|'xsmoking') !symbol;
+smktag    = ('xsmoking'|'xsmk'|'msmoking'|'msmk'|'smoking'|'smk') !symbol;
 sbstag    = ('msbs'|'sbs'|'xsbs') !symbol;
 mtag      = 'm' symbol {symbol} !symbol;
 sizetag   = ('logo' | digit digit {digit} ('x'|'-') digit digit {digit}) !symbol;
@@ -188,7 +188,9 @@ func filterFixCommonTags(typ, val string) (string, string) {
 			typ = "hardsubtag"
 			val = "xhardsub"
 		}
-	case "smktag", "sbstag", "hardsubtag":
+	case "smktag":
+		val = "xsmoking"
+	case "sbstag", "hardsubtag":
 		val = strings.TrimPrefix(val, "m")
 		val = strings.TrimPrefix(val, "x")
 		val = "x" + val
