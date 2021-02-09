@@ -13,9 +13,11 @@ main := func() {
 
 	tn := imed.tagname(filename, false)
 	err := tn.err()
-	if is_error(err) {
+	if is_error(err) && tn.len() == 0 {
 		return err
 	}
+	tn.clear_err()
+	tn.remove_tags("UNKNOWN_TAG")
 	tn.remove_tags("exx")
 	tn.remove_tags("ename")
 	tn.remove_tags("stag")
