@@ -234,18 +234,19 @@ func (o *TTagname) AddTag(typ string, val string) {
 }
 
 // RtimgCheck -
-func (o *TTagname) RtimgCheck(isDeep bool) error {
-	_, err := rtimg.CheckImage(o, isDeep)
+func (o *TTagname) RtimgCheck(filepath string) error {
+	_, err := rtimg.CheckImage("", o)
 	return err
 }
 
 // RtimgStrip -
-func (o *TTagname) RtimgStrip() error {
-	sizeLimit, err := rtimg.CheckImage(o, false)
+func (o *TTagname) RtimgStrip(filepath string) error {
+	data, err := rtimg.CheckImage("", o)
 	if err != nil {
 		return err
 	}
-	return rtimg.ReduceImage(o.Source(), sizeLimit)
+	_, _, err = rtimg.ReduceImage(o.Source(), data.FileSizeLimit)
+	return err
 }
 
 // RemoveHash -

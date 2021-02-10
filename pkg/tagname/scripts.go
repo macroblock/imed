@@ -227,10 +227,10 @@ func (o *tnType) IndexGet(index tengo.Object) (tengo.Object, error) {
 		return &tengo.UserFunction{Value: funcRSE(o, o.tn.GatherSDHD)}, nil
 
 	case "rtimgcheck", "rtimg_check":
-		return &tengo.UserFunction{Value: funcABRE(o, o.tn.RtimgCheck)}, nil
+		return &tengo.UserFunction{Value: funcASRE(o, o.tn.RtimgCheck)}, nil
 
 	case "rtimgstrip", "rtimg_strip":
-		return &tengo.UserFunction{Value: funcRE(o, o.tn.RtimgStrip)}, nil
+		return &tengo.UserFunction{Value: funcASRE(o, o.tn.RtimgStrip)}, nil
 	}
 }
 
@@ -442,6 +442,29 @@ func funcABRE(o *tnType, fn func(bool) error) tengo.CallableFunc {
 	}
 }
 
+func funcASRE(o *tnType, fn func(string) error) tengo.CallableFunc {
+	return func(args ...tengo.Object) (tengo.Object, error) {
+		if o == nil || o.tn == nil {
+			return nil, ErrTagnameIsNil
+		}
+
+		if len(args) != 1 {
+			return nil, tengo.ErrWrongNumArguments
+		}
+		val := args[0]
+		a1, ok := tengo.ToString(val)
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name: "first",
+				Expected: "string",
+				Found: val.TypeName(),
+			}
+		}
+		err := fn(a1)
+		o.setError(err)
+		return tengo.UndefinedValue, nil
+	}
+}
 
 func funcRE(o *tnType, fn func() error) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
