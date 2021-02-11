@@ -12,6 +12,7 @@ import (
 
 	"github.com/atotto/clipboard"
 	"github.com/macroblock/imed/pkg/tagname"
+	"github.com/macroblock/rtimg/pkg"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -25,39 +26,71 @@ var (
 
 func doJob(files []string) ([]string, error) {
 	var ret []string
+	var errors []string
 
-	for _, file := range files {
-		file = strings.TrimSpace(file)
-		if file == "" {
+	appendError := func(name string, err error) {
+		if err != nil {
+			errors = append(errors, fmt.Sprintf("%v:\n    %v",name, err))
+		}
+	}
+
+	for _, filePath := range files {
+		filePath = strings.TrimSpace(filePath)
+		if filePath == "" {
 			continue
 		}
-		fmt.Println(file)
-
-		dir := filepath.Dir(file)
-		file := filepath.Base(file)
-		po := ""
-		if x := strings.Split(dir, string(os.PathSeparator)); len(x) > 1 {
-			po = x[1]
-		}
-
-		tn, err := tagname.NewFromFilename(file, false)
+		filePath, err := filepath.Abs(filePath)
 		if err != nil {
-			return nil, err
+			appendError(filePath, err)
+			continue
 		}
-		typ, err := tn.GetTag("type")
-		if typ == "poster" {
-			return nil, fmt.Errorf("type must be %q, not %q", file, "poster.gp", typ)
+
+		tn, err := tagname.NewFromFilename(filePath, false)
+		if err != nil {
+			tn = nil
+		}
+		key, err := rtimg.FindKey(filePath, tn)
+		if err != nil {
+			appendError(filePath, err)
+			continue
+		}
+
+		name := key.Name()
+		data := key.Data()
+		if data == nil {
+			appendError(filePath, fmt.Errorf("unreachable: something wrong with a <key>"))
+			continue
+		}
+
+		po := ""
+		for i := 0; ; i++ {
+			seg, ok := key.Segment(i)
+			if !ok {
+				po = ""
+				break
+			}
+			if seg == "posters" {
+				break
+			}
+			po = seg
+		}
+		if po == "" {
+			appendError(filePath, fmt.Errorf("cannot detect segment 'pravoobladatel'"))
+			continue
 		}
 
 		jobType := "### Error ###"
-
+		typ := data.Type
 		switch typ {
-		default: return nil, fmt.Errorf("unsupported type %q", typ)
-		case "poster.gp":
-			ext, _ := tn.GetTag("ext")
+		default:
+			appendError(filePath, fmt.Errorf("unsupported type %q", typ))
+			continue
+		case "gp":
+			ext := filepath.Ext(filePath)
 			switch ext {
 			default:
-				return nil, fmt.Errorf("unsupported extension %q for type %q", ext, typ)
+				appendError(filePath, fmt.Errorf("unsupported extension %q for type %q", ext, typ))
+				continue
 			case ".jpg":
 				jobType = "Постер"
 			case ".psd":
@@ -65,9 +98,13 @@ func doJob(files []string) ([]string, error) {
 			} // switch ext
 		} // switch typ
 
-		s := file + "\t" + jobType + "\t" + "\t" + po + "\n"
+		s := name + "\t" + filepath.Base(filePath) + "\t" + jobType + "\t" + "\t" + po + "\n"
 		// fmt.Print(s)
 		ret = append(ret, s)
+	}
+	// fmt.Println(ret)
+	if len(errors) > 0 {
+		return nil, fmt.Errorf("%v", strings.Join(errors, "\n"))
 	}
 	return ret, nil
 }
@@ -75,7 +112,7 @@ func doJob(files []string) ([]string, error) {
 func subMain() error {
 	for _, arg := range os.Args[1:] {
 		switch arg {
-		default: return fmt.Errorf("unsupported flag %q\n  Use -c to use clipboard mode")
+		default: return fmt.Errorf("unsupported flag %q\n  Use -c to use clipboard mode", arg)
 		case "-c": useClipboard = true
 		}
 	}
