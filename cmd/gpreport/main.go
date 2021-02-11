@@ -24,6 +24,20 @@ var (
 	useClipboard = false
 )
 
+func findProvider(key *rtimg.TKey) string {
+	ret := ""
+	for i := 0; ; i++ {
+		seg, ok := key.Segment(i)
+		if !ok {
+			return ""
+		}
+		if seg == "posters" {
+			return ret
+		}
+		ret = seg
+	}
+}
+
 func doJob(files []string) ([]string, error) {
 	var ret []string
 	var errors []string
@@ -61,45 +75,31 @@ func doJob(files []string) ([]string, error) {
 			appendError(filePath, fmt.Errorf("unreachable: something wrong with a <key>"))
 			continue
 		}
-
-		po := ""
-		for i := 0; ; i++ {
-			seg, ok := key.Segment(i)
-			if !ok {
-				po = ""
-				break
-			}
-			if seg == "posters" {
-				break
-			}
-			po = seg
-		}
+		po := findProvider(key)
 		if po == "" {
 			appendError(filePath, fmt.Errorf("cannot detect segment 'pravoobladatel'"))
 			continue
 		}
 
 		jobType := "### Error ###"
-		typ := data.Type
-		switch typ {
+		switch data.Type {
 		default:
-			appendError(filePath, fmt.Errorf("unsupported type %q", typ))
+			appendError(filePath, fmt.Errorf("unsupported type %q", data.Type))
 			continue
 		case "gp":
 			ext := filepath.Ext(filePath)
 			switch ext {
 			default:
-				appendError(filePath, fmt.Errorf("unsupported extension %q for type %q", ext, typ))
+				appendError(filePath, fmt.Errorf("unsupported extension %q for type %q", ext, data.Type))
 				continue
 			case ".jpg":
 				jobType = "Постер"
 			case ".psd":
 				jobType = "Постер (исходник)"
 			} // switch ext
-		} // switch typ
+		} // switch data.Type
 
 		s := name + "\t" + filepath.Base(filePath) + "\t" + jobType + "\t" + "\t" + po + "\n"
-		// fmt.Print(s)
 		ret = append(ret, s)
 	}
 	// fmt.Println(ret)
@@ -121,19 +121,16 @@ func subMain() error {
 	if err != nil {
 		return err
 	}
-
 	output, err := doJob(files)
 	if err != nil {
 		return err
 	}
-
 	writeStringArrayTo(outputPath, output, 0775)
 	if err != nil {
 		return err
 	}
 	return nil
 }
-
 
 func main() {
 	err := subMain()
