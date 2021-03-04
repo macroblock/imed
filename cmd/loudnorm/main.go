@@ -262,4 +262,8 @@ func main() {
 
 	log.Error(err)
 	log.Info(cmdLine.GetHint())
+
+	if err != nil {
+		os.Exit(-1)
+	}
 }
