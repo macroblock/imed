@@ -55,7 +55,7 @@ hex      = '#' symbol symbol symbol symbol symbol symbol symbol symbol;
 tags     = @INVALID_TAG | @EXCLUSIVE_TAGS
          |@qtag|@atag|@smktag|@alreadyagedtag|@agetag|@stag|@vtag
 	 |@hardsubtag|@sbstag|@mtag|@sizetag|@datetag|@aligntag|@hashtag
-         |@ERR_qtag|@ERR_agetag|@ERR_atag|@UNKNOWN_TAG;
+         |@ERR_agetag|@ERR_atag|@UNKNOWN_TAG;
 
 qtag      = 'q'digit('w'|'s')digit !symbol;
 atag      = 'a' ( letter letter letter | 'r' | 'e' ) digit {( letter letter letter | 'r' | 'e' ) digit} !symbol;
@@ -82,7 +82,6 @@ staglang = 'r'|'s'|ERR_unsupported_subtitle_language;
 
 ERR_atag                          = 'a' {symbol};
 ERR_agetag                        = digit digit !symbol;
-ERR_qtag                          = 'q' {symbol};
 ERR_invalid_vtag                  = {symbol};
 ERR_unsupported_subtitle_language = letter;
 
