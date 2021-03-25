@@ -5,7 +5,7 @@ import "strings"
 var oldForm = `
 entry    = @name [,snen] [,@comment] ,@year [DIV taglist] ['.' @type] @ext$;
 
-sdhd     = ('sd'|'hd'|'3d') !symbol;
+sdhd     = ('sd'|'hd'|'3d'|'4k') !symbol;
 type     = 'trailer'| 'poster' | 'teaser';
 ` +
 // 999x999.poster

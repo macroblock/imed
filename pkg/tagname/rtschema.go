@@ -10,7 +10,7 @@ import (
 var rtForm = `
 entry       =  (@_hackHD3D @sdhd, @year, @_hack3D,| !(,) @sdhd, @year,) @name [,snen] [,@comment] [DIV taglist] @type @ext$;
 
-sdhd        = ['sd'|'hd'];
+sdhd        = ['sd'|'hd'|'4k'];
 _hackHD3D   = 'hd' !('hd',|'3d',);
 _hack3D     = '3d';
 type        = 'trailer'|'film'|'teaser'| 'logo' | poster;

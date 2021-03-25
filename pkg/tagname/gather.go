@@ -170,6 +170,7 @@ func GatherSDHD(info *ffinfo.File) (string, error) {
 			return "", fmt.Errorf("stream #%v (video) has unsupported resolution %v", index, size)
 		case "720x576": v = "sd"
 		case "1920x1080": v = "hd"
+                case "3840x2160": v = "4k"
 		}
 		if sdhd != "" && sdhd != v {
 			return "", fmt.Errorf("video streams have unequal resolution")

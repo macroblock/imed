@@ -408,6 +408,9 @@ func (o *TTagname) Describe() (*TFormat, error) {
 			err = fmt.Errorf("unsupported format %q of the tagname %v", frm, o.src)
 		}
 		return nil, err
+        case "4k":
+		format.resolution = TResolution{3840, 2160}
+		format.Sar = "1:1"
 	case "hd", "3d":
 		format.resolution = TResolution{1920, 1080}
 		format.Sar = "1:1"
