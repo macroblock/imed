@@ -92,8 +92,7 @@ func doJob(files []string) ([]string, error) {
 			default:
 				appendError(filePath, fmt.Errorf("unsupported extension %q for type %q", ext, data.Type))
 				continue
-			case ".jpg":
-			case ".png":
+			case ".jpg", ".png":
 				jobType = "Постер"
 			case ".psd":
 				jobType = "Постер (исходник)"
