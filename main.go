@@ -40,6 +40,7 @@ var (
 		// "github.com/macroblock/imed/cmd/tagname",
 		"github.com/macroblock/imed/cmd/gpreport",
 		"github.com/macroblock/imed/cmd/gpvar",
+		"github.com/macroblock/imed/cmd/subrip",
 		"github.com/macroblock/imed/cmd/tnclipboardpost",
 		"github.com/macroblock/imed/cmd/tndate",
 		"github.com/macroblock/imed/cmd/tnrename",
