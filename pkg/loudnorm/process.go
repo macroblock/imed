@@ -9,6 +9,7 @@ import (
 
 	"github.com/macroblock/imed/pkg/ffmpeg"
 	"github.com/macroblock/imed/pkg/misc"
+	"github.com/macroblock/imed/pkg/types"
 )
 
 // GlobalDebug -
@@ -131,7 +132,7 @@ func ProcessTo(fi *TFileInfo) (canBeFixed bool, err error) {
 	outputs := []string{}
 	ffmpeg.UniqueReset()
 
-	time := ffmpeg.FloatToTime(fi.Duration)
+	time := types.Timecode(fi.Duration)
 	combParser := ffmpeg.NewCombineParser(
 		ffmpeg.NewAudioProgressParser(time, nil),
 	)

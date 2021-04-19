@@ -8,7 +8,7 @@ import (
 
 // IAudioProgress -
 type IAudioProgress interface {
-	Callback(Time) error
+	Callback(Timecode) error
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

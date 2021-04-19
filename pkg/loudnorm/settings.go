@@ -3,7 +3,7 @@ package loudnorm
 import (
 	"math"
 
-	"github.com/macroblock/imed/pkg/ffmpeg"
+	"github.com/macroblock/imed/pkg/types"
 )
 
 // -
@@ -70,8 +70,8 @@ type (
 		CorrectionStep float64
 	}
 	tEditSettings struct {
-		ClipPoint    *ffmpeg.Time
-		ClipDuration *ffmpeg.Time
+		ClipPoint    *types.Timecode
+		ClipDuration *types.Timecode
 	}
 )
 
@@ -90,10 +90,10 @@ func (o TSettings) calcDuration(duration float64) (float64, error) {
 		return -1.0, nil
 	}
 	if o.Edit.ClipPoint != nil {
-		duration -= o.Edit.ClipPoint.Float()
+		duration -= o.Edit.ClipPoint.InSeconds()
 	}
 	if o.Edit.ClipDuration != nil {
-		duration = math.Min(duration, o.Edit.ClipDuration.Float())
+		duration = math.Min(duration, o.Edit.ClipDuration.InSeconds())
 	}
 	return duration, nil
 }

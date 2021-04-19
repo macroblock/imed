@@ -8,6 +8,7 @@ import (
 
 	"github.com/macroblock/imed/pkg/ffmpeg"
 	"github.com/macroblock/imed/pkg/misc"
+	"github.com/macroblock/imed/pkg/types"
 )
 
 func replaceStatic(pattern string, vals ...string) string {
@@ -96,7 +97,7 @@ func Scan(streams []*TStreamInfo) error {
 	params = append(params, GetSettings().getGlobalFlags()...)
 	params = append(params, "-i", streams[0].Parent.Filename)
 
-	time := ffmpeg.FloatToTime(streams[0].Parent.Duration)
+	time := types.NewTimecode(0, 0, streams[0].Parent.Duration)
 	combParser := ffmpeg.NewCombineParser(
 		ffmpeg.NewAudioProgressParser(time, nil),
 	)
@@ -178,7 +179,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 		params = append(params, GetSettings().getGlobalFlags()...)
 		params = append(params, "-i", streams[0].Parent.Filename)
 
-		time := ffmpeg.FloatToTime(streams[0].Parent.Duration)
+		time := types.NewTimecode(0, 0, streams[0].Parent.Duration)
 		combParser := ffmpeg.NewCombineParser(
 			ffmpeg.NewAudioProgressParser(time, nil),
 		)

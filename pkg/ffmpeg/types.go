@@ -1,11 +1,21 @@
 package ffmpeg
-
 import (
-	"fmt"
-	"strconv"
-	"strings"
+	// "fmt"
+	// "strconv"
+	// "strings"
+
+	"github.com/macroblock/imed/pkg/types"
 )
 
+
+type Timecode = types.Timecode
+
+func ParseTimecode(s string) (Timecode, error) {
+	ret, err := types.ParseHHMMSS(s)
+	return Timecode(ret), err
+}
+
+/*
 type (
 	// Time -
 	Time int
@@ -57,8 +67,8 @@ func ParseHHMMSSFr(t string, msPerFrame int) (Time, error) {
 	return o, nil
 }
 
-// ParseTime - hh:mm:ss.ms format
-func ParseTime(t string) (Time, error) {
+// ParseHHMMSSMs - hh:mm:ss.ms format
+func ParseHHMMSSMsTime(t string) (Time, error) {
 	o := Time(0)
 	// fmt.Printf("here %v", t)
 	x := strings.Split(t, ":")
@@ -131,3 +141,10 @@ func (o THHMMSSMs) String() string {
 func (o Time) String() string {
 	return o.HHMMSSMs().String()
 }
+
+// Ms() -
+func (o Time) Ms() int {
+	return int(o)
+}
+
+*/

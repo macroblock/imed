@@ -9,9 +9,10 @@ import (
 
 	"github.com/k0kubun/go-ansi"
 	"github.com/macroblock/imed/pkg/cli"
-	"github.com/macroblock/imed/pkg/ffmpeg"
+	// "github.com/macroblock/imed/pkg/ffmpeg"
 	"github.com/macroblock/imed/pkg/loudnorm"
 	"github.com/macroblock/imed/pkg/misc"
+	"github.com/macroblock/imed/pkg/types"
 	"github.com/macroblock/imed/pkg/zlog/loglevel"
 	"github.com/macroblock/imed/pkg/zlog/zlog"
 )
@@ -46,7 +47,8 @@ var (
 	flagExt string
 )
 
-func adobeTimeToFFMPEG(s string) (ffmpeg.Time, error) {
+/*
+func adobeTimeToFFMPEG(s string) (types.Timecode, error) {
 	x := strings.Split(s, ":")
 	val, err := strconv.Atoi(x[len(x)-1])
 	if err != nil {
@@ -63,6 +65,7 @@ func adobeTimeToFFMPEG(s string) (ffmpeg.Time, error) {
 	}
 	return ret, nil
 }
+*/
 
 func doProcess(path string) {
 	log.Notice("result: ", path)
@@ -100,12 +103,13 @@ type tErrorGroup struct {
 	err error
 }
 
-func (o *tErrorGroup) adobeTime(flag string, val **ffmpeg.Time) bool {
+func (o *tErrorGroup) adobeTime(flag string, val **types.Timecode) bool {
 	if o.err != nil {
 		return false
 	}
 	if flag != "" {
-		ret, err := ffmpeg.ParseHHMMSSFr(flag, 40)
+		// ret, err := ffmpeg.ParseHHMMSSFr(flag, 40)
+		ret, err := types.ParseTimecode(flag)
 		if err != nil {
 			o.err = err
 			return false
@@ -244,8 +248,8 @@ func main() {
 		cli.Flag("-r            : compressor release time (seconds)", &flagRelease),
 		cli.Flag("-tries        : number of tries (default 5)", &flagTries),
 		cli.Flag("-step         : compress correction step (default = 0.1)", &flagStep),
-		cli.Flag("-t            : same meaning as in ffmpeg but has different format (hh:mm:ss:fr)", &flagT),
-		cli.Flag("-ss           : same meaning as in ffmpeg but has different format (hh:mm:ss:fr)", &flagSS),
+		cli.Flag("-t            : same meaning as in ffmpeg but able to use hh:mm:ss:fr", &flagT),
+		cli.Flag("-ss           : same meaning as in ffmpeg but able to use hh:mm:ss:fr", &flagSS),
 		cli.Flag("-stereo       : force stereo", &flagStereo),
 		cli.Flag("-stthb        : ST stats below < I + this (default = -4.0)", &flagSTStatsTHBelow),
 		cli.Flag("-sttha        : ST stats above >= I + this(default = +4.0)", &flagSTStatsTHAbove),

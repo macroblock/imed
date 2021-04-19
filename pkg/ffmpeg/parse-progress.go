@@ -34,7 +34,8 @@ func (o *tAudioProgressParser) Parse(line string, eof bool) (accepted bool, err 
 	// 	return false, false, fmt.Errorf("audio progress parser: either receiver or callback is nil")
 	// }
 	if val := reAudioProgress.FindAllStringSubmatch(line, 1); val != nil {
-		t, err := ParseTime(val[0][1])
+		// t, err := ParseTime(val[0][1])
+		t, err := ParseTimecode(val[0][1])
 		if err != nil {
 			return true, err
 		}
@@ -46,11 +47,11 @@ func (o *tAudioProgressParser) Parse(line string, eof bool) (accepted bool, err 
 
 type tDefaultAudioProgressCallback struct {
 	lastTime   time.Time
-	total      Time
+	total      Timecode
 	maxInfoLen int
 }
 
-func (o *tDefaultAudioProgressCallback) Callback(t Time) error {
+func (o *tDefaultAudioProgressCallback) Callback(t Timecode) error {
 	if t < 0 {
 		t = o.total
 		clearLine := strings.Repeat(" ", o.maxInfoLen)
@@ -65,7 +66,7 @@ func (o *tDefaultAudioProgressCallback) Callback(t Time) error {
 	}
 	percents := "N/A"
 	if o.total > 0 {
-		percents = strconv.Itoa(int(math.Round(100*t.Float()/o.total.Float()))) + "%"
+		percents = strconv.Itoa(int(math.Round(100*t.InSeconds()/o.total.InSeconds()))) + "%"
 	}
 	info := fmt.Sprintf(" %v %v/%v, elapsed: %v            \r",
 		percents, t, o.total, time.Since(o.lastTime))
@@ -76,7 +77,7 @@ func (o *tDefaultAudioProgressCallback) Callback(t Time) error {
 }
 
 // NewAudioProgressParser -
-func NewAudioProgressParser(totalLen Time, callback IAudioProgress) IParser {
+func NewAudioProgressParser(totalLen Timecode, callback IAudioProgress) IParser {
 	// fmt.Printf("@@@@: %q\n", line)
 	if callback == nil {
 		if totalLen < 1000 { // !!!HACK!!!
