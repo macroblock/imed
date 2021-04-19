@@ -27,6 +27,7 @@ var (
 	log   = zlog.Instance("main")
 	retif = log.Catcher()
 
+	flagCheckOnly bool
 	flagFixIt bool
 	flagPoints string
 	flagInsertZero bool
@@ -97,19 +98,29 @@ func doProcess(path string) {
 	}
 	srt, err := subrip.Parse(strings.NewReader(string(data)))
 	if err != nil {
-		log.Errorf(err, "parse error")
+		log.Errorf(err, "on parse error")
 		return
 	}
 	err = subrip.CheckOpt(srt, inOpts)
 	if err != nil {
 		// fmt.Print("sss", err.Error())
-		log.Errorf(err, "input check")
+		log.Errorf(err, "on input check")
+		return
+	}
+	if flagCheckOnly {
+		err = subrip.CheckOpt(srt, outOpts)
+		if err != nil {
+			log.Errorf(err, "on check")
+			return
+		}
+		log.Notice("Ok.")
 		return
 	}
 	if pointA.enabled {
 		zp, scale, move, err := calcTransform(srt)
 		if err != nil {
-			log.Errorf(err, "transform error")
+			log.Errorf(err, "on transform error")
+			return
 		}
 		if zp != move || scale != 1.0 {
 			subrip.Transform(&srt, zp, scale, move)
@@ -132,20 +143,20 @@ func doProcess(path string) {
 
 	err = subrip.CheckOpt(srt, outOpts)
 	if err != nil {
-		log.Errorf(err, "output check")
+		log.Errorf(err, "on output check")
 		return
 	}
 	if flagBackup {
 		backup := getBackupName(path)
 		err := Copy(path, backup)
 		if err != nil {
-			log.Errorf(err, "copy file to backup")
+			log.Errorf(err, "on copy file to backup")
 			return
 		}
 	}
 	err = ioutil.WriteFile(path, []byte(subrip.ToString(srt)), 0666)
 	if err != nil {
-		log.Errorf(err, "write output file")
+		log.Errorf(err, "on write output file")
 		return
 	}
 	log.Notice("Ok.")
@@ -242,7 +253,7 @@ func mainFunc() error {
 	}
 
 	for i, path := range flagFiles {
-		log.Infof("%2v/%v: %v", i, len(flagFiles), path)
+		log.Infof("%2v/%v: %v", i+1, len(flagFiles), path)
 		doProcess(path)
 	}
 	return nil
@@ -271,6 +282,7 @@ func main() {
 		cli.Usage("!PROG! {flags|<...>}"),
 		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
 		cli.Flag("-h --help           : help", cmdLine.PrintHelp).Terminator(),
+		cli.Flag("-c --check          : check only", &flagCheckOnly),
 		cli.Flag("-x --fix            : fix it (process)", &flagFixIt),
 		cli.Flag("-p --points         : recalc points (id=hh:mm:ss.ms,)[1,2]", &flagPoints),
 		cli.Flag("-z --zero           : insert empty chunk at zero position", &flagInsertZero),
