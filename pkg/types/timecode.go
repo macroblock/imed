@@ -156,6 +156,16 @@ func (o Timecode) InSeconds() float64 {
 	return float64(o)
 }
 
+func getSign(s string) int {
+	if s[0] == '-' {
+		return -1
+	}
+	if s[0] == '+' {
+		return +1
+	}
+	return 0
+}
+
 func parseHelper(s []string, index int, isFloat, signbit bool, err error) (float64, bool, error) {
 	if index < 0 || err != nil {
 		return 0.0, signbit, err
@@ -169,16 +179,21 @@ func parseHelper(s []string, index int, isFloat, signbit bool, err error) (float
 		v = float64(x)
 		err = e
 	}
+
 	if err != nil {
 		return NaN, false, errMsg(strings.Join(s, ":"), err)
 	}
 	sb := math.Signbit(v)
+	sign := getSign(s[index])
+	if !sb && sign < 0{
+		sb = true
+	}
 
 	// if it is the firstmost subvalue
 	if index == 0 {
 		return math.Abs(v), sb, nil
 	}
-	if sb {
+	if sb || sign != 0 {
 		return NaN, false, errMsg(strings.Join(s, ":"), fmt.Errorf("only first subvalue can have a sign"))
 	}
 	return v, signbit, nil
