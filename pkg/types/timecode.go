@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/macroblock/imed/pkg/misc"
 )
 
 type (
@@ -30,6 +32,7 @@ func (o HHMMSSMs) String() string {
 	if o.HH >= 0 && o.MM >= 0 && o.SS >= 0 && o.Ms >= 0 {
 		return fmt.Sprintf("%02v:%02v:%02v.%03v", o.HH, o.MM, o.SS, o.Ms)
 	}
+	abs := misc.AbsInt
 	return fmt.Sprintf("-%02v:%02v:%02v.%03v", abs(o.HH), abs(o.MM), abs(o.SS), abs(o.Ms))
 }
 
@@ -179,12 +182,5 @@ func parseHelper(s []string, index int, isFloat, signbit bool, err error) (float
 		return NaN, false, errMsg(strings.Join(s, ":"), fmt.Errorf("only first subvalue can have a sign"))
 	}
 	return v, signbit, nil
-}
-
-func abs(v int) int {
-	if v < 0 {
-		return -v
-	}
-	return v
 }
 
