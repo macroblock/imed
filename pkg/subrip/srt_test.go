@@ -18,6 +18,12 @@ our final approach into Coruscant.
 00:02:20,476 --> 00:02:22,501
 Very good, Lieutenant.
 
+3
+00:02:30,476 --> 00:02:32,501
+one line
+second one
+and the last one
+
 `
 func TestSrtCorrect(t *testing.T) {
 	srt, err := Parse(strings.NewReader(data))
@@ -30,7 +36,7 @@ func TestSrtCorrect(t *testing.T) {
 	// }
 
 	err = StrictCheck(srt)
-	if len(strings.Split(err.Error(), "\n")) != 3 {
+	if len(strings.Split(err.Error(), "\n")) != 4 {
 		t.Errorf("Check incorrect error: %v\n", err)
 	}
 	// if err != nil {

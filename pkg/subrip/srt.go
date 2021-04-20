@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+const DefaultStrictMaxLines = 2
+
 var t35Min = NewTimecode(0, 35, 0) // 35 minutes
 
 type Record struct {
@@ -15,12 +17,18 @@ type Record struct {
 	Text string
 }
 
-type Options int
+type Options struct {
+	Bits Bits
+	MaxLines int
+}
+
+type Bits = int
 const (
-	OptMultipleErrors Options = iota
+	OptMultipleErrors Bits = iota
 	OptCheckNegativeTimecode
 	OptCheckChunkId
 	OptCheck35MinGap
+	OptCheckMaxLines
 )
 
 func MildOptions() Options {
@@ -28,23 +36,26 @@ func MildOptions() Options {
 }
 
 func StrictOptions() Options {
-	return ^MildOptions()
+	ret := NewOptions()
+	ret.Bits = ^ret.Bits
+	return ret
 }
 
-func NewOptions(args ...Options) Options {
-	o := Options(0)
+func NewOptions(args ...Bits) Options {
+	o := Options{}
+	o.MaxLines = DefaultStrictMaxLines
 	for _, v := range args {
-		o = o |	(1<<v)
+		o.Bits = o.Bits | (1<<v)
 	}
 	return o
 }
 
-func(o Options) On(v Options) bool {
-	return o & (1<<v) != 0
+func(o Options) On(v Bits) bool {
+	return o.Bits & (1<<v) != 0
 }
 
-func(o Options) Off(v Options) bool {
-	return o & (1<<v) == 0
+func(o Options) Off(v Bits) bool {
+	return o.Bits & (1<<v) == 0
 }
 
 func MildCheck(srt []Record) error {
@@ -115,6 +126,15 @@ func CheckOpt(srt []Record, opt Options) error {
 			if v.Out - v.In > t35Min ||
 				v.In - prevOut > t35Min {
 				if errMsg("chunk:%v: delta time > 35 min", v.ID) {
+					return fmt.Errorf(strings.Join(errs, "\n"))
+				}
+			}
+		}
+		if opt.On(OptCheckMaxLines) {
+			lineCount := len(strings.Split(v.Text, "\n"))
+			if lineCount > opt.MaxLines {
+				if errMsg("chunk:%v: exceeded line count of a text block (%v > %v)",
+						v.ID, lineCount, opt.MaxLines) {
 					return fmt.Errorf(strings.Join(errs, "\n"))
 				}
 			}
