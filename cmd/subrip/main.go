@@ -35,6 +35,7 @@ var (
 	// flagOutputOptions string
 	// flagListOptions string
 	flagBackup bool
+	flagK bool
 	flagFiles []string
 
 	inOpts = subrip.MildOptions()
@@ -271,13 +272,19 @@ func main() {
 	)
 
 	defer func() {
-		if log.State().Intersect(loglevel.Warning.OrLower()) != 0 {
+		if log.State().Intersect(loglevel.Warning.OrLower()) != 0 && !flagK{
 			misc.PauseTerminal()
+		}
+		if log.State().Intersect(loglevel.Error.Only()) != 0 {
+			os.Exit(3)
+		}
+		if log.State().Intersect(loglevel.Warning.Only()) != 0 {
+			os.Exit(1)
 		}
 	}()
 
 	// command line interface
-	cmdLine := cli.New("!PROG! does some work with subrip !!!overwrites input file(s)!!!", mainFunc)
+	cmdLine := cli.New("!PROG! does some work with subrip !!!overwrites input file(s)!!! returns exit codes 0, 1, 2, 3 on normal, wrarning, panic and error exits respectively.", mainFunc)
 	cmdLine.Elements(
 		cli.Usage("!PROG! {flags|<...>}"),
 		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
@@ -290,6 +297,7 @@ func main() {
 		// cli.Flag("-oo --output-options: output options delimited by comma", &flagOutputOptions),
 		// cli.Flag("-lo --list-options  : list available options", &flagListOptions),
 		cli.Flag("-b --backup         : leave backup file", &flagBackup),
+		cli.Flag("-k                  : do not wait keyboard event on errors", &flagK),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
 	)
