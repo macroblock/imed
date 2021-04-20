@@ -14,5 +14,8 @@ func CommandExists(names ...string) error {
 			list = append(list, name)
 		}
 	}
+	if len(list) == 0 {
+		return nil
+	}
 	return fmt.Errorf("command(s) not found: %v", strings.Join(list, ", "))
 }
