@@ -30,6 +30,8 @@ var (
 	flagCheckOnly bool
 	flagFixIt bool
 	flagPoints string
+	flagMove string
+	flagScale string
 	flagInsertZero bool
 	// flagInputOptions string
 	// flagOutputOptions string
@@ -40,6 +42,8 @@ var (
 
 	inOpts = subrip.MildOptions()
 	outOpts = subrip.StrictOptions()
+	moveBy = types.NewTimecode(0, 0, 0)
+	scaleBy = 1.0
 
 	pointA, pointB struct {
 		enabled bool
@@ -117,16 +121,23 @@ func doProcess(path string) {
 		log.Notice("Ok.")
 		return
 	}
+
+	zp := types.NewTimecode(0, 0, 0)
+	scale := 1.0
+	move := types.NewTimecode(0, 0, 0)
 	if pointA.enabled {
-		zp, scale, move, err := calcTransform(srt)
+		zp, scale, move, err = calcTransform(srt)
 		if err != nil {
 			log.Errorf(err, "on transform error")
 			return
 		}
-		if zp != move || scale != 1.0 {
-			subrip.Transform(&srt, zp, scale, move)
-		}
 	}
+	move += moveBy
+	scale *= scaleBy
+	if zp != move || scale != 1.0 {
+		subrip.Transform(&srt, zp, scale, move)
+	}
+
 	if flagInsertZero {
 		if len(srt) == 0 || srt[0].In.InSeconds() > 0 {
 			record := subrip.Record {
@@ -252,6 +263,20 @@ func mainFunc() error {
 			return err
 		}
 	}
+	if flagMove != "" {
+		m, err := types.ParseTimecode(flagMove)
+		if err != nil {
+			return err
+		}
+		moveBy = m
+	}
+	if flagScale != "" {
+		s, err := strconv.ParseFloat(flagScale, 64)
+		if err != nil {
+			return err
+		}
+		scaleBy = s
+	}
 
 	for i, path := range flagFiles {
 		log.Infof("%2v/%v: %v", i+1, len(flagFiles), path)
@@ -292,6 +317,8 @@ func main() {
 		cli.Flag("-c --check          : check only", &flagCheckOnly),
 		cli.Flag("-x --fix            : fix it (process)", &flagFixIt),
 		cli.Flag("-p --points         : recalc points (id=hh:mm:ss.ms,)[1,2]", &flagPoints),
+		cli.Flag("-m --move           : set offset (move by) hh:mm:ss.ms", &flagMove),
+		cli.Flag("-s --scale          : set scale ratio", &flagScale),
 		cli.Flag("-z --zero           : insert empty chunk at zero position", &flagInsertZero),
 		// cli.Flag("-io --input-options : input options delimited by comma", &flagInputOptions),
 		// cli.Flag("-oo --output-options: output options delimited by comma", &flagOutputOptions),
