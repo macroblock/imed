@@ -24,6 +24,7 @@ var (
 	flagClipboard bool
 	flagU         bool
 	flagD         string
+	flagN         string
 )
 
 func doProcess(path string) {
@@ -77,11 +78,12 @@ func mainFunc() error {
 		if clipboard.Unsupported {
 			return fmt.Errorf("%s", "clipboard unsupported on this OS")
 		}
-		text, err := clipboard.ReadAll()
+		origText, err := clipboard.ReadAll()
 		if err != nil {
 			return err
 		}
-		lines := strings.Split(text, "\n")
+		origText = strings.TrimSpace(origText)
+		lines := strings.Split(origText, "\n")
 		lastNonEmpty := -1
 		for i := range lines {
 			s := lines[i]
@@ -97,7 +99,26 @@ func mainFunc() error {
 		if flagD == "" {
 			flagD = "\n"
 		}
-		text = strings.Join(lines, flagD)
+		text := strings.Join(lines, flagD)
+		text = strings.TrimSpace(text)
+
+		if flagN != "" && text != "" && origText != "" {
+			filename := flagN
+			// fmt.Printf("%q\n", flagN)
+			// fmt.Printf("%q\n", origText)
+			// fmt.Printf("%q\n", text)
+			filename = strings.ReplaceAll(filename, "${translit}", text)
+			filename = strings.ReplaceAll(filename, "${orig}", origText)
+			f, err := os.Create(filename)
+			if err != nil {
+				return err
+			}
+			err = f.Close()
+			if err != nil {
+				return err
+			}
+		}
+
 		clipboard.WriteAll(text)
 	}
 
@@ -133,6 +154,7 @@ func main() {
 		cli.Flag("-c -clipboard : transtlit clipboard data.", &flagClipboard),
 		cli.Flag("-u            : upper case first letter.", &flagU),
 		cli.Flag("-d -delimiter : delimiter to separate multiple files. CR by default.", &flagD),
+		cli.Flag("-n            : template to save the name through ${orig}, ${translit} (does not work with files) ", &flagN),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
 	)
