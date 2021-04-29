@@ -106,12 +106,12 @@ func doProcess(path string) {
 		log.Errorf(err, "on parse error")
 		return
 	}
-	err = subrip.CheckOpt(srt, inOpts)
-	if err != nil {
-		// fmt.Print("sss", err.Error())
-		log.Errorf(err, "on input check")
-		return
-	}
+	// err = subrip.CheckOpt(srt, inOpts)
+	// if err != nil {
+		// // fmt.Print("sss", err.Error())
+		// log.Errorf(err, "on input check")
+		// return
+	// }
 	if flagCheckOnly {
 		err = subrip.CheckOpt(srt, outOpts)
 		if err != nil {
