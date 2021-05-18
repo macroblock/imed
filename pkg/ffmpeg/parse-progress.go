@@ -52,7 +52,7 @@ type tDefaultAudioProgressCallback struct {
 }
 
 func (o *tDefaultAudioProgressCallback) Callback(t Timecode) error {
-	if t < 0 {
+	if t < 0.0 {
 		t = o.total
 		clearLine := strings.Repeat(" ", o.maxInfoLen)
 		// fmt.Printf(clearLine+"\relapsed: %v", time.Since(o.lastTime))
@@ -80,8 +80,8 @@ func (o *tDefaultAudioProgressCallback) Callback(t Timecode) error {
 func NewAudioProgressParser(totalLen Timecode, callback IAudioProgress) IParser {
 	// fmt.Printf("@@@@: %q\n", line)
 	if callback == nil {
-		if totalLen < 1000 { // !!!HACK!!!
-			totalLen = -1000
+		if totalLen.InSeconds() < 1 { // !!!HACK!!!
+			totalLen = NewTimecode(0, 0, -totalLen.InSeconds())
 		}
 		callback = &tDefaultAudioProgressCallback{total: totalLen}
 	}

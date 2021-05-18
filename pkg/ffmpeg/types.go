@@ -15,6 +15,10 @@ func ParseTimecode(s string) (Timecode, error) {
 	return Timecode(ret), err
 }
 
+func NewTimecode(h, m, s float64) Timecode {
+	return types.NewTimecode(h, m, s)
+}
+
 /*
 type (
 	// Time -

@@ -37,6 +37,8 @@ var typesParseHHMMSSCorrect = []correct {
 	correct{ "-01:02", NewTimecode(0, -1, -2.0) },
 	correct{ "-01:02:03", NewTimecode(-1, -2, -3.0) },
 	correct{ "08:09:010", NewTimecode(8, 9, 10.0) },
+	correct{ "00:33:20", NewTimecode(0, 0, 2000) },
+	correct{ "00:15:00", NewTimecode(0, 0, 900) },
 }
 
 var typesParseHHMMSSIncorrect = []incorrect {
@@ -88,6 +90,9 @@ func testCorrect(t *testing.T, title string, fn func(string)(Timecode, error), d
 		}
 		if v.out != out {
 			t.Errorf("%v[#%v/%v] expected %v, got %v\n", title, i, l, v.out, out)
+		}
+		// if v.in != out.String() {
+			// t.Errorf("%v[#%v/%v] tostring expected %v, got %v\n", title, i, l, v.in, out.String())
 		}
 	}
 }
