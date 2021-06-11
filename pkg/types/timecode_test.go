@@ -93,7 +93,7 @@ func testCorrect(t *testing.T, title string, fn func(string)(Timecode, error), d
 		}
 		// if v.in != out.String() {
 			// t.Errorf("%v[#%v/%v] tostring expected %v, got %v\n", title, i, l, v.in, out.String())
-		}
+		// }
 	}
 }
 

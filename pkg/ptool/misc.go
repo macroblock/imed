@@ -97,13 +97,51 @@ func Unmarshall(root *TNode, byID func(int) string, obj interface{}) error {
 	if root == nil {
 		return nil
 	}
+	errors := []string{}
 	for idx := range root.Links {
 		name := byID(root.Links[idx].Type)
 		val := root.Links[idx].Value
 		// setStruct(obj, strings.Title(name), val)
-		SetStructField(obj, strings.Title(name), val)
+		ok, err := SetStructField(obj, strings.Title(name), val)
+		if err != nil {
+			errors = append(errors, fmt.Sprintf("%q: %v", strings.Title(name), err))
+			continue
+		}
+		if !ok {
+			errors = append(errors, fmt.Sprintf("can't set field %q", strings.Title(name)))
+			continue
+		}
 	}
+	if len(errors) > 0 {
+		return fmt.Errorf("unmarshall() error(s):\n  %v\n", strings.Join(errors, "\n  "))
+	}
+
 	return nil
+}
+
+// SetStructField -
+func SetStructField(obj interface{}, name, value string) (bool, error) {
+	val := reflect.ValueOf(obj)
+	if val.Kind() != reflect.Ptr {
+		return false, fmt.Errorf("obj is unaddressable value")
+	}
+	val = val.Elem()
+	if val.Kind() != reflect.Struct {
+		return false, fmt.Errorf("obj is not a struct")
+	}
+	v := val.FieldByName(name)
+	if !v.IsValid() || !v.CanSet() { // not found
+		return false, nil
+	}
+	switch v.Kind() {
+	default:
+		return false, fmt.Errorf("unsupported type %v", v.Kind())
+	case reflect.String:
+		v.SetString(value)
+	// case reflect.Slice:
+	}
+
+	return true, nil
 }
 
 func setStruct(ob interface{}, name, value string) error {
@@ -141,25 +179,3 @@ func setStruct(ob interface{}, name, value string) error {
 	return nil
 }
 
-// SetStructField -
-func SetStructField(obj interface{}, name, value string) (bool, error) {
-	val := reflect.ValueOf(obj)
-	if val.Kind() != reflect.Ptr {
-		return false, fmt.Errorf("obj is unaddressable value")
-	}
-	val = val.Elem()
-	if val.Kind() != reflect.Struct {
-		return false, fmt.Errorf("obj is not a struct")
-	}
-	v := val.FieldByName(name)
-	if !v.IsValid() { // not found
-		return false, nil
-	}
-	switch v.Kind() {
-	default:
-		return false, fmt.Errorf("unsupported type %v", v.Kind())
-	case reflect.String:
-		v.SetString(value)
-	}
-	return true, nil
-}
