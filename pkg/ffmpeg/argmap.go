@@ -2,6 +2,7 @@ package ffmpeg
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -111,6 +112,11 @@ func valToF(val, trimSuffix string) (float64, error) {
 	if err != nil {
 		return 0.0, err
 	}
+	// FIXME: hack to avoid "-nan" error
+	if strings.ToLower(s) == "-nan" {
+		return math.NaN(), nil
+	}
+
 	ret, err := strconv.ParseFloat(s, 64)
 	if err != nil {
 		return 0.0, err
