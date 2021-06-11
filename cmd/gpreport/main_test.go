@@ -1,9 +1,9 @@
 package main
 
 import (
-    "path/filepath"
-    "strings"
-    "testing"
+	"path/filepath"
+	"strings"
+	"testing"
 )
 
 const pathSep = string(filepath.Separator)

@@ -1,8 +1,12 @@
 package main 
 
 import (
+	"path/filepath"
+	"strings"
 	"testing"
 )
+
+const pathSep = string(filepath.Separator)
 
 var (
 	tableCorrect = []struct {
@@ -45,6 +49,10 @@ type ttag struct {
 
 // TestCorrect -
 func TestCorrect(t *testing.T) {
+	for i := range tableCorrect {
+		v := &tableCorrect[i]
+		v.out = strings.Replace(v.out, "/", pathSep, -1)
+	}
 	for _, v := range tableCorrect {
 		out, err := doProcess(v.input, false)
 		if err != v.err {
