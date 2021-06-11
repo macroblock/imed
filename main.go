@@ -51,7 +51,7 @@ var (
 		// "github.com/malashin/rtimg",
 		"github.com/MarkRaid/go-media-utils/cmd/framecut",
 
-		"github.com/malashin/shuher",
+		// "github.com/malashin/shuher",
 		"github.com/malashin/fflite",
 	}
 
