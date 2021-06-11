@@ -2,17 +2,13 @@ package tagname
 
 
 import (
-	// "context"
 	"fmt"
 	"path/filepath"
 	"strings"
 	"sync"
 
-	// "github.com/macroblock/rtimg/pkg"
-
-	// "github.com/d5/tengo/v2"
-	"github.com/d5/tengo"
-	"github.com/d5/tengo/stdlib"
+	"github.com/d5/tengo/v2"
+	"github.com/d5/tengo/v2/stdlib"
 )
 
 var ErrTagnameIsNil = fmt.Errorf("Tagname object is <nil>")
