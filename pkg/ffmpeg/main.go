@@ -5,8 +5,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os/exec"
 	"strings"
+)
+
+// -
+const (
+	Stdout int = iota
+	Stderr
 )
 
 // IParser -
@@ -47,10 +54,25 @@ func scanLines(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	return 0, nil, nil
 }
 
+
 // Run -
 func Run(parser IParser, args ...string) error {
+	return RunPipe(Stderr, parser, args...)
+}
+
+// RunStderr -
+func RunStderr(parser IParser, args ...string) error {
+	return RunPipe(Stderr, parser, args...)
+}
+
+// RunStdout -
+func RunStdout(parser IParser, args ...string) error {
+	return RunPipe(Stdout, parser, args...)
+}
+
+// RunPipe -
+func RunPipe(pipeSelector int, parser IParser, args ...string) error {
 	c := exec.Command("ffmpeg", args...)
-	// var o bytes.Buffer
 	if parser == nil {
 		var errBuf bytes.Buffer
 		c.Stdout = nil // &o
@@ -61,18 +83,30 @@ func Run(parser IParser, args ...string) error {
 		}
 		return nil
 	}
-	c.Stdout = nil //&o
-	errPipe, err := c.StderrPipe()
+
+	err := error(nil)
+	pipe := io.ReadCloser(nil)
+
+	switch pipeSelector {
+	default: err = fmt.Errorf("unsupported pipe selector %v", pipeSelector)
+	case Stderr:
+		c.Stdout = nil
+		pipe, err = c.StderrPipe()
+	case Stdout:
+		c.Stderr = nil
+		pipe, err = c.StdoutPipe()
+	}
 	if err != nil {
 		return err
 	}
+
 	err = c.Start()
 	if err != nil {
 		return err
 	}
 
 	buffer := []string{}
-	scanner := bufio.NewScanner(errPipe)
+	scanner := bufio.NewScanner(pipe)
 	scanner.Split(scanLines)
 	ok := scanner.Scan()
 	for ok {
