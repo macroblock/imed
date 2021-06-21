@@ -115,7 +115,7 @@ func Scan(streams []*TStreamInfo) error {
 
 	debugPrintf("### params: %v\n", params)
 
-	err := ffmpeg.Run(combParser, params...)
+	err := ffmpeg.Run(nil, combParser, params...)
 	if err != nil {
 		return err
 	}
@@ -211,7 +211,7 @@ func RenderParameters(streams []*TStreamInfo) error {
 		if GlobalDebug {
 			fmt.Println("### params: ", params)
 		}
-		err := ffmpeg.Run(combParser, params...)
+		err := ffmpeg.Run(nil, combParser, params...)
 		if err != nil {
 			return err
 		}

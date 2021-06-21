@@ -209,7 +209,7 @@ func ProcessTo(fi *TFileInfo) (canBeFixed bool, err error) {
 	if GlobalDebug {
 		fmt.Println("### params: ", params)
 	}
-	err = ffmpeg.Run(combParser, params...)
+	err = ffmpeg.Run(nil, combParser, params...)
 	if err != nil {
 		return false, err
 	}

@@ -56,23 +56,24 @@ func scanLines(data []byte, atEOF bool) (advance int, token []byte, err error) {
 
 
 // Run -
-func Run(parser IParser, args ...string) error {
-	return RunPipe(Stderr, parser, args...)
+func Run(stdin io.Reader, parser IParser, args ...string) error {
+	return RunPipe(stdin, Stderr, parser, args...)
 }
 
 // RunStderr -
 func RunStderr(parser IParser, args ...string) error {
-	return RunPipe(Stderr, parser, args...)
+	return RunPipe(nil, Stderr, parser, args...)
 }
 
 // RunStdout -
 func RunStdout(parser IParser, args ...string) error {
-	return RunPipe(Stdout, parser, args...)
+	return RunPipe(nil, Stdout, parser, args...)
 }
 
 // RunPipe -
-func RunPipe(pipeSelector int, parser IParser, args ...string) error {
+func RunPipe(stdin io.Reader, pipeSelector int, parser IParser, args ...string) error {
 	c := exec.Command("ffmpeg", args...)
+	c.Stdin = stdin
 	if parser == nil {
 		var errBuf bytes.Buffer
 		c.Stdout = nil // &o
