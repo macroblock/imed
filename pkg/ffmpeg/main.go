@@ -22,38 +22,49 @@ type IParser interface {
 	Finish() error
 }
 
-func scanLines(data []byte, atEOF bool) (advance int, token []byte, err error) {
+func getScanLinesFn() func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+	const pattern = " already exists. Overwrite ? [y/N] "
+	index := 0
+	return func(data []byte, atEOF bool) (advance int, token []byte, err error) {
 
-	for i := 0; i < len(data); i++ {
-		switch {
-		case data[i] == '\n':
-			return i + 1, data[:i], nil
-		case data[i] == '\r':
-			if i == len(data)-1 {
-				if atEOF {
-					// \r, EOF
+		for i := 0; i < len(data); i++ {
+			switch {
+			case data[i] == '\n':
+				index = 0
+				return i + 1, data[:i], nil
+			case data[i] == '\r':
+				index = 0
+				if i == len(data)-1 {
+					if atEOF {
+						// \r, EOF
+						return i + 1, data[:i], nil
+					}
+					// \r, EOBuffer -> need more data
+					return 0, nil, nil
+				}
+				if data[i+1] == '\n' {
+					// \r, \n
+					return i + 2, data[:i], nil
+				}
+				// \r, !\n
+				return i + 1, data[:i], nil
+			case data[i] == pattern[index]:
+				index++
+				if index == len(pattern) {
+					index = 0
 					return i + 1, data[:i], nil
 				}
-				// \r, EOBuffer -> need more data
-				return 0, nil, nil
 			}
-			if data[i+1] == '\n' {
-				// \r, \n
-				return i + 2, data[:i], nil
-			}
-			// \r, !\n
-			return i + 1, data[:i], nil
 		}
-	}
 
-	if atEOF {
-		// + 1 brings to not stuck on empty buffer
-		return len(data) + 1, data, nil
+		if atEOF {
+			// + 1 brings to not stuck on empty buffer
+			return len(data) + 1, data, nil
+		}
+		// need more data
+		return 0, nil, nil
 	}
-	// need more data
-	return 0, nil, nil
 }
-
 
 // Run -
 func Run(stdin io.Reader, parser IParser, args ...string) error {
@@ -108,12 +119,11 @@ func RunPipe(stdin io.Reader, pipeSelector int, parser IParser, args ...string) 
 
 	buffer := []string{}
 	scanner := bufio.NewScanner(pipe)
-	scanner.Split(scanLines)
+	scanner.Split(getScanLinesFn())
 	ok := scanner.Scan()
 	for ok {
 		line := scanner.Text()
 		// fmt.Printf("@@@@: %q\n", line)
-		ok = scanner.Scan()
 		accepted, err := parser.Parse(line, !ok) // !ok ==> EOF
 		if err != nil {
 			return err
@@ -121,6 +131,7 @@ func RunPipe(stdin io.Reader, pipeSelector int, parser IParser, args ...string) 
 		if !accepted {
 			buffer = append(buffer, line)
 		}
+		ok = scanner.Scan()
 	}
 	err = c.Wait()
 	if err != nil {
