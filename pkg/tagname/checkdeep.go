@@ -10,15 +10,15 @@ func parseSize(str string) (int, int, error) {
 	retErr := fmt.Errorf("Invalid size format (want: '\\d+x\\d+' have: %q", str)
 	list := strings.Split(str, "x")
 	if len(list) != 2 {
-		return -1, -1,  retErr
+		return -1, -1, retErr
 	}
 	w, err := strconv.Atoi(list[0])
 	if err != nil {
-		return -1, -1,  retErr
+		return -1, -1, retErr
 	}
 	h, err := strconv.Atoi(list[1])
 	if err != nil {
-		return -1, -1,  retErr
+		return -1, -1, retErr
 	}
 	return w, h, nil
 }
@@ -66,7 +66,7 @@ func checkDeep(tagname *TTagname) error {
 			return err
 		}
 		w, h := 0, 0
-		if len(info.Streams)>0 && info.Streams[0].CodecType == "video" {
+		if len(info.Streams) > 0 && info.Streams[0].CodecType == "video" {
 			w = info.Streams[0].Width
 			h = info.Streams[0].Height
 		} else {

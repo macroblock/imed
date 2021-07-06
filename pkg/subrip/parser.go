@@ -93,4 +93,3 @@ func Parse(rd io.Reader) ([]Record, error) {
 	}
 	return ret, nil
 }
-

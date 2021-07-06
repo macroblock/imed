@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type tCheckContext struct{
+type tCheckContext struct {
 	ListMustHaveTypes []string
 	TabNonUniqueTypes map[string]uint8
 	TabInvalidTypes   map[string]uint8
@@ -62,6 +62,7 @@ func updateCheckContext(out *tCheckContext, in1, in2 *tCheckContext) *tCheckCont
 }
 
 var filmsCheckContext *tCheckContext
+
 func getFilmsCC() *tCheckContext {
 	if filmsCheckContext != nil {
 		return filmsCheckContext
@@ -71,6 +72,7 @@ func getFilmsCC() *tCheckContext {
 }
 
 var postersCheckContext *tCheckContext
+
 func getPostersCC() *tCheckContext {
 	if postersCheckContext != nil {
 		return postersCheckContext
@@ -80,6 +82,7 @@ func getPostersCC() *tCheckContext {
 }
 
 var gpPostersCheckContext *tCheckContext
+
 func getGpPostersCC() *tCheckContext {
 	if gpPostersCheckContext != nil {
 		return gpPostersCheckContext
@@ -88,7 +91,7 @@ func getGpPostersCC() *tCheckContext {
 	return gpPostersCheckContext
 }
 
-func updateList(out, in1, in2 []string) []string{
+func updateList(out, in1, in2 []string) []string {
 	if out != nil {
 		return out
 	}
@@ -101,7 +104,7 @@ func updateList(out, in1, in2 []string) []string{
 	return out
 }
 
-func updateTable(out , in1, in2 map[string]uint8) map[string]uint8 {
+func updateTable(out, in1, in2 map[string]uint8) map[string]uint8 {
 	if out != nil {
 		return out
 	}
@@ -122,7 +125,7 @@ func isExist(table map[string]uint8, typ string) bool {
 
 func isNotExist(table map[string]uint8, typ string) bool {
 	if len(table) == 0 {
-		return  false 
+		return false
 	}
 	_, ok := table[typ]
 	return !ok
@@ -187,9 +190,9 @@ func CheckTags(tags *TTags) error {
 			return fmt.Errorf("%q is an invalid tag type: %q", typ, list)
 		}
 		for _, val := range list {
-		// if !isExist(o.tabValid, val) {
-		// return fmt.Errorf("tag (%q,%q) has not a valid value", typ, val)
-		// }
+			// if !isExist(o.tabValid, val) {
+			// return fmt.Errorf("tag (%q,%q) has not a valid value", typ, val)
+			// }
 			if isExist(cc.TabInvalidValues, val) {
 				return fmt.Errorf("tag (%q,%q) has an invalid value", typ, val)
 			}
@@ -212,7 +215,6 @@ func CheckTags(tags *TTags) error {
 	// unreachable
 }
 
-
 func checkFilmsOrTrailers(tags *TTags, typ string) error {
 	return nil
 }
@@ -224,7 +226,6 @@ func checkPostersOrLogo(tags *TTags, t string) error {
 	// return fmt.Errorf("unsupported tag type: %q", t)
 	return nil
 }
-
 
 func checkGpPosters(tags *TTags, t string) error {
 	// switch t {

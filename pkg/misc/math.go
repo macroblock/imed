@@ -16,7 +16,6 @@ func MinInt(a, b int) int {
 	return b
 }
 
-
 func AbsInt(v int) int {
 	if v < 0 {
 		return -v

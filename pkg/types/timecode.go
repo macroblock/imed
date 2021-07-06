@@ -19,8 +19,8 @@ type (
 )
 
 var (
-	globalMutex = sync.Mutex{}
-	globalFps float64 = 25.0
+	globalMutex         = sync.Mutex{}
+	globalFps   float64 = 25.0
 
 	errHHMMSSMsTemplate = "%v parse error: %v"
 )
@@ -136,7 +136,7 @@ func ParseHHMMSSFr(t string) (Timecode, error) {
 
 // HHMMSSMs -
 func (o Timecode) HHMMSSMs() HHMMSSMs {
-	v := int(o*1000)
+	v := int(o * 1000)
 	ms := v % 1000
 	v = v / 1000
 	s := v % 60
@@ -185,7 +185,7 @@ func parseHelper(s []string, index int, isFloat, signbit bool, err error) (float
 	}
 	sb := math.Signbit(v)
 	sign := getSign(s[index])
-	if !sb && sign < 0{
+	if !sb && sign < 0 {
 		sb = true
 	}
 
@@ -198,4 +198,3 @@ func parseHelper(s []string, index int, isFloat, signbit bool, err error) (float
 	}
 	return v, signbit, nil
 }
-

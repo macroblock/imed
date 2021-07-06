@@ -1,4 +1,3 @@
-
 package tagname
 
 import (
@@ -53,4 +52,3 @@ filename = process(filename)
 		return
 	}
 }
-

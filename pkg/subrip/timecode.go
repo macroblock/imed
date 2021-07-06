@@ -1,8 +1,8 @@
 package subrip
 
 import (
-	"strings"
 	"fmt"
+	"strings"
 
 	"github.com/macroblock/imed/pkg/types"
 )

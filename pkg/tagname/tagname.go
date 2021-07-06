@@ -8,8 +8,8 @@ import (
 
 	"github.com/malashin/ffinfo"
 
-	"github.com/macroblock/rtimg/pkg"
 	"github.com/macroblock/imed/pkg/zlog/zlog"
+	"github.com/macroblock/rtimg/pkg"
 )
 
 var (
@@ -82,7 +82,7 @@ func NewFromFilename(path string, isDeepCheck bool, schemaNames ...string) (*TTa
 	}
 	ret, err := NewFromString(dir, src, isDeepCheck, schemaNames...)
 	// if err != nil {
-		// return ret, err
+	// return ret, err
 	// }
 	// ret.dir = filepath.Dir(path)
 	return ret, err
@@ -141,7 +141,6 @@ func (o *TTagname) SetSource(path string) {
 	o.dir = dir
 	o.internalInfo = nil
 }
-
 
 // FFInfo -
 func (o *TTagname) FFInfo() (*ffinfo.File, error) {
@@ -408,7 +407,7 @@ func (o *TTagname) Describe() (*TFormat, error) {
 			err = fmt.Errorf("unsupported format %q of the tagname %v", frm, o.src)
 		}
 		return nil, err
-        case "4k":
+	case "4k":
 		format.resolution = TResolution{3840, 2160}
 		format.Sar = "1:1"
 	case "hd", "3d":

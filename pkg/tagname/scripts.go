@@ -1,6 +1,5 @@
 package tagname
 
-
 import (
 	"fmt"
 	"path/filepath"
@@ -87,17 +86,17 @@ func (o *TScript) Run(arg string) ([]*TTagname, error) {
 type tnModType struct {
 	tengo.ObjectImpl
 	moduleMap map[string]tengo.Object
-	mtx sync.Mutex
+	mtx       sync.Mutex
 }
 
 func newTnModType() *tnModType {
 	ret := &tnModType{}
 	ret.moduleMap = map[string]tengo.Object{
 		// "xstr": &tengo.UserFunction{Value: ret.customString},
-		"tagname": &tengo.UserFunction{Value: ret.fnParse},
+		"tagname":  &tengo.UserFunction{Value: ret.fnParse},
 		"filebase": &tengo.UserFunction{Value: funcASRS(filepath.Base)},
-		"filedir": &tengo.UserFunction{Value: funcASRS(filepath.Dir)},
-		"fileext": &tengo.UserFunction{Value: funcASRS(filepath.Ext)},
+		"filedir":  &tengo.UserFunction{Value: funcASRS(filepath.Dir)},
+		"fileext":  &tengo.UserFunction{Value: funcASRS(filepath.Ext)},
 		// "err": &tengo.UserFunction{Value: ret.fnError},
 	}
 	return ret
@@ -124,18 +123,18 @@ func (o *tnModType) fnParse(args ...tengo.Object) (tengo.Object, error) {
 	s1, ok := tengo.ToString(val)
 	if !ok {
 		return nil, tengo.ErrInvalidArgumentType{
-			Name: "first",
+			Name:     "first",
 			Expected: "string(compatible)",
-			Found: val.TypeName(),
+			Found:    val.TypeName(),
 		}
 	}
 	val = args[1]
 	b2, ok := tengo.ToBool(val)
 	if !ok {
 		return nil, tengo.ErrInvalidArgumentType{
-			Name: "second",
+			Name:     "second",
 			Expected: "bool",
-			Found: val.TypeName(),
+			Found:    val.TypeName(),
 		}
 	}
 
@@ -145,10 +144,9 @@ func (o *tnModType) fnParse(args ...tengo.Object) (tengo.Object, error) {
 	return tnType, nil
 }
 
-
 type tnType struct {
 	tengo.ObjectImpl
-	tn *TTagname
+	tn  *TTagname
 	err error
 }
 
@@ -175,14 +173,14 @@ func (o *tnType) IndexGet(index tengo.Object) (tengo.Object, error) {
 	s, ok := tengo.ToString(val)
 	if !ok {
 		return nil, tengo.ErrInvalidArgumentType{
-			Name: "",
+			Name:     "",
 			Expected: "string(compatible)",
-			Found: val.TypeName(),
+			Found:    val.TypeName(),
 		}
 	}
 	switch strings.ToLower(s) {
 	default:
-		return nil, fmt.Errorf("cannot call %v for object %v",s, o.TypeName())
+		return nil, fmt.Errorf("cannot call %v for object %v", s, o.TypeName())
 	case "err", "error":
 		return &tengo.UserFunction{Value: o.fnError}, nil
 	case "clearerr", "clear_err":
@@ -318,9 +316,9 @@ func funcAS(fn func(string)) tengo.CallableFunc {
 		s1, ok := tengo.ToString(val)
 		if !ok {
 			return nil, tengo.ErrInvalidArgumentType{
-				Name: "first",
+				Name:     "first",
 				Expected: "string(compatible)",
-				Found: val.TypeName(),
+				Found:    val.TypeName(),
 			}
 		}
 		fn(s1)
@@ -337,18 +335,18 @@ func funcASS(fn func(string, string)) tengo.CallableFunc {
 		s1, ok := tengo.ToString(val)
 		if !ok {
 			return nil, tengo.ErrInvalidArgumentType{
-				Name: "first",
+				Name:     "first",
 				Expected: "string(compatible)",
-				Found: val.TypeName(),
+				Found:    val.TypeName(),
 			}
 		}
 		val = args[1]
 		s2, ok := tengo.ToString(val)
 		if !ok {
 			return nil, tengo.ErrInvalidArgumentType{
-				Name: "second",
+				Name:     "second",
 				Expected: "string(compatible",
-				Found: val.TypeName(),
+				Found:    val.TypeName(),
 			}
 		}
 		fn(s1, s2)
@@ -380,9 +378,9 @@ func funcASRS(fn func(string) string) tengo.CallableFunc {
 		s1, ok := tengo.ToString(val)
 		if !ok {
 			return nil, tengo.ErrInvalidArgumentType{
-				Name: "first",
+				Name:     "first",
 				Expected: "string(compatible)",
-				Found: val.TypeName(),
+				Found:    val.TypeName(),
 			}
 		}
 		ret := fn(s1)
@@ -403,9 +401,9 @@ func funcASRSE(o *tnType, fn func(string) (string, error)) tengo.CallableFunc {
 		s1, ok := tengo.ToString(val)
 		if !ok {
 			return nil, tengo.ErrInvalidArgumentType{
-				Name: "first",
+				Name:     "first",
 				Expected: "string(compatible)",
-				Found: val.TypeName(),
+				Found:    val.TypeName(),
 			}
 		}
 		ret, err := fn(s1)
@@ -427,9 +425,9 @@ func funcABRE(o *tnType, fn func(bool) error) tengo.CallableFunc {
 		a1, ok := tengo.ToBool(val)
 		if !ok {
 			return nil, tengo.ErrInvalidArgumentType{
-				Name: "first",
+				Name:     "first",
 				Expected: "bool",
-				Found: val.TypeName(),
+				Found:    val.TypeName(),
 			}
 		}
 		err := fn(a1)
@@ -451,9 +449,9 @@ func funcASRE(o *tnType, fn func(string) error) tengo.CallableFunc {
 		a1, ok := tengo.ToString(val)
 		if !ok {
 			return nil, tengo.ErrInvalidArgumentType{
-				Name: "first",
+				Name:     "first",
 				Expected: "string",
-				Found: val.TypeName(),
+				Found:    val.TypeName(),
 			}
 		}
 		err := fn(a1)
@@ -503,9 +501,9 @@ func funcASRSs(fn func(string) []string) tengo.CallableFunc {
 		s1, ok := tengo.ToString(val)
 		if !ok {
 			return nil, tengo.ErrInvalidArgumentType{
-				Name: "first",
+				Name:     "first",
 				Expected: "string(compatible)",
-				Found: val.TypeName(),
+				Found:    val.TypeName(),
 			}
 		}
 		arr := &tengo.Array{}
@@ -527,4 +525,3 @@ func wrapError(err error) tengo.Object {
 	}
 	return &tengo.Error{Value: &tengo.String{Value: err.Error()}}
 }
-

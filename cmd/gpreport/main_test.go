@@ -8,7 +8,7 @@ import (
 
 const pathSep = string(filepath.Separator)
 
-var data = []string {
+var data = []string{
 	"xxx/yyy/PO/posters/project_a/google_apple_feed/jpg/g_iconic_poster_600x800.jpg",
 	"yyy/PO/posters/project_b/google_apple_feed/jpg/g_iconic_poster_600x800.jpg",
 	"/PO/posters/project_c/google_apple_feed/jpg/g_iconic_poster_600x800.jpg",

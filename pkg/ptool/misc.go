@@ -138,7 +138,7 @@ func SetStructField(obj interface{}, name, value string) (bool, error) {
 		return false, fmt.Errorf("unsupported type %v", v.Kind())
 	case reflect.String:
 		v.SetString(value)
-	// case reflect.Slice:
+		// case reflect.Slice:
 	}
 
 	return true, nil
@@ -178,4 +178,3 @@ func setStruct(ob interface{}, name, value string) error {
 	}
 	return nil
 }
-

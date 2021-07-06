@@ -31,7 +31,7 @@ var (
 	// flagDoRename   bool
 	// flagAddHash    bool
 	// flagReport     bool
-	flagDontPause  bool
+	flagDontPause bool
 	// flagSilent     bool
 	flagGlobFilter string = "*"
 	flagFiles      []string
@@ -74,22 +74,25 @@ func doProcess(filePath string, deepCheck bool) (string, error) {
 	flags2 := strings.TrimSuffix(flags, "_"+size)
 	outName := ""
 	switch {
-	default: return "", fmt.Errorf("unsupported flag set")
-	case flags == "logo_600x600": outName = "haslogo"
-	case flags == "logo_1800x1000": outName = "hastitle_logo"
+	default:
+		return "", fmt.Errorf("unsupported flag set")
+	case flags == "logo_600x600":
+		outName = "haslogo"
+	case flags == "logo_1800x1000":
+		outName = "hastitle_logo"
 	case flags2 == "background":
 		outName = "iconic_background"
-		if !in(size, "1000x1500","3840x2160") {
+		if !in(size, "1000x1500", "3840x2160") {
 			return "", fmt.Errorf("%v is an invalid size for %q", size, flags2)
 		}
 	case flags2 == "poster":
 		outName = "iconic_poster"
-		if !in(size, "600x600","600x800","800x600","1000x1500","3840x2160") {
+		if !in(size, "600x600", "600x800", "800x600", "1000x1500", "3840x2160") {
 			return "", fmt.Errorf("%v is an invalid size for %q", size, flags2)
 		}
 	}
 
-	outName = "g_"+outName+"_"+size
+	outName = "g_" + outName + "_" + size
 	outPath := filepath.Join(path, outName+ext)
 
 	return outPath, nil

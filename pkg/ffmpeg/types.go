@@ -1,4 +1,5 @@
 package ffmpeg
+
 import (
 	// "fmt"
 	// "strconv"
@@ -6,7 +7,6 @@ import (
 
 	"github.com/macroblock/imed/pkg/types"
 )
-
 
 type Timecode = types.Timecode
 

@@ -2,8 +2,8 @@ package main
 
 import (
 	"bufio"
-	"io/ioutil"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
@@ -39,7 +39,7 @@ func doProcess(path string, schema string, isDeepCheck bool, script *tagname.TSc
 	defer retif.Catch()
 	errPrefix := ""
 	if flagSilent {
-		errPrefix = "\n"+path+"\n"
+		errPrefix = "\n" + path + "\n"
 	}
 	if !flagSilent {
 		log.Info("")
@@ -72,7 +72,7 @@ func doProcess(path string, schema string, isDeepCheck bool, script *tagname.TSc
 				}
 				dst := globalTags[t]
 				list := tn.GetTags(t)
-				for  _, v := range list {
+				for _, v := range list {
 					dst[v] = true
 				}
 				// fmt.Printf("%16v : %v\n", v, list)
@@ -80,12 +80,12 @@ func doProcess(path string, schema string, isDeepCheck bool, script *tagname.TSc
 		}
 	}
 
-	retif.Error(err, errPrefix + "whilest preprocess")
+	retif.Error(err, errPrefix+"whilest preprocess")
 
 	for _, tn := range list {
 		srcPath := tn.Source()
 		newPath, err := tn.ConvertTo(schema)
-		retif.Error(err, errPrefix + "cannot convert to '"+schema+"'")
+		retif.Error(err, errPrefix+"cannot convert to '"+schema+"'")
 
 		if flagDoRename {
 			err = os.Rename(srcPath, newPath)

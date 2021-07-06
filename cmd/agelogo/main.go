@@ -190,10 +190,10 @@ func mainFunc() error {
 
 	// checkLevel := tagname.CheckNormal
 	// if flagStrict {
-		// checkLevel |= tagname.CheckStrict
+	// checkLevel |= tagname.CheckStrict
 	// }
 	// if flagDeep {
-		// checkLevel |= tagname.CheckDeep
+	// checkLevel |= tagname.CheckDeep
 	// }
 
 	list := []string{}

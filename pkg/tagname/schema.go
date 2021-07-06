@@ -10,8 +10,8 @@ import (
 
 // TSchema -
 type TSchema struct {
-	name                    string
-	parser                  **ptool.TParser
+	name   string
+	parser **ptool.TParser
 	// MustHaveByType          []string
 	// NonUniqueByType         []string // can be placed multiple times
 	// Valid                   []string
@@ -45,9 +45,9 @@ name     =                     ident {, !(sxx,|ZZZ,|EONAME) ident};
 sname    = !(exx,|ZZZ,|EONAME) ident {, !(exx,|ZZZ,|EONAME) ident};
 ename    = !(     ZZZ,|EONAME) ident {, !(     ZZZ,|EONAME) ident};
 ` +
-// "comment  = ZZZ,      !(EONAME) ident {, !(          EONAME) ident};" +
-"comment  = ZZZ      {, !(          EONAME) ident};" +
-`
+	// "comment  = ZZZ,      !(EONAME) ident {, !(          EONAME) ident};" +
+	"comment  = ZZZ      {, !(          EONAME) ident};" +
+	`
 
 year     = digit digit digit digit !symbol;
 hex      = '#' symbol symbol symbol symbol symbol symbol symbol symbol;
@@ -146,10 +146,10 @@ func filterFixCommonTags(typ, val string) (string, string) {
 		switch val {
 		default:
 			typ = "mtag"
-			val = "m"+val
+			val = "m" + val
 		case "newstudio", "pozitiv", "lostfilm":
 			typ = "vtag"
-			val = "v"+val
+			val = "v" + val
 		}
 	case "UNKNOWN_TAG":
 		switch val {

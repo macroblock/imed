@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	inputPath = "input.txt"
+	inputPath  = "input.txt"
 	outputPath = "output.txt"
 
 	useClipboard = false
@@ -44,7 +44,7 @@ func doJob(files []string) ([]string, error) {
 
 	appendError := func(name string, err error) {
 		if err != nil {
-			errors = append(errors, fmt.Sprintf("%v:\n    %v",name, err))
+			errors = append(errors, fmt.Sprintf("%v:\n    %v", name, err))
 		}
 	}
 
@@ -112,8 +112,10 @@ func doJob(files []string) ([]string, error) {
 func subMain() error {
 	for _, arg := range os.Args[1:] {
 		switch arg {
-		default: return fmt.Errorf("unsupported flag %q\n  Use -c to use clipboard mode", arg)
-		case "-c": useClipboard = true
+		default:
+			return fmt.Errorf("unsupported flag %q\n  Use -c to use clipboard mode", arg)
+		case "-c":
+			useClipboard = true
 		}
 	}
 

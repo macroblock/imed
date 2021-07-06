@@ -14,8 +14,8 @@ import (
 
 	"github.com/macroblock/imed/pkg/cli"
 	"github.com/macroblock/imed/pkg/misc"
-	"github.com/macroblock/imed/pkg/types"
 	"github.com/macroblock/imed/pkg/subrip"
+	"github.com/macroblock/imed/pkg/types"
 	// "github.com/macroblock/imed/pkg/translit"
 	"github.com/macroblock/imed/pkg/zlog/loglevel"
 	"github.com/macroblock/imed/pkg/zlog/zlog"
@@ -27,28 +27,28 @@ var (
 	log   = zlog.Instance("main")
 	retif = log.Catcher()
 
-	flagCheckOnly bool
-	flagFixIt bool
-	flagPoints string
-	flagMove string
-	flagScale string
+	flagCheckOnly  bool
+	flagFixIt      bool
+	flagPoints     string
+	flagMove       string
+	flagScale      string
 	flagInsertZero bool
 	// flagInputOptions string
 	// flagOutputOptions string
 	// flagListOptions string
 	flagBackup bool
-	flagK bool
-	flagFiles []string
+	flagK      bool
+	flagFiles  []string
 
-	inOpts = subrip.MildOptions()
+	inOpts  = subrip.MildOptions()
 	outOpts = subrip.StrictOptions()
-	moveBy = types.NewTimecode(0, 0, 0)
+	moveBy  = types.NewTimecode(0, 0, 0)
 	scaleBy = 1.0
 
 	pointA, pointB struct {
 		enabled bool
-		id int
-		tc Timecode
+		id      int
+		tc      Timecode
 	}
 )
 
@@ -82,8 +82,8 @@ func fileExists(filename string) bool {
 }
 
 func getBackupName(path string) string {
-	if !fileExists(path+".bak") {
-		return path+".bak"
+	if !fileExists(path + ".bak") {
+		return path + ".bak"
 	}
 	for i := 2; i < 10000; i++ {
 		ret := fmt.Sprintf("%v.bak%02v", path, i)
@@ -108,9 +108,9 @@ func doProcess(path string) {
 	}
 	// err = subrip.CheckOpt(srt, inOpts)
 	// if err != nil {
-		// // fmt.Print("sss", err.Error())
-		// log.Errorf(err, "on input check")
-		// return
+	// // fmt.Print("sss", err.Error())
+	// log.Errorf(err, "on input check")
+	// return
 	// }
 	if flagCheckOnly {
 		err = subrip.CheckOpt(srt, outOpts)
@@ -140,10 +140,10 @@ func doProcess(path string) {
 
 	if flagInsertZero {
 		if len(srt) == 0 || srt[0].In.InSeconds() > 0 {
-			record := subrip.Record {
-				ID: 1,
-				In: types.NewTimecode(0, 0, 0.0),
-				Out: types.NewTimecode(0, 0, 0.0),
+			record := subrip.Record{
+				ID:   1,
+				In:   types.NewTimecode(0, 0, 0.0),
+				Out:  types.NewTimecode(0, 0, 0.0),
 				Text: "<i>",
 			}
 			srt = append([]subrip.Record{record}, srt...)
@@ -244,7 +244,7 @@ func calcTransform(srt []subrip.Record) (Timecode, float64, Timecode, error) {
 		}
 		if pointB.enabled && v.ID == pointB.id {
 			check--
-			scaleX = float64(pointB.tc - pointA.tc) / float64(v.In - zp)
+			scaleX = float64(pointB.tc-pointA.tc) / float64(v.In-zp)
 		}
 	}
 	if check != 0 {
@@ -297,7 +297,7 @@ func main() {
 	)
 
 	defer func() {
-		if log.State().Intersect(loglevel.Warning.OrLower()) != 0 && !flagK{
+		if log.State().Intersect(loglevel.Warning.OrLower()) != 0 && !flagK {
 			misc.PauseTerminal()
 		}
 		if log.State().Intersect(loglevel.Error.Only()) != 0 {

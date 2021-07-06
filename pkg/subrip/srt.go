@@ -11,18 +11,19 @@ const DefaultStrictMaxLines = 2
 var t35Min = NewTimecode(0, 35, 0) // 35 minutes
 
 type Record struct {
-	ID int // used in error messages only
-	In Timecode
-	Out Timecode
+	ID   int // used in error messages only
+	In   Timecode
+	Out  Timecode
 	Text string
 }
 
 type Options struct {
-	Bits Bits
+	Bits     Bits
 	MaxLines int
 }
 
 type Bits = int
+
 const (
 	OptMultipleErrors Bits = iota
 	OptCheckNegativeTimecode
@@ -45,17 +46,17 @@ func NewOptions(args ...Bits) Options {
 	o := Options{}
 	o.MaxLines = DefaultStrictMaxLines
 	for _, v := range args {
-		o.Bits = o.Bits | (1<<v)
+		o.Bits = o.Bits | (1 << v)
 	}
 	return o
 }
 
-func(o Options) On(v Bits) bool {
-	return o.Bits & (1<<v) != 0
+func (o Options) On(v Bits) bool {
+	return o.Bits&(1<<v) != 0
 }
 
-func(o Options) Off(v Bits) bool {
-	return o.Bits & (1<<v) == 0
+func (o Options) Off(v Bits) bool {
+	return o.Bits&(1<<v) == 0
 }
 
 func MildCheck(srt []Record) error {
@@ -68,9 +69,9 @@ func StrictCheck(srt []Record) error {
 
 func CheckOpt(srt []Record, opt Options) error {
 	var (
-		errs []string
-		tc Timecode
-		prevID int
+		errs    []string
+		tc      Timecode
+		prevID  int
 		prevOut Timecode
 	)
 	errMsg := func(format string, args ...interface{}) bool {
@@ -116,15 +117,15 @@ func CheckOpt(srt []Record, opt Options) error {
 
 		}
 		if opt.On(OptCheckChunkId) {
-			if v.ID - prevID != 1 {
+			if v.ID-prevID != 1 {
 				if errMsg("chunk:%v: nonhomogeneus chunk id", v.ID) {
 					return fmt.Errorf(strings.Join(errs, "\n"))
 				}
 			}
 		}
 		if opt.On(OptCheck35MinGap) {
-			if v.Out - v.In > t35Min ||
-				v.In - prevOut > t35Min {
+			if v.Out-v.In > t35Min ||
+				v.In-prevOut > t35Min {
 				if errMsg("chunk:%v: delta time > 35 min", v.ID) {
 					return fmt.Errorf(strings.Join(errs, "\n"))
 				}
@@ -134,7 +135,7 @@ func CheckOpt(srt []Record, opt Options) error {
 			lineCount := len(strings.Split(v.Text, "\n"))
 			if lineCount > opt.MaxLines {
 				if errMsg("chunk:%v: exceeded line count of a text block (%v > %v)",
-						v.ID, lineCount, opt.MaxLines) {
+					v.ID, lineCount, opt.MaxLines) {
 					return fmt.Errorf(strings.Join(errs, "\n"))
 				}
 			}
@@ -146,7 +147,7 @@ func CheckOpt(srt []Record, opt Options) error {
 		return nil
 	}
 	for i := range errs {
-		errs[i] = "  "+errs[i]
+		errs[i] = "  " + errs[i]
 	}
 	return fmt.Errorf("Error(s):\n%v", strings.Join(errs, "\n"))
 }
@@ -168,7 +169,7 @@ func ToString(srt []Record) string {
 func genFillerTCs(in, out Timecode) []Timecode {
 	var ret []Timecode
 	times := int((out.InSeconds() - in.InSeconds()) / t35Min.InSeconds())
-	tc := (out - in) / 2 + in
+	tc := (out-in)/2 + in
 	for i := 0; i < times; i++ {
 		ret = append(ret, tc)
 		tc += t35Min
@@ -178,7 +179,7 @@ func genFillerTCs(in, out Timecode) []Timecode {
 
 func Fix(srt []Record) []Record {
 	var (
-		ret []Record
+		ret     []Record
 		prevOut Timecode
 	)
 	first := true
@@ -192,19 +193,19 @@ func Fix(srt []Record) []Record {
 			id++
 			continue
 		}
-		if v.In - prevOut > t35Min {
+		if v.In-prevOut > t35Min {
 			timecodes := genFillerTCs(prevOut, v.In)
 			for _, tc := range timecodes {
-				r := Record{ ID: id, In: tc, Out: tc, Text: "<i>" }
+				r := Record{ID: id, In: tc, Out: tc, Text: "<i>"}
 				ret = append(ret, r)
 				id++
 			}
 		}
-		if v.Out - v.In > t35Min {
+		if v.Out-v.In > t35Min {
 			timecodes := genFillerTCs(v.Out, v.In)
 			prev := v.In
 			for _, tc := range timecodes {
-				r := Record{ ID: id, In: prev, Out: tc, Text: v.Text }
+				r := Record{ID: id, In: prev, Out: tc, Text: v.Text}
 				ret = append(ret, r)
 				id++
 				prev = tc
@@ -224,7 +225,7 @@ func transformTC(tc Timecode, zp Timecode, scale float64, move Timecode) Timecod
 		return tc - zp + move
 	}
 	// return ffmpeg.FloatToTime((tc - zp).Float()*scale) + move
-	return NewTimecode(0, 0, (tc - zp).InSeconds()*scale) + move
+	return NewTimecode(0, 0, (tc-zp).InSeconds()*scale) + move
 }
 
 func Transform(srt *[]Record, zp Timecode, scale float64, move Timecode) {

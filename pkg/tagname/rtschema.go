@@ -25,7 +25,7 @@ INVALID_TAG = 'sd'|'hd'|'3d'|'logo'|'poster';
 ` + body
 
 var rtNormalSchema = &TSchema{
-	parser:                  &rtParser,
+	parser: &rtParser,
 	// MustHaveByType:          []string{"name", "year", "sdhd", "type"},
 	// NonUniqueByType:         nil,
 	// Invalid:                 nil,
@@ -122,7 +122,7 @@ func fnToRTFilter(in, out *TTags, typ, val string, firstRun bool) error {
 			out.AddTag("_hack3D", "3d")
 		}
 	// case "name":
-		// val = strings.Title(val)
+	// val = strings.Title(val)
 	case "sizetag":
 		t, _ := in.GetTag("type")
 		if t == "poster" {
@@ -141,7 +141,7 @@ func fnToRTFilter(in, out *TTags, typ, val string, firstRun bool) error {
 				val = "poster" + size
 			}
 		// case "poster.logo":
-			// val = "logo.poster"
+		// val = "logo.poster"
 		case "poster.gp":
 		case "film":
 			hash := genHashTag(in)

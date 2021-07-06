@@ -8,23 +8,23 @@ entry    = @name [,snen] [,@comment] ,@year [DIV taglist] ['.' @type] @ext$;
 sdhd     = ('sd'|'hd'|'3d'|'4k') !symbol;
 type     = 'trailer'| 'poster' | 'teaser';
 ` +
-// 999x999.poster
-// logo.poster
+	// 999x999.poster
+	// logo.poster
 
-// poster   = (((digit{digit} ('-'|'x') digit{digit}) | 'logo') '.poster') | 'logo';
-`
+	// poster   = (((digit{digit} ('-'|'x') digit{digit}) | 'logo') '.poster') | 'logo';
+	`
 taglist  = [(@sdhd|tags){,(@sdhd|tags)}];
 ` +
-// "EONAME   = year (DIV|'.'|$);" +
-"EONAME   = year !({ '_' !(year) ident } '_' year) (DIV|'.'|$);" +
-`
+	// "EONAME   = year (DIV|'.'|$);" +
+	"EONAME   = year !({ '_' !(year) ident } '_' year) (DIV|'.'|$);" +
+	`
 DIV = '__'|'_';
 
 INVALID_TAG = 'asdfafdadf!!';
 ` + body
 
 var oldNormalSchema = &TSchema{
-	parser:                  &oldParser,
+	parser: &oldParser,
 	// MustHaveByType:          []string{"name", "year", "type"},
 	// NonUniqueByType:         nil,
 	// Invalid:                 nil, //[]string{"trailer", "film", "logo", "poster"},
@@ -77,25 +77,25 @@ func fnFromOldFilter(in, out *TTags, typ, val string, firstRun bool) error {
 	case "sizetag":
 		val = strings.ReplaceAll(val, "-", "x")
 
-	// case "type":
+		// case "type":
 		// val = strings.TrimPrefix(val, "poster")
 		// switch {
 		// case val == "":
-			// val = "film"
-			// _, err := in.GetTag("sdhd")
-			// if err != nil {
-				// val = "poster.gp"
-			// }
+		// val = "film"
+		// _, err := in.GetTag("sdhd")
+		// if err != nil {
+		// val = "poster.gp"
+		// }
 		// case val == ".trailer":
-			// val = "trailer"
+		// val = "trailer"
 		// case strings.HasPrefix(val, "logo"):
-			// val = "poster.logo"
+		// val = "poster.logo"
 		// case strings.HasSuffix(val, ".poster"):
-			// val = strings.TrimSuffix(val, ".poster")
-			// val = strings.TrimPrefix(val, "_")
-			// size := strings.ReplaceAll(val, "-", "x")
-			// out.AddTag("sizetag", size)
-			// val = "poster"
+		// val = strings.TrimSuffix(val, ".poster")
+		// val = strings.TrimPrefix(val, "_")
+		// size := strings.ReplaceAll(val, "-", "x")
+		// out.AddTag("sizetag", size)
+		// val = "poster"
 		// }
 	}
 
@@ -105,17 +105,17 @@ func fnFromOldFilter(in, out *TTags, typ, val string, firstRun bool) error {
 
 func fnToOldFilter(in, out *TTags, typ, val string, firstRun bool) error {
 	// if typ == "" && val == "" {
-		// // for first run only
-		// if firstRun {
-			// err := unfixATag(in)
-			// return err
-		// }
-		// return nil
+	// // for first run only
+	// if firstRun {
+	// err := unfixATag(in)
+	// return err
+	// }
+	// return nil
 	// }
 
 	switch typ {
 	// case "name":
-		// val = strings.Title(val)
+	// val = strings.Title(val)
 	case "sizetag":
 		t, _ := in.GetTag("type")
 		if t == "poster" || t == "poster.gp" {

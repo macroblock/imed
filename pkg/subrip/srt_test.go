@@ -4,12 +4,10 @@ import (
 	// "fmt"
 	"strings"
 	"testing"
-
 	// "unsafe"
 )
 
-var data =
-`0
+var data = `0
 00:02:17,440 --> 00:02:20,375
 Senator, we're making
 our final approach into Coruscant.
@@ -25,6 +23,7 @@ second one
 and the last one
 
 `
+
 func TestSrtCorrect(t *testing.T) {
 	srt, err := Parse(strings.NewReader(data))
 	if err != nil {
@@ -32,7 +31,7 @@ func TestSrtCorrect(t *testing.T) {
 		return
 	}
 	// for i, v := range srt {
-		// t.Errorf("%2v: %v\n", i, v)
+	// t.Errorf("%2v: %v\n", i, v)
 	// }
 
 	err = StrictCheck(srt)
@@ -40,7 +39,7 @@ func TestSrtCorrect(t *testing.T) {
 		t.Errorf("Check incorrect error: %v\n", err)
 	}
 	// if err != nil {
-		// t.Errorf("%v", err)
+	// t.Errorf("%v", err)
 	// }
 
 	// t.Errorf("tree:\n%s\n", tree)
@@ -49,4 +48,3 @@ func TestSrtCorrect(t *testing.T) {
 
 	// t.Errorf("size of timecode %v", unsafe.Sizeof(Timecode{}))
 }
-

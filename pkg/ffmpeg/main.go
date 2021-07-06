@@ -100,7 +100,8 @@ func RunPipe(stdin io.Reader, pipeSelector int, parser IParser, args ...string) 
 	pipe := io.ReadCloser(nil)
 
 	switch pipeSelector {
-	default: err = fmt.Errorf("unsupported pipe selector %v", pipeSelector)
+	default:
+		err = fmt.Errorf("unsupported pipe selector %v", pipeSelector)
 	case Stderr:
 		c.Stdout = nil
 		pipe, err = c.StderrPipe()
