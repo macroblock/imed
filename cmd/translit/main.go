@@ -25,6 +25,7 @@ var (
 	flagU         bool
 	flagD         string
 	flagN         string
+	flagRA        string
 )
 
 func doProcess(path string) {
@@ -83,6 +84,12 @@ func mainFunc() error {
 			return err
 		}
 		origText = strings.TrimSpace(origText)
+
+		if flagRA != "" {
+			lines := strings.Split(origText, flagRA)
+			origText = lines[0]
+		}
+
 		lines := strings.Split(origText, "\n")
 		lastNonEmpty := -1
 		for i := range lines {
@@ -155,6 +162,7 @@ func main() {
 		cli.Flag("-u            : upper case first letter.", &flagU),
 		cli.Flag("-d -delimiter : delimiter to separate multiple files. CR by default.", &flagD),
 		cli.Flag("-n            : template to save the name through ${orig}, ${translit} (does not work with files) ", &flagN),
+		cli.Flag("-ra           : remove after TEXT", &flagRA),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
 	)
