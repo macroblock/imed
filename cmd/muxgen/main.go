@@ -26,7 +26,8 @@ var (
 
 	flagDoCheck    bool
 	flagK          bool
-	flagFilterFile string = "mux.cfg"
+	flagGenPause   bool
+	flagFilterFile string = "./mux.cfg"
 	flagNamesFile  string
 	flagOutPath    string
 	flagFiles      []string
@@ -46,6 +47,15 @@ type (
 	}
 )
 
+const replsep = "\x00sep\x00"
+func escapeSep(s string) string {
+	return strings.Replace(s, "\\:", replsep, -1)
+}
+
+func unescapeSep(s string) string {
+	return strings.Replace(s, replsep, ":", -1)
+}
+
 func readFilters(fname string) ([]Filter, error) {
 	data, err := ioutil.ReadFile(fname)
 	if err != nil {
@@ -59,16 +69,18 @@ func readFilters(fname string) ([]Filter, error) {
 		if l == "" || strings.HasPrefix(l, "//") {
 			continue
 		}
-		tuple := strings.Split(l, ":")
+		tuple := strings.Split(escapeSep(l), ":")
 		if len(tuple) != 5 {
 			return nil, fmt.Errorf("%q:%v: something wrong with ':'", fname, i+1)
 		}
-		trimspace := strings.TrimSpace
-		in := trimspace(tuple[0])
-		typ := trimspace(tuple[1])
-		lang := trimspace(tuple[2])
-		grout := trimspace(tuple[3])
-		out := trimspace(tuple[4])
+		clean := func(s string) string {
+			return strings.TrimSpace(unescapeSep(s))
+		}
+		in := clean(tuple[0])
+		typ := clean(tuple[1])
+		lang := clean(tuple[2])
+		grout := clean(tuple[3])
+		out := clean(tuple[4])
 		re, err := regexp.Compile(in)
 		if err != nil {
 			return nil, err
@@ -213,6 +225,10 @@ func doProcess(files []string) error {
 		out += data + "\n\n"
 	}
 
+	if flagGenPause {
+		out += misc.PauseTerminalStr() + "\n"
+	}
+
 	err = ioutil.WriteFile("mux"+scriptExt, []byte(out), 0777)
 	if err != nil {
 		//log.Errorf(err, "on write output file")
@@ -288,9 +304,10 @@ func main() {
 		cli.Flag("-h --help           : help", cmdLine.PrintHelp).Terminator(),
 		//cli.Flag("-c --check          : do internal check", &flagDoCheck),
 		cli.Flag("-o --out-path       : output path", &flagOutPath),
-		cli.Flag("-f --filter         : filter file", &flagFilterFile),
+		cli.Flag("-f --config         : mux config file (default './mux.cfg')", &flagFilterFile),
 		cli.Flag("-n --names          : file names file", &flagNamesFile),
 		cli.Flag("-k                  : do not wait keyboard event on errors", &flagK),
+		cli.Flag("-p --gen-pause          : gen pause at the end of the output file", &flagGenPause),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
 	)
