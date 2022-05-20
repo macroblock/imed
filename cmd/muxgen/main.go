@@ -139,12 +139,12 @@ func genmux(name string, item []Filter) (string, error) {
 			vout += v.out
 			vgr = v.grout
 		case "a":
-			maps = append(maps, fmt.Sprintf("    -map %v:a metadata:s:a:%v -language=%v", idx, aidx, v.lang))
+			maps = append(maps, fmt.Sprintf("    -map %v:a -metadata:s:a:%v language=%v", idx, aidx, v.lang))
 			aout += v.out
 			agr = v.grout
 			aidx++
 		case "s":
-			maps = append(maps, fmt.Sprintf("    -map %v:s metadata:s:s:%v -language=%v", idx, sidx, v.lang))
+			maps = append(maps, fmt.Sprintf("    -map %v:s -metadata:s:s:%v language=%v", idx, sidx, v.lang))
 			sout += v.out
 			sgr = v.grout
 			sidx++
