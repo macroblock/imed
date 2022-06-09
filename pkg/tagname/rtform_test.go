@@ -29,6 +29,9 @@ var (
 		{inputVal: "sd_2018_the_name_zzz_a_comment__q0w0_ar2_logo"},
 		{inputVal: "sd_2018_the_name_zzz_a_comment__q0w0_ar2_poster300-600",
 			check: "sd_2018_the_name_zzz_a_comment__q0w0_ar2_poster300x600"},
+		// sorting issues
+		{inputVal: "hd_1996_arliss_s01_07__ae2_xsmoking_xhardsub_xo6hDsJGYXd_film.mp4",
+			check: "hd_1996_arliss_s01_07__ae2_xhardsub_xsmoking_xo6hDsJGYXd_film.mp4"},
 	}
 	tableRtSchemaParseIncorrect = []string{
 		//23456789012345678901234567890

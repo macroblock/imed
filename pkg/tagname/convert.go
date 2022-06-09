@@ -1,6 +1,7 @@
 package tagname
 
 import (
+	"sort"
 	"strings"
 	// "fmt"
 )
@@ -88,6 +89,7 @@ func toString(tagname *TTags, toSchema *TSchema) (string, error) {
 			}
 		}
 	}
+	sort.Strings(freeTags)
 
 	head = multiJoin(head, freeTags, tail)
 	hstr := strings.Join(head, "_")
