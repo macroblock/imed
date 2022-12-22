@@ -11,3 +11,9 @@ require (
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e
 	golang.org/x/text v0.3.7-0.20210524175448-3115f89c4b99
 )
+
+require (
+	github.com/mattn/go-isatty v0.0.13 // indirect
+	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
+	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
+)
