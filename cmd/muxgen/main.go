@@ -144,14 +144,17 @@ func genmux(name string, item []Filter) (string, error) {
 		case "v":
 			vout += v.out
 			vgr = v.grout
+			useIdx = vidx
 			vidx++
 		case "a":
 			aout += v.out
 			agr = v.grout
+			useIdx = aidx
 			aidx++
 		case "s":
 			sout += v.out
 			sgr = v.grout
+			useIdx = sidx
 			sidx++
 		}
 		idx++
