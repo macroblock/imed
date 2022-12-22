@@ -42,12 +42,14 @@ type (
 		in    string
 		typ   string
 		lang  string
+		title string
 		grout string
 		out   string
 	}
 )
 
 const replsep = "\x00sep\x00"
+
 func escapeSep(s string) string {
 	return strings.Replace(s, "\\:", replsep, -1)
 }
@@ -70,7 +72,7 @@ func readFilters(fname string) ([]Filter, error) {
 			continue
 		}
 		tuple := strings.Split(escapeSep(l), ":")
-		if len(tuple) != 5 {
+		if len(tuple) != 6 {
 			return nil, fmt.Errorf("%q:%v: something wrong with ':'", fname, i+1)
 		}
 		clean := func(s string) string {
@@ -79,8 +81,9 @@ func readFilters(fname string) ([]Filter, error) {
 		in := clean(tuple[0])
 		typ := clean(tuple[1])
 		lang := clean(tuple[2])
-		grout := clean(tuple[3])
-		out := clean(tuple[4])
+		title := clean(tuple[3])
+		grout := clean(tuple[4])
+		out := clean(tuple[5])
 		re, err := regexp.Compile(in)
 		if err != nil {
 			return nil, err
@@ -89,7 +92,7 @@ func readFilters(fname string) ([]Filter, error) {
 			return nil, fmt.Errorf("%q:%v: not valid type of stream '%v'", fname, i+1, typ)
 		}
 
-		ret = append(ret, Filter{re: re, in: in, typ: typ, lang: lang, grout: grout, out: out})
+		ret = append(ret, Filter{re: re, in: in, typ: typ, lang: lang, title: title, grout: grout, out: out})
 	}
 	return ret, nil
 }
@@ -119,6 +122,7 @@ func genmux(name string, item []Filter) (string, error) {
 	maps := []string{}
 	idx := 0
 	aidx := 0
+	vidx := 0
 	sidx := 0
 	vout := ""
 	vgr := ""
@@ -131,25 +135,35 @@ func genmux(name string, item []Filter) (string, error) {
 			continue
 		}
 		ins = append(ins, fmt.Sprintf("-i \"%v\"", v.in))
+
+		out := fmt.Sprintf("    -map %v:%v", idx, v.typ)
+		useIdx := -1
 		switch v.typ {
 		default:
 			panic("unreachable")
 		case "v":
-			maps = append(maps, fmt.Sprintf("    -map %v:v", idx))
 			vout += v.out
 			vgr = v.grout
+			vidx++
 		case "a":
-			maps = append(maps, fmt.Sprintf("    -map %v:a -metadata:s:a:%v language=%v", idx, aidx, v.lang))
 			aout += v.out
 			agr = v.grout
 			aidx++
 		case "s":
-			maps = append(maps, fmt.Sprintf("    -map %v:s -metadata:s:s:%v language=%v", idx, sidx, v.lang))
 			sout += v.out
 			sgr = v.grout
 			sidx++
 		}
 		idx++
+
+		metadata := fmt.Sprintf("-metadata:s:%v:%v", v.typ, useIdx)
+		if len(v.lang) > 0 {
+			out += fmt.Sprintf(" %v language=%v", metadata, v.lang)
+		}
+		if len(v.title) > 0 {
+			out += fmt.Sprintf(" %v title=%v", metadata, v.title)
+		}
+		maps = append(maps, out)
 	}
 	outname := ""
 	if vout != "" {
@@ -164,7 +178,7 @@ func genmux(name string, item []Filter) (string, error) {
 	sep := " " + lineSep + "\n"
 	outname = filepath.Join(flagOutPath, name+outname)
 	ret := []string{
-		"ffmpeg",
+		"chcp 65001 && ffmpeg",
 		strings.Join(ins, sep),
 		"-codec:v copy -codec:a copy -codec:s mov_text",
 		strings.Join(maps, sep),
@@ -209,9 +223,9 @@ func doProcess(files []string) error {
 	}
 
 	/*
-	for i, v := range order {
-		fmt.Printf("%2v: %v\n\n", i, items[v])
-	}
+		for i, v := range order {
+			fmt.Printf("%2v: %v\n\n", i, items[v])
+		}
 	*/
 
 	out := ""

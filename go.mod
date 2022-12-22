@@ -3,6 +3,7 @@ module github.com/macroblock/imed
 go 1.15
 
 replace github.com/macroblock/rtimg => ../../macroblock/rtimg
+
 replace golang.com/x/ => ../../golang.com/x/
 
 require (
