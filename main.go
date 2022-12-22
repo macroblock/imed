@@ -121,7 +121,8 @@ func goDownload(pkgPath string) error {
 	if prefixes[dir] || prefixes[pkgPath] {
 		return nil
 	}
-	info, err := misc.RunCommand("go", "get", "-u", "-d", "-v", pkgPath+"/...")
+	//info, err := misc.RunCommand("go", "install", "-u", "-d", "-v", pkgPath+"/...")
+	info, err := misc.RunCommand("go", "install", "-i", "-v", pkgPath+"/...")
 	if err != nil {
 		return fmt.Errorf("%v", info)
 	}
