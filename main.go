@@ -112,6 +112,7 @@ func doFindPackage(pkgName string) string {
 	return ""
 }
 
+/*
 func goDownload(pkgPath string) error {
 	if flagDontDownload {
 		return nil
@@ -130,9 +131,10 @@ func goDownload(pkgPath string) error {
 	prefixes[pkgPath] = true
 	return nil
 }
+*/
 
 func goInstall(pkgPath string) error {
-	info, err := misc.RunCommand("go", "install", pkgPath+"@latest")
+	info, err := misc.RunCommand("go", "install", "-v", pkgPath+"@latest")
 	if err != nil {
 		return fmt.Errorf("%v", info)
 	}
@@ -154,12 +156,14 @@ func doInstall() error {
 			prError(fmt.Errorf("unknown package %q", pkg))
 			continue
 		}
+		/*
 		prProc("downloading")
 		err = goDownload(pkg)
 		if err != nil {
 			prError(err)
 			continue
 		}
+		*/
 		prProc("installing")
 		err = goInstall(pkg)
 		if err != nil {
