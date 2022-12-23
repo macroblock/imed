@@ -180,7 +180,7 @@ func doUpdate() error {
 }
 
 func doList() error {
-	fmt.Printf("Available modules:")
+	fmt.Printf("Available modules:\n")
 	for _, s := range packageNameList {
 		fmt.Printf("%v\n", s)
 	}
