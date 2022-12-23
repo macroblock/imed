@@ -33,6 +33,7 @@ var (
 	flagFiles      []string
 )
 
+var osNewLine = "\n"
 var lineSep = "\\"
 var scriptExt = ".sh"
 
@@ -188,6 +189,7 @@ func genmux(name string, item []Filter) (string, error) {
 			strings.Join(maps, sep),
 			fmt.Sprintf("\"%v.mp4\"", outname),
 		}, sep)
+	ret = strings.ReplaceAll(ret, "\n", osNewLine);
 	return ret, nil
 }
 
@@ -287,9 +289,11 @@ func main() {
 	default:
 		lineSep = "\\"
 		scriptExt = ".sh"
+		osNewLine = "\n"
 	case "windows":
 		lineSep = "^"
 		scriptExt = ".bat"
+		osNewLine = "\x0d\x0a"
 	}
 
 	// setup log
