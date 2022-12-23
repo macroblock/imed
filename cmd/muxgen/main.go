@@ -180,14 +180,15 @@ func genmux(name string, item []Filter) (string, error) {
 	}
 	sep := " " + lineSep + "\n"
 	outname = filepath.Join(flagOutPath, name+outname)
-	ret := []string{
-		"chcp 65001 && ffmpeg",
-		strings.Join(ins, sep),
-		"-codec:v copy -codec:a copy -codec:s mov_text",
-		strings.Join(maps, sep),
-		fmt.Sprintf("\"%v.mp4\"", outname),
-	}
-	return strings.Join(ret, sep), nil
+	ret := "chcp 65001\n" +
+		strings.Join([]string{
+			"ffmpeg",
+			strings.Join(ins, sep),
+			"-codec:v copy -codec:a copy -codec:s mov_text",
+			strings.Join(maps, sep),
+			fmt.Sprintf("\"%v.mp4\"", outname),
+		}, sep)
+	return ret, nil
 }
 
 func doProcess(files []string) error {
