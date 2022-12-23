@@ -132,7 +132,7 @@ func goDownload(pkgPath string) error {
 }
 
 func goInstall(pkgPath string) error {
-	info, err := misc.RunCommand("go", "install", pkgPath)
+	info, err := misc.RunCommand("go", "install", pkgPath+"@latest")
 	if err != nil {
 		return fmt.Errorf("%v", info)
 	}
