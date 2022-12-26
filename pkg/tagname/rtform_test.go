@@ -32,6 +32,8 @@ var (
 		// sorting issues
 		{inputVal: "hd_1996_arliss_s01_07__ae2_xsmoking_xhardsub_xo6hDsJGYXd_film.mp4",
 			check: "hd_1996_arliss_s01_07__ae2_xhardsub_xsmoking_xo6hDsJGYXd_film.mp4"},
+		{inputVal: "hd_1996_arliss_s01_07__ae2_PRT123456789012_xsmoking_xhardsub_xo6hDsJGYXd_film.mp4",
+			check: "hd_1996_arliss_s01_07__ae2_xhardsub_xsmoking_prt123456789012_xo6hDsJGYXd_film.mp4"},
 	}
 	tableRtSchemaParseIncorrect = []string{
 		//23456789012345678901234567890
@@ -55,6 +57,8 @@ var (
 		"hd_2018_The_name_2018__q0w0_sd_film",
 		"sd_2018_The_name_2018__hd_q0w0_mdisney_mhardsub_film",
 		"hd_2018_The_name_2018__q0w0_mhardsub_q1s3_trailer",
+		"sd_2018_The_name_2018__q0w0_prt12345_film",
+		"sd_2018_The_name_2018__q0w0_Prt123456789012_film",
 		// "sd_2018_Sobibor__12_q0w2_trailer.mpg",
 	}
 )

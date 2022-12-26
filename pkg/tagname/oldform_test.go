@@ -35,6 +35,8 @@ var (
 			check: "xxx_s01_01_2000__300x400.jpg"},
 		{inputVal: "xxx_s01_01_2000__center_300x400_sbs_mxxx.jpg",
 			check: "xxx_s01_01_2000__sbs_mxxx_300x400_center.jpg"},
+		{inputVal: "b_s01_01_2000__hd_x1234567890_PRT123456789012_mxxx",
+			check: "b_s01_01_2000__hd_ar6_mxxx_prt123456789012"},
 	}
 	tableOldSchemaParseIncorrect = []string{
 		//23456789012345678901234567890
@@ -57,6 +59,8 @@ var (
 		"The_name_2018__sd_q0w0_hd",
 		"The_name_2018__sd_q0w0_mdisney_film.trailer",
 		"The_name_2018__sd_q0w0_mhardsub_q1s3.trailer",
+		"The_name_2018__sd_q0w0_prt12345",
+		"The_name_2018__sd_q0w0_Prt123456789012",
 		// "Sobibor_2018__sd_12_q0w2.trailer.mpg",
 	}
 )

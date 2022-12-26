@@ -30,7 +30,7 @@ var rtNormalSchema = &TSchema{
 	// NonUniqueByType:         nil,
 	// Invalid:                 nil,
 	ToStringHeadOrderByType: []string{"sdhd", "year", "_hack3D", "name", "sxx", "sname", "exx", "ename", "comment", "_", "alreadyagedtag", "agetag", "qtag", "atag", "stag"},
-	ToStringTailOrderByType: []string{"datetag", "hashtag", "type", "ext"},
+	ToStringTailOrderByType: []string{"datetag", "prttag", "hashtag", "type", "ext"},
 	UnmarshallFilter:        fnFromRTFilter,
 	MarshallFilter:          fnToRTFilter,
 }

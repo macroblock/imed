@@ -54,7 +54,7 @@ hex      = '#' symbol symbol symbol symbol symbol symbol symbol symbol;
 
 tags     = @INVALID_TAG | @EXCLUSIVE_TAGS
          |@qtag|@atag|@smktag|@alreadyagedtag|@agetag|@stag|@vtag
-	 |@hardsubtag|@sbstag|@mtag|@sizetag|@datetag|@aligntag|@hashtag
+	 |@hardsubtag|@sbstag|@mtag|@sizetag|@datetag|@aligntag|@prttag|@hashtag
          |@ERR_agetag|@ERR_atag|@UNKNOWN_TAG;
 
 qtag      = 'q'digit('w'|'s')digit !symbol;
@@ -70,6 +70,7 @@ mtag      = 'm' symbol {symbol} !symbol;
 sizetag   = ('logo' | digit digit {digit} ('x'|'-') digit digit {digit}) !symbol;
 aligntag  = ('center'|'left') !symbol;
 datetag   = 'd' digit digit digit digit digit digit digit digit digit digit !symbol;
+prttag    = ('prt'|'PRT') digit digit digit digit digit digit digit digit digit digit digit digit !symbol;
 hashtag   = 'x' symbol symbol symbol symbol symbol symbol symbol symbol symbol symbol !symbol;
 
 EXCLUSIVE_TAGS = ('amed'|'abc'|'pb'|'vp'|'disney'|('dop'{symbol})|'oscar'|'dk'|'ru'|'pryamoiz'
@@ -193,7 +194,8 @@ func filterFixCommonTags(typ, val string) (string, string) {
 		val = strings.TrimPrefix(val, "m")
 		val = strings.TrimPrefix(val, "x")
 		val = "x" + val
-
+	case "prttag":
+		val = strings.ToLower(val)
 	}
 	return typ, val
 }

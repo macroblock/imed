@@ -29,7 +29,7 @@ var oldNormalSchema = &TSchema{
 	// NonUniqueByType:         nil,
 	// Invalid:                 nil, //[]string{"trailer", "film", "logo", "poster"},
 	ToStringHeadOrderByType: []string{"name", "sxx", "sname", "exx", "ename", "comment", "year", "_", "sdhd", "alreadyagedtag", "agetag", "qtag", "atag", "stag"},
-	ToStringTailOrderByType: []string{"datetag", "hashtag", "type", "aligntag", "ext"},
+	ToStringTailOrderByType: []string{"datetag", "prttag", "hashtag", "type", "aligntag", "ext"},
 	UnmarshallFilter:        fnFromOldFilter,
 	MarshallFilter:          fnToOldFilter,
 }
