@@ -197,7 +197,7 @@ func main() {
 	)
 
 	defer func() {
-		if log.State().Intersect(loglevel.Warning.OrLower()) != 0 && !flagDontPause {
+		if (log.State().Intersect(loglevel.Warning.OrLower()) != 0 || flagReport) && !flagDontPause {
 			misc.PauseTerminal()
 		}
 	}()
@@ -213,7 +213,7 @@ func main() {
 		cli.Flag("-f --force  : force to rename to a schema ('old' and 'rt' is supported)", &flagForce),
 		cli.Flag("-n --do-rename: do rename files)", &flagDoRename),
 		cli.Flag("-r --report : print cumulative report", &flagReport),
-		cli.Flag("-k          : do not wait key press on errors", &flagDontPause),
+		cli.Flag("-k          : do not wait key press on errors or report", &flagDontPause),
 		cli.Flag("-q --quiet  : quiet mode (display errors only)", &flagSilent),
 		cli.Flag("-t --script : a script file path to run", &flagScriptFile),
 		cli.Flag("-l --filelist   : specifies a file that contains list of files to process", &flagFileList),
