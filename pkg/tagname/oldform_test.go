@@ -64,6 +64,7 @@ var (
 		"The_name_2018__sd_q0w0_prt12345",
 		"The_name_2018__sd_q0w0_Prt123456789012",
 		"b_s01_01_PRT123456789012_zzz_2000__hd_x1234567890_mxxx",
+		"b_s01_01_PRT123456789012_2000__hd_PRT123456789012_x1234567890_mxxx",
 		"b_PRT123456789012_xxx_2000__hd_x1234567890_mxxx",
 		// "Sobibor_2018__sd_12_q0w2.trailer.mpg",
 	}
