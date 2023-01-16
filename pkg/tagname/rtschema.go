@@ -19,7 +19,7 @@ poster      = ('poster' sizetag) | 'logo';
 
 taglist     = {!(type ('.'|$)) tags,};
 DIV         = '__';
-EONAME      = DIV|'.'|$;
+EONAME      = prttag|DIV|'.'|$;
 
 INVALID_TAG = 'sd'|'hd'|'3d'|'logo'|'poster';
 ` + body

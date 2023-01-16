@@ -59,6 +59,8 @@ var (
 		"hd_2018_The_name_2018__q0w0_mhardsub_q1s3_trailer",
 		"sd_2018_The_name_2018__q0w0_prt12345_film",
 		"sd_2018_The_name_2018__q0w0_Prt123456789012_film",
+		"sd_2018_The_name_prt123456789012_2018__q0w0_film",
+		"sd_2018_name_prt123456789012_xxx_2018__q0w0_film",
 		// "sd_2018_Sobibor__12_q0w2_trailer.mpg",
 	}
 )

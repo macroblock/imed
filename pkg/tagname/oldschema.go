@@ -3,7 +3,7 @@ package tagname
 import "strings"
 
 var oldForm = `
-entry    = @name [,snen] [,@comment] ,@year [DIV taglist] ['.' @type] @ext$;
+entry    = @name [,snen] [,@comment] [,@prttag] ,@year [DIV taglist] ['.' @type] @ext$;
 
 sdhd     = ('sd'|'hd'|'3d'|'4k') !symbol;
 type     = 'trailer'| 'poster' | 'teaser';
@@ -16,7 +16,8 @@ type     = 'trailer'| 'poster' | 'teaser';
 taglist  = [(@sdhd|tags){,(@sdhd|tags)}];
 ` +
 	// "EONAME   = year (DIV|'.'|$);" +
-	"EONAME   = year !({ '_' !(year) ident } '_' year) (DIV|'.'|$);" +
+	//"EONAME   = year !({ '_' !(year) ident } '_' year) (DIV|'.'|$);" +
+	"EONAME   = (prttag | (year !({ '_' !(year) ident } '_' year) (DIV|'.'|$)));" +
 	`
 DIV = '__'|'_';
 

@@ -38,12 +38,12 @@ var body = `
 ,        = '_';
 ZZZ      = 'zzz';
 
-snen	 = @sxx [,@sname] [,@exx [,@ename]];
+snen     = @sxx [,@sname] [,@exx [,@ename]];
 sxx      = 's' (digit digit | 'xx' | 'XX' | 'xX' | 'Xx');
 exx      = !(EONAME) digit digit [digit] ['a'|'b'];
-name     =                     ident {, !(sxx,|ZZZ,|EONAME) ident};
-sname    = !(exx,|ZZZ,|EONAME) ident {, !(exx,|ZZZ,|EONAME) ident};
-ename    = !(     ZZZ,|EONAME) ident {, !(     ZZZ,|EONAME) ident};
+name     = !(EONAME|sxx,|ZZZ,) ident {, !(EONAME|sxx,|ZZZ,) ident};
+sname    = !(EONAME|exx,|ZZZ,) ident {, !(EONAME|exx,|ZZZ,) ident};
+ename    = !(EONAME|     ZZZ,) ident {, !(EONAME|     ZZZ,) ident};
 ` +
 	// "comment  = ZZZ,      !(EONAME) ident {, !(          EONAME) ident};" +
 	"comment  = ZZZ      {, !(          EONAME) ident};" +
@@ -54,7 +54,7 @@ hex      = '#' symbol symbol symbol symbol symbol symbol symbol symbol;
 
 tags     = @INVALID_TAG | @EXCLUSIVE_TAGS
          |@qtag|@atag|@smktag|@alreadyagedtag|@agetag|@stag|@vtag
-	 |@hardsubtag|@sbstag|@mtag|@sizetag|@datetag|@aligntag|@prttag|@hashtag
+         |@hardsubtag|@sbstag|@mtag|@sizetag|@datetag|@aligntag|@prttag|@hashtag
          |@ERR_agetag|@ERR_atag|@UNKNOWN_TAG;
 
 qtag      = 'q'digit('w'|'s')digit !symbol;
@@ -74,7 +74,7 @@ prttag    = ('prt'|'PRT') digit digit digit digit digit digit digit digit digit 
 hashtag   = 'x' symbol symbol symbol symbol symbol symbol symbol symbol symbol symbol !symbol;
 
 EXCLUSIVE_TAGS = ('amed'|'abc'|'pb'|'vp'|'disney'|('dop'{symbol})|'oscar'|'dk'|'ru'|'pryamoiz'
-		 |'newstudio'|'pozitiv'|'lostfilm'
+            |'newstudio'|'pozitiv'|'lostfilm'
                  ) !symbol;
 
 UNKNOWN_TAG = !'poster' symbol{symbol};
