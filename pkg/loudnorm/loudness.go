@@ -115,6 +115,17 @@ func targetMP() float64 {
 	return settings.Loudness.MP
 }
 
+func targetLimit() float64 {
+	ret := 0.0
+	if !math.IsNaN(targetMP()) {
+		ret = targetMP()
+	}
+	if !math.IsNaN(targetTP()) {
+		ret = math.Min(ret, targetTP())
+	}
+	return ret
+}
+
 const loudnessDeltaLI = 0.5
 
 // IsValid -
@@ -122,7 +133,7 @@ func (o *TLoudnessInfo) IsValid() bool {
 	if o == nil {
 		return false
 	}
-	if targetIMax() <= o.I || o.I <= targetIMin() {
+	if o.I <= targetIMin() || targetIMax() <= o.I {
 		return false
 	}
 	if !math.IsNaN(targetTP()) && o.TP > targetTP() {
@@ -136,20 +147,34 @@ func (o *TLoudnessInfo) IsValid() bool {
 
 // IsSuitable -
 func (o *TLoudnessInfo) IsSuitable() bool {
-	// defer fmt.Printf("@@@@@@@@@ !!!!! %+v", li)
+	if GlobalDebug {
+		fmt.Printf("## suitable?:\n"+
+			"    I %0.3v,  tI %0.3v\n"+
+			"   MP %0.3v, tMP %0.3v\n"+
+			"   TP %0.3v, tTP %0.3v\n"+
+			"   RA %0.3v, tRA %0.3v\n",
+			o.I, targetIMin(),
+			o.MP, targetMP(),
+			o.TP, targetTP(),
+			o.RA, targetLRA())
+	}
 	if o == nil {
 		return false
 	}
 	if o.I <= targetIMin() {
-		// fmt.Println("IMin")
+		//fmt.Println("## IMin")
+		return false
+	}
+	if !math.IsNaN(targetMP()) && o.MP > targetMP() {
+		//fmt.Println("## MP")
 		return false
 	}
 	if !math.IsNaN(targetTP()) && o.TP > targetTP() {
-		// fmt.Println("TP")
+		//fmt.Println("## TP")
 		return false
 	}
-	if !math.IsNaN(targetTP()) && o.RA > targetLRA() {
-		// fmt.Println("LRA")
+	if !math.IsNaN(targetLRA()) && o.RA > targetLRA() {
+		//fmt.Println("## LRA")
 		return false
 	}
 	return true
@@ -201,7 +226,16 @@ func (o *TLoudnessInfo) Normalize() {
 	// o.TP -= o.MP
 	// o.TH -= o.MP
 	// o.MP -= o.MP
-	o.Amp(-o.MP)
+	o.Amp(o.Headroom())
+}
+
+func (o *TLoudnessInfo) Headroom() float64 {
+	ret := -o.MP
+	if !math.IsNaN(o.TP) {
+		ret = math.Min(ret, -o.TP)
+	}
+	ret += targetLimit()
+	return ret
 }
 
 // Amp -
@@ -218,9 +252,10 @@ func (o *TLoudnessInfo) CanFix() bool {
 	*l = *o
 	l.Normalize()
 	if l.IsSuitable() {
-		// fmt.Println("--- not suitable")
+		//fmt.Println("## suitable")
 		return true
 	}
+	//fmt.Println("## not suitable")
 	return false
 }
 
@@ -229,7 +264,7 @@ func (o *TLoudnessInfo) calcPostAmp() (float64, bool) {
 		return 0.0, false
 	}
 	postAmp := targetI() - o.I
-	postAmp = math.Min(postAmp, -o.MP)
+	postAmp = math.Min(postAmp, o.Headroom()) //-o.MP)
 	return postAmp, true
 }
 

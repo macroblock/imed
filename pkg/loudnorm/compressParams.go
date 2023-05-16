@@ -20,6 +20,7 @@ func newEmptyCompressParams() *TCompressParams {
 func newCompressParams(li *TLoudnessInfo) *TCompressParams {
 	cp := newEmptyCompressParams()
 	cp.li = *li
+	/*
 	offs := li.I - targetI()
 	if offs >= li.MP {
 		cp.PreAmp = -offs
@@ -28,6 +29,17 @@ func newCompressParams(li *TLoudnessInfo) *TCompressParams {
 	offs = li.MP
 	k := targetI() / (li.I - offs)
 	cp.PreAmp = -offs
+	cp.Ratio = k
+	*/
+	offs := targetI() - li.I
+	headroom := li.Headroom()
+	if offs <= headroom {
+		cp.PreAmp = offs
+		return cp
+	}
+	offs = headroom
+	k := targetI() / (li.I + offs)
+	cp.PreAmp = offs
 	cp.Ratio = k
 	return cp
 }

@@ -110,7 +110,8 @@ func printStreamParams(stream *TStreamInfo, colorize bool) {
 	printf := ansi.Printf
 
 	li := stream.TargetLI
-	I2 := math.Min(li.I-li.MP, settings.Loudness.I)
+	//I2 := math.Min(li.I-li.MP, settings.Loudness.I)
+	I2 := math.Min(li.I+li.Headroom(), settings.Loudness.I)
 	maxP := math.Inf(-1)
 	for _, ch := range stream.astatsInfo.Channels {
 		maxP = math.Max(maxP, ch.RMSLevel)
