@@ -21,7 +21,7 @@ var settings = TSettings{
 	Loudness: tLoudnessSettings{
 		I:             -23,
 		RA:            math.Inf(+1),
-		TP:            math.NaN(), // -1.0,
+		TP:            -1.0,
 		MP:            0.0,
 		Precision:     0.5,
 		STStatTHBelow: -4.0,
