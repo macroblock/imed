@@ -40,6 +40,7 @@ var (
 		// "github.com/macroblock/imed/cmd/tagname",
 		"github.com/macroblock/imed/cmd/gpreport",
 		"github.com/macroblock/imed/cmd/gpvar",
+		"github.com/macroblock/imed/cmd/movmeta",
 		"github.com/macroblock/imed/cmd/muxgen",
 		"github.com/macroblock/imed/cmd/subrip",
 		"github.com/macroblock/imed/cmd/tnclipboardpost",
