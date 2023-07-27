@@ -1,32 +1,32 @@
 package mov
 
 import (
-	"bufio"
 	"encoding/binary"
 	"fmt"
 	"io"
+	"os"
 )
 
 type StreamReader struct {
 	err   error
-	rd    *bufio.Reader
+	f     *os.File
 	pos   int64
 	order binary.ByteOrder
 	limit SizeLimit
 }
 
-func NewStreamReaderBE(rd io.Reader) *StreamReader {
-	return NewStreamReader(rd, binary.BigEndian)
+func NewStreamReaderBE(f *os.File) *StreamReader {
+	return NewStreamReader(f, binary.BigEndian)
 }
 
-func NewStreamReaderLE(rd io.Reader) *StreamReader {
-	return NewStreamReader(rd, binary.LittleEndian)
+func NewStreamReaderLE(f *os.File) *StreamReader {
+	return NewStreamReader(f, binary.LittleEndian)
 }
 
-func NewStreamReader(rd io.Reader, byteOrder binary.ByteOrder) *StreamReader {
+func NewStreamReader(f *os.File, byteOrder binary.ByteOrder) *StreamReader {
 	return &StreamReader{
 		err:   nil,
-		rd:    bufio.NewReader(rd),
+		f:     f,
 		pos:   0,
 		order: byteOrder,
 		limit: InitSizeLimitCap(16),
@@ -41,8 +41,15 @@ func (o *StreamReader) CanRead() bool {
 	if o.err != nil || o.limit.Remainder(o.pos) <= 0 {
 		return false
 	}
-	_, err := o.rd.Peek(1)
-	return err == nil
+	pos, err := o.f.Seek(0, os.SEEK_CUR)
+	if err != nil {
+		return false
+	}
+	info, err := o.f.Stat()
+	if err != nil {
+		return false
+	}
+	return pos < info.Size()
 }
 
 func (o *StreamReader) LimitRemainder() int64 {
@@ -71,7 +78,7 @@ func (o *StreamReader) ReadSlice(buf []byte) {
 	if o.err != nil {
 		return
 	}
-	n, err := io.ReadAtLeast(o.rd, buf, len(buf))
+	n, err := io.ReadAtLeast(o.f, buf, len(buf))
 	o.pos += int64(n)
 	o.err = err
 }
@@ -118,21 +125,12 @@ func (o *StreamReader) Skip(size int64) {
 		o.err = fmt.Errorf("negative limit reamainder (%v)", size)
 		return
 	}
-	n, err := io.CopyN(io.Discard, o.rd, size)
-	o.pos += n
+	pos, err := o.f.Seek(size, os.SEEK_CUR)
+	//n, err := io.CopyN(io.Discard, o.f, size)
+	o.pos = pos
 	o.err = err
 }
 
 func (o *StreamReader) SkipLimitRemainder() {
-	if o.err != nil {
-		return
-	}
-	size := o.limit.Remainder(o.pos)
-	if size < 0 {
-		o.err = fmt.Errorf("negative limit reamainder (%v)", size)
-		return
-	}
-	n, err := io.CopyN(io.Discard, o.rd, size)
-	o.pos += n
-	o.err = err
+	o.Skip(o.limit.Remainder(o.pos))
 }
