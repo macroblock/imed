@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
+	//"strings"
 
 	"github.com/malashin/ffinfo"
 
@@ -49,6 +49,136 @@ func in(what string, where ...string) bool {
 	return false
 }
 
+func doProcess(filePath string, isDeepCheck bool) string {
+	defer retif.Catch()
+	log.Info(" ")
+	log.Info("processing: " + filePath)
+	tn, err := tagname.NewFromFilename(filePath, isDeepCheck)
+	retif.Error(err, "cannot parse filename")
+
+	// schema := "" //tn.Schema()
+
+	/*
+		_, err = tn.GetTag("alreadyagedtag")
+		doAge := true
+		if err != nil {
+			doAge = false
+		}
+
+		age := ""
+		if !doAge {
+			age, err = tn.GetTag("agetag")
+			retif.Error(err, "cannot get 'agetag' tag")
+		}
+	*/
+	audTag := ""
+	audTag, err = tn.GetTag("atag")
+	retif.Error(err, "cannot get 'atag' tag")
+
+	subTag := ""
+	subTag, err = tn.GetTag("stag")
+
+	audsubPostfix := audTag
+	if subTag != "" {
+		audsubPostfix += "_" + subTag
+	}
+
+	sdhd, err := tn.GetTag("sdhd")
+	retif.Error(err, "cannot get 'sdhd' tag")
+
+	// qtag, err := tn.GetTag("qtag")
+
+	hasSmokingTag := false
+	if _, err := tn.GetTag("smktag"); err == nil {
+		hasSmokingTag = true
+	}
+	hasAlcoholTag := false
+	if _, err := tn.GetTag("alcotag"); err == nil {
+		hasAlcoholTag = true
+	}
+	hasSideBySideTag := false
+	if _, err := tn.GetTag("sbstag"); err == nil {
+		hasSideBySideTag = true
+	}
+
+	retif.Error(!hasSmokingTag && !hasAlcoholTag, "nothing to do")
+
+	// tn.RemoveTags("agetag")
+	// tn.RemoveTags("alreadyagedtag")
+	tn.RemoveTags("smktag")
+	tn.RemoveTags("alcotag")
+
+	newPath, err := tn.ConvertTo("")
+	retif.Error(err, "cannot convert to '"+tn.Schema()+"' schema")
+
+	file, err := ffinfo.Probe(filePath)
+	retif.Error(err, "ffinfo.Probe() (ffprobe)")
+
+	sar := ""
+	logoPostfix := ""
+	err = fmt.Errorf("%v", "cannot find video stream")
+	for i, s := range file.Streams {
+		if s.CodecType != "video" {
+			continue
+		}
+		sar = s.SampleAspectRatio
+		log.Notice(fmt.Sprintf("stream: %v, sar [%v]", i, sar))
+		switch sar {
+		default:
+			retif.Error(fmt.Errorf("unsupported SAR [%v]", sar))
+		case "64:45":
+			logoPostfix = "SD169"
+		case "16:15":
+			logoPostfix = "SD43"
+		case "0:1", "1:1", "":
+			sar = "1:1"
+			switch sdhd {
+			default:
+				retif.Error(fmt.Errorf("SAR [%v] does not match sdhd tag %q", sar, sdhd))
+			case "3d":
+				logoPostfix = "3D"
+				if hasSideBySideTag {
+					logoPostfix += "SBS"
+				}
+			case "hd":
+				logoPostfix = "HD"
+			case "4k":
+				logoPostfix = "4K"
+			}
+		}
+		err = nil
+		break
+	}
+	retif.Error(err)
+
+	ret := ""
+	redir := ">"
+	if hasAlcoholTag {
+		path := filepath.Join(ageLogoPathEnv, "alcohol",
+			"alcohol_"+logoPostfix+"_"+audsubPostfix+".mp4")
+		ret += fmt.Sprintf("echo file %v %v #fflist.txt\n", path, redir)
+		redir = ">>"
+	}
+
+	if hasSmokingTag {
+		path := filepath.Join(ageLogoPathEnv, "smk",
+			"msmoking_"+logoPostfix+"_"+audsubPostfix+".mp4")
+		ret += fmt.Sprintf("echo file %v %v #fflist.txt\n", path, redir)
+		redir = ">>"
+	}
+	ret += fmt.Sprintf("echo file %v %v #fflist.txt\n", filePath, redir)
+
+	exportMetaStr := fmt.Sprintf("movmeta -i %v -export meta", filePath)
+	processStr := fmt.Sprintf("ffmpeg -f concat -safe 0 -i #fflist.txt -map 0:v? -map 0:a? -map 0:s? -c copy -codec:s mov_text %v", newPath)
+	importMetaStr := fmt.Sprintf("movmeta -i %v -import meta", newPath)
+
+	ret += fmt.Sprintf("%v && ^\n%v && ^\n%v\n", exportMetaStr, processStr, importMetaStr)
+	ret += "\n"
+
+	return ret
+}
+
+/*
 func doProcess(filePath string, isDeepCheck bool) string {
 	defer retif.Catch()
 	log.Info(" ")
@@ -182,6 +312,7 @@ func doProcess(filePath string, isDeepCheck bool) string {
 
 	return ret
 }
+*/
 
 func mainFunc() error {
 	if len(flagFiles) == 0 {
