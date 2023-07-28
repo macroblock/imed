@@ -168,9 +168,9 @@ func doProcess(filePath string, isDeepCheck bool) string {
 	}
 	ret += fmt.Sprintf("echo file %v %v #fflist.txt\n", filePath, redir)
 
-	exportMetaStr := fmt.Sprintf("movmeta -i %v -export meta", filePath)
+	exportMetaStr := fmt.Sprintf("movmeta -i %v -export #meta", filePath)
 	processStr := fmt.Sprintf("ffmpeg -f concat -safe 0 -i #fflist.txt -map 0:v? -map 0:a? -map 0:s? -c copy -codec:s mov_text %v", newPath)
-	importMetaStr := fmt.Sprintf("movmeta -i %v -import meta", newPath)
+	importMetaStr := fmt.Sprintf("movmeta -i %v -import #meta", newPath)
 
 	ret += fmt.Sprintf("%v && ^\n%v && ^\n%v\n", exportMetaStr, processStr, importMetaStr)
 	ret += "\n"
