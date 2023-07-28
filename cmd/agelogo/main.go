@@ -154,14 +154,14 @@ func doProcess(filePath string, isDeepCheck bool) string {
 	ret := ""
 	redir := ">"
 	if hasAlcoholTag {
-		path := filepath.Join(ageLogoPathEnv, "alcohol",
+		path := filepath.Join(ageLogoPath, "alcohol",
 			"alcohol_"+logoPostfix+"_"+audsubPostfix+".mp4")
 		ret += fmt.Sprintf("echo file %v %v #fflist.txt\n", path, redir)
 		redir = ">>"
 	}
 
 	if hasSmokingTag {
-		path := filepath.Join(ageLogoPathEnv, "smk",
+		path := filepath.Join(ageLogoPath, "smk",
 			"msmoking_"+logoPostfix+"_"+audsubPostfix+".mp4")
 		ret += fmt.Sprintf("echo file %v %v #fflist.txt\n", path, redir)
 		redir = ">>"
