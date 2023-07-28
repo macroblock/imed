@@ -65,6 +65,7 @@ alreadyagedtag = digit digit 'aged' !symbol;
 vtag      = 'v' ('goblin'|'kurazhbambey'|'lostfilm'|'newstudio'|'pozitiv'|ERR_invalid_vtag) !symbol;
 hardsubtag= ('mhardsub'|'hardsub'|'xhardsub') !symbol;
 smktag    = ('xsmoking'|'xsmk'|'msmoking'|'msmk'|'smoking'|'smk') !symbol;
+alcotag    = 'malcohol' !symbol;
 sbstag    = ('msbs'|'sbs'|'xsbs') !symbol;
 mtag      = 'm' symbol {symbol} !symbol;
 sizetag   = ('logo' | digit digit {digit} ('x'|'-') digit digit {digit}) !symbol;
