@@ -107,7 +107,7 @@ var (
 				{typ: "ext", val: ""},
 			},
 		},
-		{input: "hd_2018_3d_The_name_sXX_a_sname_01b_a_ename_zzz_comment__q0w0_amed_film",
+		{input: "hd_2018_3d_The_name_sXX_a_sname_01b_a_ename_zzz_comment__q0w0_amed_xalcohol_film",
 			tags: []ttag{
 				{typ: "name", val: "the_name"},
 				// {typ: "snen", val: "s01e01_a_subname"},
@@ -119,6 +119,7 @@ var (
 				{typ: "sdhd", val: "3d"},
 				{typ: "mtag", val: "mamed"},
 				{typ: "qtag", val: "q0w0"},
+				{typ: "alcotag", val: "xalcohol"},
 				{typ: "type", val: "film"},
 				{typ: "ext", val: ""},
 			},

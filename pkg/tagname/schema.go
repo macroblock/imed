@@ -53,7 +53,7 @@ year     = digit digit digit digit !symbol;
 hex      = '#' symbol symbol symbol symbol symbol symbol symbol symbol;
 
 tags     = @INVALID_TAG | @EXCLUSIVE_TAGS
-         |@qtag|@atag|@smktag|@alreadyagedtag|@agetag|@stag|@vtag
+         |@qtag|@atag|@smktag|@alreadyagedtag|@agetag|@alcotag|@stag|@vtag
          |@hardsubtag|@sbstag|@mtag|@sizetag|@datetag|@aligntag|@prttag|@hashtag
          |@ERR_agetag|@ERR_atag|@UNKNOWN_TAG;
 
@@ -65,7 +65,7 @@ alreadyagedtag = digit digit 'aged' !symbol;
 vtag      = 'v' ('goblin'|'kurazhbambey'|'lostfilm'|'newstudio'|'pozitiv'|ERR_invalid_vtag) !symbol;
 hardsubtag= ('mhardsub'|'hardsub'|'xhardsub') !symbol;
 smktag    = ('xsmoking'|'xsmk'|'msmoking'|'msmk'|'smoking'|'smk') !symbol;
-alcotag    = 'malcohol' !symbol;
+alcotag   = 'xalcohol' !symbol;
 sbstag    = ('msbs'|'sbs'|'xsbs') !symbol;
 mtag      = 'm' symbol {symbol} !symbol;
 sizetag   = ('logo' | digit digit {digit} ('x'|'-') digit digit {digit}) !symbol;
