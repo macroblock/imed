@@ -153,18 +153,18 @@ func doProcess(filePath string, isDeepCheck bool) string {
 
 	ret := ""
 	redir := ">"
-	if hasAlcoholTag {
-		path := filepath.Join(ageLogoPath, "alcohol",
-			"alcohol_"+logoPostfix+"_"+audsubPostfix+".mp4")
+	if hasSmokingTag {
+		path := filepath.Join(ageLogoPath, "smk",
+			"msmoking_"+logoPostfix+"_"+audsubPostfix+".mp4")
 		// workaround: replace windows backslashes to use it in ffmpeg filter
 		path = strings.Replace(path, "\\", "/", -1)
 		ret += fmt.Sprintf("echo file %v %v #fflist.txt\n", path, redir)
 		redir = ">>"
 	}
 
-	if hasSmokingTag {
-		path := filepath.Join(ageLogoPath, "smk",
-			"msmoking_"+logoPostfix+"_"+audsubPostfix+".mp4")
+	if hasAlcoholTag {
+		path := filepath.Join(ageLogoPath, "alcohol",
+			"alcohol_"+logoPostfix+"_"+audsubPostfix+".mp4")
 		// workaround: replace windows backslashes to use it in ffmpeg filter
 		path = strings.Replace(path, "\\", "/", -1)
 		ret += fmt.Sprintf("echo file %v %v #fflist.txt\n", path, redir)
