@@ -327,6 +327,15 @@ func main() {
 		cli.Flag("-k                  : do not wait keyboard event on errors", &flagK),
 		cli.Flag(": files to be processed", &flagFiles),
 		cli.OnError("Run '!PROG! -h' for usage.\n"),
+		cli.Hint(`Most common use cases:
+    Recalculate timings from 25fps to 24fps:
+        subrip [Path/To/Source.srt] --scale 0.96
+
+    Move timings by 5.2 seconds closer to start:
+        subrip [Path/To/Source.srt] --move -5.2
+
+    Recalculate timings so that range of entries numbered 1 through 386 match appropriate timecodes. (copypaste from Premiere for fps25 is acceptable):
+        subrip [Path/To/Source.srt] --points 1=00:01:32:04,386=01:48:18:07`),
 	)
 
 	err := cmdLine.Parse(os.Args)
