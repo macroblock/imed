@@ -238,7 +238,7 @@ func main() {
 	}()
 
 	// command line interface
-	cmdLine := cli.New("!PROG! the program that creates a script that burns agelogo over the specified files. v0.1", mainFunc)
+	cmdLine := cli.New("!PROG! v0.1.2 the program that creates a script that burns agelogo over the specified files.", mainFunc)
 	cmdLine.Elements(
 		cli.Usage("!PROG! {flags|<...>}"),
 		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
