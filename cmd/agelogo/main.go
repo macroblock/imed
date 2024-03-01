@@ -157,7 +157,7 @@ func doProcess(filePath string, isDeepCheck bool) string {
 	ret := ""
 	redir := ">"
 	if hasSmokingTag {
-		path := filepath.Join(ageLogoPath, "smk",
+		path := filepath.Join(ageLogoPath, "msmoking",
 			"msmoking_"+logoPostfix+"_"+audsubPostfix+".mp4")
 		// workaround: replace windows backslashes to use it with ffmpeg filter
 		path = strings.Replace(path, "\\", "/", -1)
@@ -238,7 +238,7 @@ func main() {
 	}()
 
 	// command line interface
-	cmdLine := cli.New("!PROG! v0.1.2 the program that creates a script that burns agelogo over the specified files.", mainFunc)
+	cmdLine := cli.New("!PROG! v0.1.3 the program that creates a script that burns agelogo over the specified files.", mainFunc)
 	cmdLine.Elements(
 		cli.Usage("!PROG! {flags|<...>}"),
 		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
