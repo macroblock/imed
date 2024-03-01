@@ -78,8 +78,8 @@ func doProcess(filePath string, isDeepCheck bool) string {
 	subTag := ""
 	subTag, err = tn.GetTag("stag")
 
-	aCTag := cleanAudSubTag(audTag)
-	sCTag := cleanAudSubTag(subTag)
+	aCTag := cleanAudTag(audTag)
+	sCTag := cleanSubTag(subTag)
 
 	audsubPostfix := aCTag
 	if sCTag != "" {
@@ -256,7 +256,7 @@ func main() {
 }
 
 
-func cleanAudSubTag(tag string) string {
+func cleanAudTag(tag string) string {
 	if tag == "" {
 		return ""
 	}
@@ -266,6 +266,18 @@ func cleanAudSubTag(tag string) string {
 		if r >= '0' && r <= '9' {
 			ret += string(r)
 		}
+	}
+	return ret
+}
+
+func cleanSubTag(tag string) string {
+	if tag == "" {
+		return ""
+	}
+	ret := tag[0:1]
+
+	for _, _ = range tag[1:] {
+		ret += "x"
 	}
 	return ret
 }
