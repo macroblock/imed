@@ -276,7 +276,7 @@ func cleanSubTag(tag string) string {
 	}
 	ret := tag[0:1]
 
-	for _, _ = range tag[1:] {
+	for range tag[1:] {
 		ret += "x"
 	}
 	return ret
