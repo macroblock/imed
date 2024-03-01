@@ -238,7 +238,7 @@ func main() {
 	}()
 
 	// command line interface
-	cmdLine := cli.New("!PROG! the program that creates a script that burns agelogo over the specified files.", mainFunc)
+	cmdLine := cli.New("!PROG! the program that creates a script that burns agelogo over the specified files. v0.1", mainFunc)
 	cmdLine.Elements(
 		cli.Usage("!PROG! {flags|<...>}"),
 		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
@@ -262,7 +262,7 @@ func cleanAudSubTag(tag string) string {
 	}
 	ret := tag[0:1]
 
-	for _, r := range tag[1:len(tag)] {
+	for _, r := range tag[1:] {
 		if r >= '0' && r <= '9' {
 			ret += string(r)
 		}
