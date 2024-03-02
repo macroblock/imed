@@ -71,6 +71,10 @@ func doProcess(filePath string, isDeepCheck bool) string {
 			retif.Error(err, "cannot get 'agetag' tag")
 		}
 	*/
+
+	langMeta, err := generateLangMetainfo(tn)
+	retif.Error(err, "cannot get stream lang")
+
 	audTag := ""
 	audTag, err = tn.GetTag("atag")
 	retif.Error(err, "cannot get 'atag' tag")
@@ -176,7 +180,7 @@ func doProcess(filePath string, isDeepCheck bool) string {
 	ret += fmt.Sprintf("echo file %v %v #fflist.txt\n", filePath, redir)
 
 	exportMetaStr := fmt.Sprintf("movmeta -i %v -export #meta", filePath)
-	processStr := fmt.Sprintf("ffmpeg -f concat -safe 0 -i #fflist.txt -map 0:v? -map 0:a? -map 0:s? -c copy -codec:s mov_text %v", newPath)
+	processStr := fmt.Sprintf("ffmpeg -f concat -safe 0 -i #fflist.txt -map 0:v? -map 0:a? -map 0:s? -c copy -codec:s mov_text %v %v", langMeta, newPath)
 	importMetaStr := fmt.Sprintf("movmeta -i %v -merge #meta -write", newPath)
 
 	ret += fmt.Sprintf("%v && ^\n%v && ^\n%v\n", exportMetaStr, processStr, importMetaStr)
@@ -184,7 +188,6 @@ func doProcess(filePath string, isDeepCheck bool) string {
 
 	return ret
 }
-
 
 func mainFunc() error {
 	if len(flagFiles) == 0 {
@@ -253,8 +256,11 @@ func main() {
 
 	log.Error(err)
 	log.Info(cmdLine.GetHint())
-}
 
+	if err != nil {
+		os.Exit(-1)
+	}
+}
 
 func cleanAudTag(tag string) string {
 	if tag == "" {
@@ -280,4 +286,40 @@ func cleanSubTag(tag string) string {
 		ret += "x"
 	}
 	return ret
+}
+
+func generateLangMetainfo(tn *tagname.TTagname) (string, error) {
+	info, err := tn.FFInfo()
+	if err != nil {
+		return "", err
+	}
+	ret := []string{}
+	vCount := 0
+	aCount := 0
+	sCount := 0
+
+	for _, stream := range info.Streams {
+		lang := stream.Tags.Language
+		switch stream.CodecType {
+		default:
+			return "", fmt.Errorf("unsupported codec type %q", stream.CodecType)
+		case "video":
+			if lang != "" {
+				ret = append(ret, fmt.Sprintf("-metadata s:v:%v language=%v", vCount, lang))
+			}
+			vCount++
+		case "audio":
+			if lang != "" {
+				ret = append(ret, fmt.Sprintf("-metadata s:a:%v language=%v", aCount, lang))
+			}
+			aCount++
+		case "subtitle":
+			if lang != "" {
+				ret = append(ret, fmt.Sprintf("-metadata s:s:%v language=%v", sCount, lang))
+			}
+			sCount++
+		}
+	}
+
+	return strings.Join(ret, " "), nil
 }
