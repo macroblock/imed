@@ -241,7 +241,7 @@ func main() {
 	}()
 
 	// command line interface
-	cmdLine := cli.New("!PROG! v0.1.3 the program that creates a script that burns agelogo over the specified files.", mainFunc)
+	cmdLine := cli.New("!PROG! v0.1.4 the program that creates a script that burns agelogo over the specified files.", mainFunc)
 	cmdLine.Elements(
 		cli.Usage("!PROG! {flags|<...>}"),
 		// cli.Hint("Use '!PROG! help <flag>' for more information about that flag."),
@@ -305,17 +305,17 @@ func generateLangMetainfo(tn *tagname.TTagname) (string, error) {
 			return "", fmt.Errorf("unsupported codec type %q", stream.CodecType)
 		case "video":
 			if lang != "" {
-				ret = append(ret, fmt.Sprintf("-metadata s:v:%v language=%v", vCount, lang))
+				ret = append(ret, fmt.Sprintf("-metadata:s:v:%v language=%v", vCount, lang))
 			}
 			vCount++
 		case "audio":
 			if lang != "" {
-				ret = append(ret, fmt.Sprintf("-metadata s:a:%v language=%v", aCount, lang))
+				ret = append(ret, fmt.Sprintf("-metadata:s:a:%v language=%v", aCount, lang))
 			}
 			aCount++
 		case "subtitle":
 			if lang != "" {
-				ret = append(ret, fmt.Sprintf("-metadata s:s:%v language=%v", sCount, lang))
+				ret = append(ret, fmt.Sprintf("-metadata:s:s:%v language=%v", sCount, lang))
 			}
 			sCount++
 		}
